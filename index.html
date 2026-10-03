@@ -19,6 +19,7 @@
   --accent:#248A3D; --accent-ink:#FFFFFF; --soft:#E6F4EA;
   --fill:rgba(118,118,128,.12); --material:rgba(249,249,249,.8); --grabber:#C7C7CC;
   --red:#FF3B30; --orange:#FF9500; --seg-on:#FFFFFF;
+  --ring1:#28CD41; --ring2:#0A84FF; --ring3:#FF9500;
   --display:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,'Segoe UI',Roboto,sans-serif;
   --body:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI',Roboto,sans-serif;
   --rounded:ui-rounded,'SF Pro Rounded',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
@@ -30,6 +31,7 @@
     --accent:#30D158; --accent-ink:#00230C; --soft:#1B3022;
     --fill:rgba(118,118,128,.24); --material:rgba(28,28,30,.78); --grabber:#48484A;
     --red:#FF453A; --orange:#FF9F0A; --seg-on:#636366;
+    --ring1:#30D158; --ring2:#0A84FF; --ring3:#FF9F0A;
   }
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -173,7 +175,7 @@ label.iconbtn{display:inline-flex; align-items:center}
 .closebtn{width:100%; margin-top:14px; font-size:17px}
 .closebtn:disabled{background:var(--line); color:var(--mute); cursor:default}
 
-.prow{cursor:default}
+.prow{cursor:default; border-bottom:.5px solid var(--line)}
 .pmark{width:28px; height:28px; border:2px solid var(--mute); border-radius:8px; display:grid; place-items:center}
 .pmark.on{background:var(--accent); border-color:var(--accent)}
 .pmark.on::after{content:""; width:7px; height:14px; border:solid var(--accent-ink); border-width:0 3px 3px 0; transform:translateY(-1px) rotate(45deg)}
@@ -324,12 +326,59 @@ label.iconbtn{display:inline-flex; align-items:center}
 @keyframes flash{0%{background:var(--soft)} 100%{background:transparent}}
 @keyframes bump{0%{transform:translateY(0)} 40%{transform:translateY(-3px) scale(1.08)} 100%{transform:none}}
 @keyframes blink{0%,80%,100%{opacity:.25; transform:translateY(0)} 40%{opacity:.9; transform:translateY(-3px)}}
-.row.hassteps{border-bottom:0; padding-bottom:4px}
-.steps{margin:0 0 4px; padding:0 0 10px 36px; border-bottom:.5px solid var(--line); list-style:none; counter-reset:st}
-.steps li{counter-increment:st; display:grid; grid-template-columns:22px 1fr; column-gap:6px; padding:5px 0; font-size:15px}
-.steps li::before{content:counter(st); grid-row:span 2; width:20px; height:20px; border-radius:50%; background:var(--fill); color:var(--mute); font-size:12px; font-weight:600; display:grid; place-items:center; font-family:var(--rounded)}
-.steps li b{font-weight:500}
+.steps{margin:0; padding:0 0 10px 36px; list-style:none; counter-reset:st}
+.steps li{counter-increment:st; display:grid; grid-template-columns:22px 1fr auto; column-gap:8px; align-items:center; padding:5px 0; font-size:15px}
+.steps li::before{content:counter(st); grid-row:span 2; align-self:start; margin-top:1px; width:20px; height:20px; border-radius:50%; background:var(--fill); color:var(--mute); font-size:12px; font-weight:600; display:grid; place-items:center; font-family:var(--rounded)}
+.steps li b{font-weight:500; grid-column:2}
+.steps li .tool{grid-column:3; grid-row:1 / span 2}
 .steps li span{grid-column:2; font-size:13px; color:var(--mute)}
+.item{position:relative; border-bottom:.5px solid var(--line)}
+.item .row{border-bottom:0}
+.item.hastools .row{padding-right:80px}
+.tools{position:absolute; right:0; top:9px; display:flex; gap:6px}
+.tool{width:32px; height:32px; border:0; border-radius:9px; background:var(--fill); color:var(--accent); display:grid; place-items:center; cursor:pointer; padding:0}
+.tool svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.tool.sm{width:28px; height:28px; border-radius:8px}
+.tool.sm svg{width:16px; height:16px}
+.swaptag{display:inline-block; vertical-align:2px; margin-left:6px; padding:1px 7px; border-radius:999px; background:var(--fill); color:var(--mute); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.03em}
+details.stepsbox{margin:-4px 0 8px 36px; padding:0; border-radius:0; background:none}
+details.stepsbox summary{font-size:14px; color:var(--accent); padding:4px 0; font-weight:500}
+details.stepsbox summary::after{font-size:18px; color:var(--accent)}
+details.stepsbox[open] summary{border:0; margin:0}
+details.stepsbox .steps{padding-left:0}
+.dayhead{display:flex; align-items:center; gap:16px; margin:14px 0 2px}
+.rings{width:88px; height:88px; flex:none; transform:rotate(-90deg)}
+.rtrack{fill:none; stroke-width:9; opacity:.18}
+.ring{fill:none; stroke-width:9; stroke-linecap:round; transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)}
+.ringstats{display:grid; gap:4px; font-size:14px; color:var(--mute)}
+.ringstats b{color:var(--ink); font-family:var(--rounded); font-weight:700; font-size:16px}
+.ringstats i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:1px}
+.swaplist{display:grid; gap:6px}
+.swaplist button{display:flex; justify-content:space-between; align-items:center; width:100%; min-height:48px; padding:0 14px; border:0; border-radius:12px; background:var(--fill); color:var(--ink); font-size:16px; text-align:left; cursor:pointer}
+.swaplist button.on{background:var(--soft); color:var(--accent); font-weight:600}
+.swaplist small{margin-left:6px; font-size:11px; font-weight:600; color:var(--mute); text-transform:uppercase}
+.demofig{background:var(--bg); border-radius:14px; padding:6px}
+.fig{display:block; width:100%; height:auto}
+.fig line, .fig path{fill:none; stroke-linecap:round; stroke-linejoin:round}
+.fig .pose line, .fig .pose path{stroke:var(--accent); stroke-width:7}
+.fig .pose circle{fill:var(--accent)}
+.fig .ghost line, .fig .ghost path{stroke:var(--mute); stroke-width:7; opacity:.3}
+.fig .ghost circle{fill:var(--mute); opacity:.3}
+.fig .far{opacity:.5}
+.fig .floor{stroke:var(--line); stroke-width:2}
+.fig .prop{stroke:var(--mute); stroke-width:4}
+.fig .propfill{fill:var(--mute); opacity:.35}
+.fig .propsoft{fill:var(--fill)}
+.fig .cable{stroke:var(--mute); stroke-width:1.5; stroke-dasharray:3 3}
+.fig .arrow{stroke:var(--orange); stroke-width:2.5}
+.fig .ahead{fill:var(--orange)}
+.fig .figlabel{font-size:10px; fill:var(--mute); font-family:var(--body)}
+.democues{margin:0; padding-left:20px; font-size:15px; display:grid; gap:4px}
+.videolink{display:flex; align-items:center; justify-content:center; text-decoration:none}
+.row{padding:9px 0}
+.row .rx{font-size:13px}
+.sub{margin-top:18px}
+.prog{font-size:13px}
 .mins{display:inline-block; vertical-align:2px; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; font-family:var(--rounded); background:var(--fill); color:var(--ink)}
 .mins.short{background:var(--fill); color:var(--mute)}
 .mins.good{background:var(--soft); color:var(--accent)}
@@ -639,6 +688,23 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your private GitHub repo when connected (encrypted if you set a passphrase).</p>
   </div>
   <div class="modal" id="modal" hidden></div>
+  <div class="sheet" id="swapsheet" hidden>
+    <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="swaptitle">
+      <h2 id="swaptitle">Swap exercise</h2>
+      <p class="cap" id="swapsub"></p>
+      <div class="swaplist" id="swaplist"></div>
+      <button class="btn cancel" data-closesheet="swapsheet">Cancel</button>
+    </div>
+  </div>
+  <div class="sheet" id="demosheet" hidden>
+    <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="demotitle">
+      <h2 id="demotitle"></h2>
+      <div class="demofig" id="demofig"></div>
+      <ol class="democues" id="democues"></ol>
+      <a class="btn cancel videolink" id="demovideo" href="#" target="_blank" rel="noopener">▶︎ Watch a video</a>
+      <button class="btn" data-closesheet="demosheet">Done</button>
+    </div>
+  </div>
   <div class="sheet" id="minsheet" hidden>
     <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="minstitle">
       <h2 id="minstitle">How long was your cardio?</h2>
@@ -702,96 +768,203 @@ const MOBILITY = [
   ["Child's pose with side reach", '30 s per side, then 5 slow breaths']
 ];
 
+/* ---------- Exercise demos: hand-drawn SVG figures (faded = start, green = end) ---------- */
+const CORE_EASY = [['Pallof press', '2 × 10 per side'], ['Dead bug', '2 × 6 per side']];
+const segL = (a, b) => a && b ? `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>` : '';
+function figBody(P, cls){
+  const torso = P.m ? `<path d="M${P.s} Q${P.m} ${P.p}"/>` : segL(P.s, P.p);
+  return `<g class="${cls}"><g class="far">${segL(P.p,P.k2)}${segL(P.k2,P.f2)}${segL(P.s,P.e2)}${segL(P.e2,P.w2)}</g>`
+    + `${torso}${segL(P.p,P.k)}${segL(P.k,P.f)}${segL(P.s,P.e)}${segL(P.e,P.w)}${P.h ? `<circle cx="${P.h[0]}" cy="${P.h[1]}" r="9"/>` : ''}</g>`;
+}
+function demoSvg(d){
+  const inner = d.custom || `${d.ghost ? figBody(d.ghost, 'ghost') : ''}${figBody(d.pose, 'pose')}`;
+  return `<svg viewBox="0 0 240 150" class="fig" role="img" aria-label="${esc(d.alt || '')}">
+    <defs><marker id="ah" viewBox="0 0 8 8" refX="5" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ahead"/></marker></defs>
+    ${d.floor === false ? '' : '<line class="floor" x1="12" y1="140" x2="228" y2="140"/>'}
+    ${d.props || ''}${inner}${d.arrow ? `<path class="arrow" d="${d.arrow}" marker-end="url(#ah)"/>` : ''}
+    ${d.view ? `<text x="228" y="14" text-anchor="end" class="figlabel">${d.view}</text>` : ''}</svg>`;
+}
+const STACK = (x, y = 18) => `<rect class="propfill" x="${x}" y="${y}" width="14" height="${140 - y}" rx="3"/>`;
+const DEMOS = {
+  'Cat–cow': { view:'Side view', alt:'On hands and knees, rounding then arching the back',
+    ghost:{ h:[154,80], s:[140,92], m:[110,110], p:[80,92], e:[140,113], w:[140,135], k:[80,135], f:[48,136], e2:[136,113], w2:[136,135], k2:[84,135], f2:[52,136] },
+    pose: { h:[151,105], s:[140,92], m:[110,68], p:[80,92], e:[140,113], w:[140,135], k:[80,135], f:[48,136], e2:[136,113], w2:[136,135], k2:[84,135], f2:[52,136] },
+    cues:['Hands under shoulders, knees under hips.', 'Breathe in, let the belly drop and look up (cow, faded).', 'Breathe out, round your back toward the ceiling (cat, green).'] },
+  'Open book (side-lying T-spine rotation)': { view:'From above', floor:false, alt:'Lying on side, top arm opening across the body',
+    ghost:{ h:[48,84], s:[66,84], p:[128,84], k:[142,54], f:[174,60], e:[66,62], w:[70,40] },
+    pose: { h:[48,84], s:[66,84], p:[128,84], k:[142,54], f:[174,60], e:[66,106], w:[70,128], e2:[66,62], w2:[70,40] },
+    arrow:'M88,44 C122,62 122,106 90,124',
+    cues:['Lie on your side, knees bent to 90° and stacked.', 'Open the top arm across to the other side and follow it with your eyes.', 'Knees stay together; only the upper back rotates.'] },
+  '90/90 hip switches': { view:'From above', floor:false, alt:'Seated, both knees rotating from one side to the other',
+    ghost:{ h:[120,86], s:[120,92], p:[120,92], k:[96,116], f:[120,140], k2:[144,116], f2:[168,92], e:[106,74], w:[98,58], e2:[134,74], w2:[142,58] },
+    pose: { h:[120,86], s:[120,92], p:[120,92], k:[144,116], f:[120,140], k2:[96,116], f2:[72,92], e:[106,74], w:[98,58], e2:[134,74], w2:[142,58] },
+    arrow:'M92,132 Q120,148 150,132',
+    cues:['Sit tall, feet wide, hands behind you for support.', 'Let both knees drop to one side, then rotate them to the other.', 'Slow and controlled, pain-free range only.'] },
+  'Half-kneeling hip flexor stretch': { view:'Side view', alt:'Half kneeling, hips shifting forward',
+    props:'<rect class="propfill" x="92" y="131" width="26" height="8" rx="4"/>',
+    ghost:{ h:[115,45], s:[114,58], p:[114,98], k:[104,132], f:[72,136], k2:[148,99], f2:[156,136], e:[104,78], w:[112,94] },
+    pose: { h:[128,45], s:[126,58], p:[124,98], k:[104,132], f:[72,136], k2:[156,99], f2:[158,136], e:[114,78], w:[122,94], e2:[138,78], w2:[128,94] },
+    arrow:'M112,114 L142,114',
+    cues:['Back knee on a cushion, front foot flat.', 'Squeeze the back-side glute and shift the hips forward a little.', 'Feel it at the front of the back hip. Keep the ribs down.'] },
+  'Knee-to-wall ankle rocks': { view:'Side view', alt:'Half kneeling facing a wall, front knee moving toward the wall',
+    props:'<line class="prop" x1="198" y1="24" x2="198" y2="140"/>',
+    ghost:{ h:[141,45], s:[138,58], p:[136,98], k:[114,132], f:[84,136], k2:[164,100], f2:[168,136], e:[160,62], w:[192,64] },
+    pose: { h:[141,45], s:[138,58], p:[136,98], k:[114,132], f:[84,136], k2:[178,104], f2:[168,136], e:[160,62], w:[192,64], e2:[160,68], w2:[192,72] },
+    arrow:'M158,90 L184,94',
+    cues:['Front foot a few centimetres from the wall, heel down.', 'Drive the knee toward the wall over the middle toes.', 'Stop before any ankle pain. Heel stays on the floor.'] },
+  'Wall slides': { view:'Front view', alt:'Back to a wall, arms sliding from a W to a Y',
+    props:'<rect class="propsoft" x="70" y="10" width="100" height="130" rx="8"/>',
+    ghost:{ h:[120,47], s:[120,62], p:[120,104], k:[111,121], f:[108,137], k2:[129,121], f2:[132,137], e:[98,66], w:[96,42], e2:[142,66], w2:[144,42] },
+    pose: { h:[120,47], s:[120,62], p:[120,104], k:[111,121], f:[108,137], k2:[129,121], f2:[132,137], e:[104,42], w:[92,20], e2:[136,42], w2:[148,20] },
+    arrow:'M60,74 L62,34',
+    cues:['Back, head and forearms against the wall.', 'Slide the arms up from a W to a Y without arching the lower back.', 'Only go as high as you can keep contact, pain-free.'] },
+  'Doorway chest stretch': { view:'Side view', alt:'Forearm on a door frame, leaning through',
+    props:'<line class="prop" x1="106" y1="18" x2="106" y2="140"/>',
+    ghost:{ h:[134,49], s:[130,62], p:[126,104], k:[122,121], f:[116,137], k2:[146,120], f2:[154,137], e:[108,62], w:[108,38] },
+    pose: { h:[146,50], s:[139,63], p:[128,104], k:[122,121], f:[116,137], k2:[146,120], f2:[154,137], e:[108,62], w:[108,38], e2:[148,84], w2:[152,102] },
+    arrow:'M154,72 L172,78',
+    cues:['Forearm on the door frame, elbow at shoulder height.', 'Step through gently until you feel the chest stretch.', 'No pain at the front of the shoulder; ease off if there is.'] },
+  "Child's pose with side reach": { view:'Side view', alt:'Kneeling, sitting back, arms reaching forward',
+    pose:{ h:[156,126], s:[144,122], m:[112,94], p:[86,112], k:[120,134], f:[76,137], e:[170,128], w:[198,132], e2:[170,124], w2:[200,127] },
+    arrow:'M200,116 Q214,106 214,92',
+    cues:['Sit back toward your heels with arms reaching forward.', 'Walk both hands to one side to stretch the opposite lat.', 'Breathe slowly, then switch sides.'] },
+  'Cable crunch': { view:'Side view', alt:'Kneeling facing a cable stack, crunching down',
+    props: STACK(204) + '<line class="cable" x1="208" y1="24" x2="158" y2="100"/>',
+    ghost:{ h:[130,49], s:[126,62], p:[118,100], k:[118,134], f:[86,136], e:[142,58], w:[134,46] },
+    pose: { h:[160,106], s:[148,96], m:[142,72], p:[118,100], k:[118,134], f:[86,136], e:[164,90], w:[158,100] },
+    arrow:'M138,46 Q172,56 170,84',
+    cues:['Kneel facing the stack, rope beside your head.', 'Curl the ribs toward the hips; the hips stay still.', 'Pause at the bottom, return slowly.'] },
+  'Pallof press': { view:'From above', floor:false, alt:'Standing side-on to a cable, pressing the handle straight out',
+    custom:`<rect class="propfill" x="14" y="68" width="18" height="24" rx="3"/>
+      <line class="cable" x1="32" y1="80" x2="120" y2="124"/>
+      <g class="ghost"><line x1="104" y1="80" x2="120" y2="96"/><line x1="136" y1="80" x2="120" y2="96"/></g>
+      <g class="pose"><line x1="100" y1="80" x2="140" y2="80"/><line x1="104" y1="80" x2="117" y2="124"/><line x1="136" y1="80" x2="123" y2="124"/><circle cx="120" cy="80" r="11"/></g>`,
+    arrow:'M160,92 L160,124',
+    cues:['Stand side-on to the cable, handle at your chest.', "Press straight out and hold 1–2 s. Don't let the cable twist you.", 'Brace as if someone is about to poke your stomach.'] },
+  'Hanging/knee raises': { view:'Side view', floor:false, alt:'Hanging from a bar, knees lifting toward the chest',
+    props:'<line class="prop" x1="70" y1="16" x2="170" y2="16"/>',
+    ghost:{ h:[131,40], s:[120,46], p:[118,92], k:[118,120], f:[118,146], e:[120,32], w:[120,18] },
+    pose: { h:[131,40], s:[120,46], p:[118,92], k:[148,82], f:[148,112], e:[120,32], w:[120,18] },
+    arrow:'M132,130 Q158,122 160,98',
+    cues:['Hang with shoulders active, not shrugged up.', 'Bring the knees up by tilting the pelvis, not by swinging.', 'Lower with control.'] },
+  'Cable wood chop': { view:'Front view', alt:'Pulling a cable diagonally from high to low across the body',
+    props: STACK(210, 14) + '<line class="cable" x1="214" y1="20" x2="80" y2="104"/>',
+    ghost:{ h:[126,48], s:[122,62], p:[122,104], k:[104,121], f:[96,137], k2:[138,121], f2:[146,137], e:[146,48], w:[166,30], e2:[140,52], w2:[164,32] },
+    pose: { h:[118,48], s:[120,62], p:[122,104], k:[104,121], f:[96,137], k2:[138,121], f2:[146,137], e:[100,84], w:[80,104], e2:[108,88], w2:[82,106] },
+    arrow:'M172,40 Q140,60 96,92',
+    cues:['Feet wide, cable high to one side.', 'Pull diagonally across to the opposite hip, rotating through hips and torso.', 'Control the return, then switch sides.'] },
+  'Dead bug': { view:'Side view', alt:'Lying on the back, extending opposite arm and leg',
+    ghost:{ h:[52,122], s:[70,126], p:[124,128], k:[124,96], f:[154,96], e:[70,104], w:[72,84] },
+    pose: { h:[52,122], s:[70,126], p:[124,128], k:[154,120], f:[186,126], e:[48,114], w:[26,118], k2:[124,96], f2:[154,96], e2:[70,104], w2:[72,84] },
+    cues:['On your back, arms up, knees over hips.', 'Lower the opposite arm and leg while keeping the lower back flat.', 'Breathe out as you extend; switch sides.'] }
+};
+DEMOS["Captain's chair knee raise"] = DEMOS['Hanging/knee raises'];
+
+// Items: I(name, prescription, { alts, steps, collapse }). Alternatives keep the same sets × reps.
+const I = (n, rx, o = {}) => ({ n, rx, ...o });
+const W = (...steps) => I('Warm-up', '5–10 min: 5 min easy cardio, then the routine below', { steps, collapse: true });
+const CARDIO_ALTS = undefined;   // cardio stays "Cardio" so minutes logging works
+
 const PLAN = [
   { day:'Mon', title:'Chest + Triceps', load:'Hard / controlled', lift:true,
     note:"Fresh split start. Don't turn Day 1 into a max-out test.",
     items:[
-      ['Warm-up','5–7 min treadmill + shoulder mobility + progressive bench warm-up'],
-      ['Barbell bench press','4 × 5–8'],
-      ['Incline dumbbell press','3 × 8–10'],
-      ['Machine chest press','3 × 10–12'],
-      ['Cable fly','2–3 × 12–15'],
-      ['Cable triceps pushdown','3 × 10–12'],
-      ['Overhead cable extension','3 × 10–12'],
-      ['Single-arm pushdown (optional)','2 × 12–15'],
-      ['Cardio','15–20 min easy/moderate treadmill or elliptical']
+      W(['Easy treadmill or elliptical', '5 min'], ['Arm circles', '10 forward, 10 back'], ['Band pull-aparts', '2 × 15'],
+        ['Band or stick dislocates', '10 slow reps'], ['Scap push-ups (incline)', '10 reps'],
+        ['Bench ramp-up', 'bar × 10, 40% × 8, 60% × 5, 80% × 2']),
+      I('Barbell bench press','4 × 5–8', { alts:['Dumbbell bench press','Machine chest press','Smith machine bench press'] }),
+      I('Incline dumbbell press','3 × 8–10', { alts:['Incline machine press','Incline Smith press','Low-incline barbell press'] }),
+      I('Machine chest press','3 × 10–12', { alts:['Dumbbell flat press','Hammer Strength press','Weighted push-ups'] }),
+      I('Cable fly','2–3 × 12–15', { alts:['Pec deck','Dumbbell fly'] }),
+      I('Cable triceps pushdown','3 × 10–12', { alts:['Rope pushdown','Dip machine','Close-grip push-up'] }),
+      I('Overhead cable extension','3 × 10–12', { alts:['Overhead dumbbell extension','EZ-bar skull crusher'] }),
+      I('Single-arm pushdown (optional)','2 × 12–15', { alts:['Reverse-grip pushdown','Cable kickback'] }),
+      I('Cardio','15–20 min easy/moderate treadmill or elliptical')
     ]},
   { day:'Tue', title:'Back + Biceps', load:'Hard / controlled', lift:true,
-    note:'Controlled reps and clean range beat chasing stack numbers.',
+    note:'Deadlift first while you are fresh: crisp reps at 1–2 in reserve, keep the strength. Then controlled pulling.',
     items:[
-      ['Warm-up','5–7 min treadmill + upper-back/scapular prep'],
-      ['Lat pulldown','4 × 8–10'],
-      ['Chest-supported row','3 × 8–10'],
-      ['Seated cable row','3 × 10–12'],
-      ['Single-arm lat pulldown','2 × 10–12'],
-      ['Straight-arm pulldown','2 × 12–15'],
-      ['EZ-bar curl','3 × 8–10'],
-      ['Incline DB curl','3 × 10–12'],
-      ['Hammer curl','2 × 10–12'],
-      ['Cardio','15–20 min easy/moderate']
+      W(['Easy treadmill or bike', '5 min'], ['Cat–cow', '8 slow reps'], ['Hip hinge with a stick', '10 reps, stick on spine'],
+        ['Glute bridge', '12 reps'], ['Band pull-aparts', '2 × 15'],
+        ['Deadlift ramp-up', '40% × 5, 60% × 3, 75% × 2, 85% × 1']),
+      I('Deadlift (conventional)','3 × 3–5', { alts:['Trap-bar deadlift','Sumo deadlift','Rack pull (below knee)'] }),
+      I('Lat pulldown','4 × 8–10', { alts:['Assisted pull-up','Wide-grip pulldown','Machine pulldown'] }),
+      I('One-arm dumbbell row','3 × 8–10 per side', { alts:['Machine row','T-bar row','Single-arm cable row'] }),
+      I('Seated cable row','3 × 10–12', { alts:['Wide-grip cable row','Machine row'] }),
+      I('Straight-arm pulldown','2 × 12–15', { alts:['Dumbbell pullover','Machine pullover'] }),
+      I('EZ-bar curl','3 × 8–10', { alts:['Barbell curl','Cable curl','Dumbbell curl'] }),
+      I('Incline DB curl','3 × 10–12', { alts:['Preacher curl','Bayesian cable curl'] }),
+      I('Hammer curl','2 × 10–12', { alts:['Rope hammer curl','Cross-body hammer curl'] }),
+      I('Cardio','15–20 min easy/moderate')
     ]},
   { day:'Wed', title:'Legs', load:'Hard / controlled', lift:true,
-    note:"Knee sleeves are fine if they improve comfort. Don't push through pain. Shoulders get their work on Thursday.",
+    note:"Knee sleeves are fine if they improve comfort. Don't push through pain. Hip thrusts replace RDLs today because you deadlifted yesterday.",
     items:[
-      ['Warm-up','5–7 min treadmill/elliptical + hip/ankle mobility'],
-      ['Squat','4 × 5–8'],
-      ['Leg press','3 × 8–12'],
-      ['Romanian deadlift','3 × 8–10'],
-      ['Leg curl','3 × 10–12'],
-      ['Leg extension','2 × 12–15'],
-      ['Cardio','10–15 min easy']
+      W(['Easy elliptical or bike', '5 min (ankle-friendly)'], ['Leg swings', '10 front-back, 10 side-to-side each leg'],
+        ['Bodyweight box squat', '10 reps'], ['Glute bridge', '12 reps'], ['Knee-to-wall ankle rocks', '8 per side, pain-free'],
+        ['Squat ramp-up', 'bar × 10, 40% × 5, 60% × 3, 80% × 2']),
+      I('Squat','4 × 5–8', { alts:['Hack squat','Smith machine squat','Safety-bar squat'] }),
+      I('Leg press','3 × 8–12', { alts:['Hack squat','Pendulum squat','Belt squat'] }),
+      I('Hip thrust','3 × 8–12', { alts:['Barbell glute bridge','Glute drive machine','Cable pull-through'] }),
+      I('Leg curl','3 × 10–12', { alts:['Seated leg curl','Lying leg curl'] }),
+      I('Leg extension','2 × 12–15', { alts:['Single-leg extension','Reverse sled drag'] }),
+      I('Cardio','10–15 min easy')
     ]},
   { day:'Thu', title:'Chest + Shoulders + Triceps', load:'Moderate-hard', lift:true,
     note:'Second push stimulus, not a second max-strength day.',
     items:[
-      ['Warm-up','5–7 min treadmill/elliptical + shoulder prep'],
-      ['Incline machine press','3 × 8–10'],
-      ['Dumbbell flat press','3 × 8–12'],
-      ['Cable fly','3 × 12–15'],
-      ['Machine/DB shoulder press','3 × 8–10'],
-      ['Cable lateral raise','3 × 12–15'],
-      ['Rear-delt fly','2 × 15'],
-      ['Rope pushdown','3 × 10–12'],
-      ['Overhead extension','2 × 12–15'],
-      ['Cardio','15–20 min easy/moderate']
+      W(['Easy treadmill or elliptical', '5 min'], ['Arm circles', '10 forward, 10 back'], ['Band external rotations', '12 per side'],
+        ['Wall slides', '10 slow reps'], ['Band pull-aparts', '2 × 15'], ['Light press ramp-up', '2 easy sets of the first press']),
+      I('Incline machine press','3 × 8–10', { alts:['Incline dumbbell press','Incline Smith press'] }),
+      I('Dumbbell flat press','3 × 8–12', { alts:['Machine chest press','Barbell bench (moderate)'] }),
+      I('Cable fly','3 × 12–15', { alts:['Pec deck','Dumbbell fly'] }),
+      I('Machine/DB shoulder press','3 × 8–10', { alts:['Seated dumbbell press','Landmine press','Smith shoulder press'] }),
+      I('Cable lateral raise','3 × 12–15', { alts:['Dumbbell lateral raise','Machine lateral raise'] }),
+      I('Rear-delt fly','2 × 15', { alts:['Face pull','Reverse pec deck'] }),
+      I('Rope pushdown','3 × 10–12', { alts:['Bar pushdown','Dip machine'] }),
+      I('Overhead extension','2 × 12–15', { alts:['EZ-bar skull crusher','Cable overhead extension'] }),
+      I('Cardio','15–20 min easy/moderate')
     ]},
   { day:'Fri', title:'Lower + Core', load:'Moderate', lift:true,
-    note:'Lower-volume lower day. Remove anything that aggravates the foot/ankle.',
+    note:'Lower-volume lower day. Keep RDLs moderate, 3 days after deadlifts. Remove anything that aggravates the foot/ankle.',
     items:[
-      ['Warm-up','5–7 min treadmill/elliptical + lower-body mobility'],
-      ['Hack squat / controlled squat variation','3 × 8–10'],
-      ['Romanian deadlift','3 × 8–10'],
-      ['Supported split squat','2 × 8–10 per leg'],
-      ['Leg curl','3 × 10–12'],
-      ['Leg extension','2 × 12–15'],
-      ['Calf raise','3 × 12–15'],
-      ['Cable crunch','3 × 12–15'],
-      ['Pallof press','3 × 10–12 per side'],
-      ['Cardio','15–20 min easy']
+      W(['Easy treadmill or bike', '5 min'], ['Cat–cow', '8 slow reps'], ['Half-kneeling hip flexor stretch', '30 s per side'],
+        ['Leg swings', '10 each direction, each leg'], ['Glute bridge', '12 reps'], ['Dead bug', '6 per side']),
+      I('Hack squat / controlled squat variation','3 × 8–10', { alts:['Leg press','Smith machine squat','Goblet box squat'] }),
+      I('Romanian deadlift','3 × 8–10, moderate', { alts:['Dumbbell RDL','Cable pull-through','45° back extension'] }),
+      I('Single-leg leg press','2 × 10–12 per leg', { alts:['Goblet box squat','Step-up (low box)','Supported split squat'] }),
+      I('Leg curl','3 × 10–12', { alts:['Seated leg curl','Lying leg curl'] }),
+      I('Leg extension','2 × 12–15', { alts:['Single-leg extension','Reverse sled drag'] }),
+      I('Calf raise','3 × 12–15', { alts:['Seated calf raise','Leg-press calf raise'] }),
+      I('Cable crunch','3 × 12–15', { alts:['Machine crunch','Dead bug','Reverse crunch'] }),
+      I('Pallof press','3 × 10–12 per side', { alts:['Dead bug','Side plank (knees down)','Bird dog'] }),
+      I('Cardio','15–20 min easy')
     ]},
   { day:'Sat', title:'Functional + Conditioning', load:'Moderate', lift:true,
     note:'SkiErg is distance-based: 3 × 200 m at Level 10 with easy recovery between sets. Your first 200 m is the baseline. Box jumps stay out for now.',
     items:[
-      ['Warm-up','5–7 min treadmill/elliptical'],
-      ['Farmer walk','3–4 × 30–40 m'],
-      ['Kettlebell swing','3 × 12–15'],
-      ['Cable wood chop','3 × 10–12 per side'],
-      ['Medicine-ball slams','3 × 10–15'],
-      ['Battle ropes','4 × 20–30 sec'],
-      ['Torque SkiErg, Level 10','3 × 200 m'],
-      ['Cable crunch','3 × 12–15'],
-      ['Pallof press','3 × 10–12 per side'],
-      ['Hanging/knee raises','3 × 10–15'],
-      ['Cardio','15–20 min easy/moderate']
+      W(['Easy treadmill or elliptical', '5 min'], ['Arm circles + leg swings', '10 each'], ['Hip hinge with a stick', '10 reps'],
+        ['Glute bridge', '12 reps'], ['Light kettlebell deadlift', '10 reps'], ['Easy SkiErg', '1 min, building pace']),
+      I('Farmer walk','3–4 × 30–40 m', { alts:['Trap-bar carry','Suitcase carry (one hand)'] }),
+      I('Kettlebell swing','3 × 12–15', { alts:['Cable pull-through','Dumbbell RDL (fast up)'] }),
+      I('Cable wood chop','3 × 10–12 per side', { alts:['Landmine rotation','Half-kneeling cable lift'] }),
+      I('Medicine-ball slams','3 × 10–15', { alts:['Wall ball throws','Fast cable chop'] }),
+      I('Battle ropes','4 × 20–30 sec', { alts:['Rowing erg 30 s hard','Bike sprint 20 s'] }),
+      I('Torque SkiErg, Level 10','3 × 200 m', { alts:['Rowing erg 3 × 250 m','Assault bike 3 × 45 s'] }),
+      I('Cable crunch','3 × 12–15', { alts:['Machine crunch','Dead bug','Reverse crunch'] }),
+      I('Pallof press','3 × 10–12 per side', { alts:['Dead bug','Side plank (knees down)','Bird dog'] }),
+      I('Hanging/knee raises','3 × 10–15', { alts:["Captain's chair knee raise",'Reverse crunch','Dead bug'] }),
+      I('Cardio','15–20 min easy/moderate')
     ]},
   { day:'Sun', title:'Active Recovery + Mobility', load:'Easy', lift:false,
     note:'Still a gym day. Long easy treadmill: aim for 45 minutes (30 is solid). Finish feeling better than you started.',
     items:[
-      ['Cardio','45 min easy treadmill target · 30 is solid'],
-      ['Mobility','~12 min circuit, pain-free range only', MOBILITY],
-      ['Optional core','2–3 very easy sets']
+      I('Cardio','45 min easy treadmill target · 30 is solid'),
+      I('Mobility','~12 min circuit, pain-free range only', { steps: MOBILITY }),
+      I('Optional core','2–3 very easy sets', { steps: CORE_EASY })
     ]}
 ];
+
 
 const HABITS = [
   ['Weighed in','After bathroom, before food or drink'],
@@ -807,9 +980,9 @@ const MODES = {
   cardio: { label:'Cardio only', tag:'Cardio', title:'Cardio Only', load:'Easy / moderate',
     note:'Gym off or skipping weights today. Keep it conversational and pain-free. Any cardio counts.',
     items:[
-      ['Cardio','30–45 min easy/moderate: treadmill, elliptical, bike, or a brisk outdoor walk'],
-      ['Mobility','~12 min circuit, pain-free range only', MOBILITY],
-      ['Optional core','2–3 easy sets: dead bugs, planks, Pallof press']
+      I('Cardio','30–45 min easy/moderate: treadmill, elliptical, bike, or a brisk outdoor walk'),
+      I('Mobility','~12 min circuit, pain-free range only', { steps: MOBILITY }),
+      I('Optional core','2–3 easy sets', { steps: CORE_EASY })
     ]},
   rest:   { label:'Rest day', tag:'Rest', title:'Rest Day', load:'Off',
     note:'Full rest. Eat to plan, hit protein, sleep well. A light pain-free walk is fine.',
@@ -883,7 +1056,7 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
-  for (const k of ['closed','protein','checkins','ai','cardio']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['closed','protein','checkins','ai','cardio','swaps']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
   for (const k of ['close','week']) if (!s.ai[k] || typeof s.ai[k] !== 'object') s.ai[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
@@ -1156,7 +1329,7 @@ function aiContext(){
   return `PLAN
 - Cutting from ${START} kg to ${GOAL} kg (milestones ${MILESTONES.join(', ')}). Waist started at ${WAIST_START} in.
 - Nutrition: ~2,500 kcal/day, protein ${PROTEIN_MIN}-${PROTEIN_MAX} g, fat 70-80 g, carbs fill the rest. Indian diet with roti/rice, 3 meals, protein every meal, no cheat days.
-- Training: Mon Chest+Triceps, Tue Back+Biceps, Wed Legs, Thu Chest+Shoulders+Triceps, Fri Lower+Core, Sat Functional+Conditioning, Sun active recovery. Working sets at 1-3 reps in reserve. Deload every 6th week. Max ${MAX_REST} full rest days a week.
+- Training: Mon Chest+Triceps, Tue Deadlift (3x3-5, strongest lift) + Back + Biceps, Wed Legs (hip thrust instead of RDL), Thu Chest+Shoulders+Triceps, Fri Lower+Core, Sat Functional+Conditioning, Sun active recovery. Working sets at 1-3 reps in reserve. Deload every 6th week. Max ${MAX_REST} full rest days a week.
 - Pace rule: 7-day average loss under 0.3 kg/week for 2-3 weeks → cut 150-200 kcal; over 1 kg/week → add food back.
 - Pain rules: foot/ankle pain-free cardio only; knee sleeves OK but don't push through pain; shoulders controlled pressing, no forced ranges.
 NOW (today ${iso(today)})
@@ -1219,6 +1392,48 @@ function renderAiSettings(){
   document.getElementById('ai-on').hidden = !cfg.aiKey;
 }
 
+/* ---------- Exercise tools: demos, swaps, steps, rings ---------- */
+const ICON_IMG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M5 17l5-5 4 4 2-2 3 3"/></svg>';
+const ICON_SWAP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h13l-3.5-3.5M19 16H6l3.5 3.5"/></svg>';
+function stepsHtml(steps, collapse){
+  const list = `<ol class="steps">${steps.map(([n,d]) => `<li><b>${n}</b>${DEMOS[n] ? `<button class="tool sm" data-demo="${esc(n)}" aria-label="How to do ${esc(n)}">${ICON_IMG}</button>` : ''}<span>${d}</span></li>`).join('')}</ol>`;
+  return collapse ? `<details class="stepsbox"><summary>Show routine · ${steps.length} steps</summary>${list}</details>` : list;
+}
+function ringsHtml(date, p){
+  const g = state.protein[date] || 0, cm = state.cardio[date] || 0, ct = dow(fromIso(date)) === 6 ? 45 : 30;
+  const rings = [[36, '--ring1', p.done / p.total], [26, '--ring2', Math.min(1, g / PROTEIN_MIN)], [16, '--ring3', Math.min(1, cm / ct)]];
+  const svg = rings.map(([r, c, v], i) => { const C = 2 * Math.PI * r;
+    return `<circle cx="44" cy="44" r="${r}" class="rtrack" style="stroke:var(${c})"/><circle cx="44" cy="44" r="${r}" class="ring" data-r="ring${i}" style="stroke:var(${c}); stroke-dasharray:${C.toFixed(1)}; stroke-dashoffset:${(C * (1 - v)).toFixed(1)}"/>`; }).join('');
+  return `<div class="dayhead"><svg viewBox="0 0 88 88" class="rings" aria-hidden="true">${svg}</svg>
+    <div class="ringstats">
+      <div><i style="background:var(--ring1)"></i><b>${p.done}/${p.total}</b> done</div>
+      <div><i style="background:var(--ring2)"></i><b>${g}</b>/${PROTEIN_MIN} g protein</div>
+      <div><i style="background:var(--ring3)"></i><b>${cm}</b>/${ct} min cardio</div></div></div>`;
+}
+let swapFor = null;
+function openSwap(id){
+  const it = dayView(sel).items.find(x => x[0] === id); if (!it) return;
+  const meta = it[4]; swapFor = id;
+  document.getElementById('swapsub').textContent = `${meta.rx} · your pick is remembered for future weeks`;
+  document.getElementById('swaplist').innerHTML = [meta.n, ...meta.alts].map((n, i) =>
+    `<button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>✓</b>' : ''}</button>`).join('');
+  document.getElementById('swapsheet').hidden = false;
+}
+function pickSwap(name){
+  const it = dayView(sel).items.find(x => x[0] === swapFor); if (!it) return;
+  if (name === it[4].n) delete state.swaps[swapFor]; else state.swaps[swapFor] = name;
+  swapFor = null; fadeOut(document.getElementById('swapsheet')); save(); render();
+}
+function openDemo(name){
+  const d = DEMOS[name]; if (!d) return;
+  document.getElementById('demotitle').textContent = name;
+  document.getElementById('demofig').innerHTML = demoSvg(d);
+  document.getElementById('democues').innerHTML = d.cues.map(c => `<li>${c}</li>`).join('');
+  document.getElementById('demovideo').href = `https://www.youtube.com/results?search_query=${encodeURIComponent(name.replace(/\(.*?\)/g, '') + ' exercise how to')}`;
+  document.getElementById('demosheet').hidden = false;
+}
+const closeSheet = id => { const el = document.getElementById(id); if (!el.hidden) fadeOut(el); };
+
 /* ---------- Cardio minutes picker ---------- */
 // 20+ is good, 30 is solid, more than 30 is superb. Sunday is the long treadmill day: superb starts at 45.
 const cardioTiers = date => ({ good: 20, solid: 30, superb: dow(fromIso(date)) === 6 ? 45 : 31 });
@@ -1247,14 +1462,18 @@ const closeMins = () => { minsFor = null; fadeOut(document.getElementById('minsh
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function replay(el, cls){ if (!el || calm()) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 // Bars are re-created on every render; start each one at its old width so the change glides.
-const captureBars = () => new Map([...document.querySelectorAll('[data-k]')].map(el => [el.dataset.k, el.style.width]));
+const captureBars = () => new Map([...document.querySelectorAll('[data-k]')].map(el => [el.dataset.k, el.style.width])
+  .concat([...document.querySelectorAll('[data-r]')].map(el => ['r:' + el.dataset.r, el.style.strokeDashoffset])));
 function animateBars(prev){
   if (calm()) return;
   const els = [...document.querySelectorAll('[data-k]')].filter(el => prev.has(el.dataset.k) && prev.get(el.dataset.k) !== el.style.width);
-  if (!els.length) return;
+  const rings = [...document.querySelectorAll('[data-r]')].filter(el => prev.has('r:' + el.dataset.r) && prev.get('r:' + el.dataset.r) !== el.style.strokeDashoffset);
+  if (!els.length && !rings.length) return;
   els.forEach(el => { el.dataset.to = el.style.width; el.style.transition = 'none'; el.style.width = prev.get(el.dataset.k); });
+  rings.forEach(el => { el.dataset.to = el.style.strokeDashoffset; el.style.transition = 'none'; el.style.strokeDashoffset = prev.get('r:' + el.dataset.r); });
   void document.body.offsetWidth;
   els.forEach(el => { el.style.transition = ''; el.style.width = el.dataset.to; });
+  rings.forEach(el => { el.style.transition = ''; el.style.strokeDashoffset = el.dataset.to; });
 }
 let popRow = null, lastSel = null, lastWeek = null;
 function fadeOut(el, after){
@@ -1423,12 +1642,15 @@ function chartHtml(){
 /* ---------- Helpers ---------- */
 // What a date's session looks like after applying its mode. Item ids differ per mode
 // (`3-2` planned, `cardio-0`), so switching modes never mixes up ticked boxes.
+// A swap is remembered per plan slot and applies every week until you pick "Plan" again.
+const swapName = (id, it) => { const sw = state.swaps[id]; return sw && it.alts && it.alts.includes(sw) ? sw : it.n; };
 function dayView(date){
   const i = dow(fromIso(date)), mode = modeOf(date);
-  if (mode === 'plan') return { mode, ...PLAN[i], items: PLAN[i].items.map((it,k) => [`${i}-${k}`, ...it]) };
+  // Items become [id, name (after any swap), prescription, steps, meta].
+  if (mode === 'plan') return { mode, ...PLAN[i], items: PLAN[i].items.map((it,k) => { const id = `${i}-${k}`; return [id, swapName(id, it), it.rx, it.steps, it]; }) };
   const m = MODES[mode];
   return { mode, day: PLAN[i].day, title: m.title, load: m.load, note: m.note, lift: false,
-    planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, ...it]) };
+    planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, it.n, it.rx, it.steps, it]) };
 }
 function idsFor(date){
   return [...dayView(date).items.map(it => it[0]), ...HABITS.map((_,k)=>`h${k}`)];
@@ -1590,11 +1812,15 @@ function render(){
   const day = dayView(sel), p = progress(sel);
   const dl = wi.deload && day.lift;
   const locked = isClosed(sel), dis = locked ? 'disabled' : '';
-  const row = (id,name,rx,steps) => {
+  const row = (id,name,rx,steps,meta = {}) => {
     const mins = name === 'Cardio' && isDone(sel,id) ? state.cardio[sel] : null;
-    return `<label class="row${steps ? ' hassteps' : ''}" data-row="${id}"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
-      <div><span class="name">${name}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${rx}</span></div></label>
-      ${steps ? `<ol class="steps">${steps.map(([n,d]) => `<li><b>${n}</b><span>${d}</span></li>`).join('')}</ol>` : ''}`;
+    const swapped = meta.alts && name !== meta.n;
+    const tools = (DEMOS[name] ? `<button class="tool" data-demo="${esc(name)}" aria-label="How to do ${esc(name)}">${ICON_IMG}</button>` : '')
+      + (meta.alts && !locked ? `<button class="tool" data-swap="${id}" aria-label="Swap ${esc(name)}">${ICON_SWAP}</button>` : '');
+    return `<div class="item${tools ? ' hastools' : ''}">
+      <label class="row" data-row="${id}"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
+      <div><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${rx}</span></div></label>
+      ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse) : ''}</div>`;
   };
   const proteinRow = () => {
     const g = state.protein[sel], pa = proteinAvg(sel);
@@ -1626,10 +1852,11 @@ function render(){
     <h2 class="daytitle">${day.title}</h2>
     <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${day.planned ? ` · planned: ${day.planned}` : ''}</div>
     ${dl ? '<div class="banner"><b>Deload week</b>Sets are trimmed below. Keep your usual weights and stop 3–4 reps short of failure.</div>' : ''}
+    ${ringsHtml(sel, p)}
     <div class="note">${day.note}</div>
     ${day.mode === 'rest' && restCount(mon(fromIso(sel))) > MAX_REST ? `<div class="warn">⚠️ ${restCount(mon(fromIso(sel)))} full rest days this week. The plan allows ${MAX_REST}. Consider <b>Cardio only</b> instead: an easy walk still counts.</div>` : ''}
     ${day.items.length ? '<h3 class="sub">Session</h3>' : ''}
-    ${day.items.map(([id,name,rx,steps]) => row(id, name, dl ? deloadRx(rx) : rx, steps)).join('')}
+    ${day.items.map(([id,name,rx,steps,meta]) => row(id, name, dl ? deloadRx(rx) : rx, steps, meta)).join('')}
     ${day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : ''}
     <h3 class="sub">Daily</h3>
     ${HABITS.map((h,k)=> k === 0 ? weightRow() : k === 1 ? proteinRow() : row(`h${k}`, h[0], h[1])).join('')}
@@ -1835,6 +2062,10 @@ document.addEventListener('click', e => {
   }
   else if (t.hasAttribute('data-opencoach')) openCoach();
   else if (t.dataset.mins) logMins(t.dataset.mins);
+  else if (t.dataset.demo){ e.preventDefault(); openDemo(t.dataset.demo); }
+  else if (t.dataset.swap){ e.preventDefault(); openSwap(t.dataset.swap); }
+  else if (t.dataset.pick) pickSwap(t.dataset.pick);
+  else if (t.dataset.closesheet) closeSheet(t.dataset.closesheet);
   else if (t.hasAttribute('data-minsother')) logMins(document.getElementById('minsother').value);
   else if (t.hasAttribute('data-minscancel')) closeMins();
   else if (t.hasAttribute('data-closecoach')) closeCoach();
@@ -1940,7 +2171,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chatin'){ e.preventDefault(); sendChat(e.target.value); }
   if (e.key === 'Enter' && e.target.id === 'unlockpass') unlock();
   if (e.key === 'Enter' && e.target.id === 'minsother'){ e.preventDefault(); logMins(e.target.value); }
-  if (e.key === 'Escape'){ hideModal(); closeCoach(); if (!document.getElementById('minsheet').hidden) closeMins(); }
+  if (e.key === 'Escape'){ hideModal(); closeCoach(); if (!document.getElementById('minsheet').hidden) closeMins(); closeSheet('swapsheet'); closeSheet('demosheet'); }
   // Mac shortcuts: 1–4 tabs, ←/→ day, C coach (ignored while typing)
   if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const tabs = ['today','progress','goals','more'];
@@ -1958,6 +2189,7 @@ window.addEventListener('offline', renderSync);
 document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
 document.getElementById('coachsheet').addEventListener('click', e => { if (e.target.id === 'coachsheet') closeCoach(); });
 document.getElementById('minsheet').addEventListener('click', e => { if (e.target.id === 'minsheet') closeMins(); });
+['swapsheet','demosheet'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
 
 render();
 renderSync();
