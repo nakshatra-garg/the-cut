@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Cut: 127.4 to 105 kg</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1F7A5C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="The Cut">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F1F3F2; --card:#FFFFFF; --ink:#16201C; --mute:#5E6B66; --line:#D9DFDC;
+  --accent:#1F7A5C; --accent-ink:#FFFFFF; --soft:#E4EFEA;
+  --display:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
+  --body:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1513; --card:#18201D; --ink:#E8EEEB; --mute:#98A59F; --line:#2A3531;
+    --accent:#4CC59A; --accent-ink:#06150F; --soft:#1E2B26;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.45;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px));
+}
+main{max-width:560px; margin:0 auto}
+h1,h2{font-family:var(--display); margin:0; line-height:1.05; letter-spacing:.01em}
+button{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+
+.top{display:flex; justify-content:space-between; align-items:baseline; gap:12px}
+.top h1{font-size:30px; font-weight:700}
+.top .goal{color:var(--mute); font-size:14px}
+
+.weeknav{display:flex; align-items:center; justify-content:space-between; margin:14px 0 8px}
+.weeknav .label{font-weight:600}
+.iconbtn{background:var(--card); border:1px solid var(--line); border-radius:10px; min-width:44px; height:40px; cursor:pointer; padding:0 12px}
+.iconbtn.text{font-size:14px}
+
+.strip{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+.pill{
+  background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 0 7px;
+  display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer;
+}
+.pill .dn{font-size:12px; color:var(--mute)}
+.pill .dd{font-family:var(--display); font-weight:700; font-size:22px; line-height:1}
+.pill .bar{width:70%; height:4px; border-radius:2px; background:var(--line); overflow:hidden; margin-top:4px}
+.pill .bar i{display:block; height:100%; background:var(--accent); width:0}
+.pill.today .dd{color:var(--accent)}
+.pill.sel{background:var(--ink); border-color:var(--ink)}
+.pill.sel .dn,.pill.sel .dd{color:var(--bg)}
+.pill.sel .bar{background:rgba(128,128,128,.4)}
+
+.weekmeta{text-align:center; font-size:14px; color:var(--mute); margin:-2px 0 10px}
+.weekmeta.deload{color:var(--accent); font-weight:600}
+.banner{margin:14px 0 0; padding:10px 12px; border:2px solid var(--accent); border-radius:10px; font-size:15px}
+.banner b{font-family:var(--display); font-size:19px; font-weight:700; display:block}
+.setup input{height:42px; padding:0 10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit}
+.setup p{margin:4px 0 8px; color:var(--mute); font-size:14px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; margin-top:16px}
+.daytitle{font-size:38px; font-weight:700}
+.meta{color:var(--mute); font-size:14px; margin-top:4px}
+.note{margin:14px 0 4px; padding:10px 12px; background:var(--soft); border-left:4px solid var(--accent); border-radius:0 8px 8px 0; font-size:15px}
+
+.sub{font-family:var(--display); font-size:20px; font-weight:600; margin:20px 0 4px}
+.row{
+  display:grid; grid-template-columns:28px 1fr; gap:12px; align-items:start;
+  padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer;
+}
+.row:last-of-type{border-bottom:0}
+.row input{
+  appearance:none; -webkit-appearance:none; width:28px; height:28px; margin:0; border:2px solid var(--mute);
+  border-radius:8px; background:transparent; cursor:pointer; display:grid; place-items:center;
+}
+.row input:checked{background:var(--accent); border-color:var(--accent)}
+.row input:checked::after{
+  content:""; width:7px; height:14px; border:solid var(--accent-ink); border-width:0 3px 3px 0;
+  transform:translateY(-1px) rotate(45deg);
+}
+.row .name{font-weight:600; display:block}
+.row .rx{color:var(--mute); font-size:14px; display:block}
+.row input:checked ~ div .name{text-decoration:line-through; text-decoration-thickness:2px; color:var(--mute)}
+.prog{color:var(--mute); font-size:14px; margin-top:10px}
+.foot{display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:10px}
+.count{font-weight:600}
+.linkbtn{background:none; border:0; color:var(--mute); text-decoration:underline; cursor:pointer; padding:8px 0; font-size:14px}
+
+.wgrid{display:flex; gap:10px; align-items:flex-end; margin-top:10px}
+.wgrid label{display:block; font-size:14px; color:var(--mute); margin-bottom:4px}
+.wgrid input{
+  width:130px; height:46px; font-size:20px; font-family:var(--display); font-weight:600; padding:0 12px;
+  border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink);
+}
+.btn{height:46px; padding:0 18px; border-radius:10px; border:0; background:var(--accent); color:var(--accent-ink); font-weight:600; cursor:pointer}
+.avg{display:flex; gap:20px; margin-top:16px; flex-wrap:wrap}
+.avg .big{font-family:var(--display); font-size:34px; font-weight:700; line-height:1}
+.avg .cap{font-size:13px; color:var(--mute)}
+.track{height:10px; border-radius:5px; background:var(--line); margin-top:16px; overflow:hidden}
+.track i{display:block; height:100%; background:var(--accent); width:0}
+.chips{display:flex; gap:6px; margin-top:12px; flex-wrap:wrap}
+.chip{border:1px solid var(--line); border-radius:999px; padding:3px 12px; font-size:14px; color:var(--mute)}
+.chip.hit{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+
+details{margin-top:16px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:4px 18px}
+summary{cursor:pointer; padding:14px 0; font-family:var(--display); font-size:20px; font-weight:600}
+details ul{margin:0 0 14px; padding-left:20px}
+details li{margin:4px 0}
+details h3{font-size:15px; margin:14px 0 4px}
+.tag{margin-top:24px; text-align:center; color:var(--mute); font-size:13px}
+
+.top .goal{display:flex; flex-direction:column; align-items:flex-end; gap:2px}
+.syncdot{background:none; border:0; padding:2px 0; font-size:12px; color:var(--mute); cursor:pointer; display:flex; align-items:center; gap:5px}
+.syncdot::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--line)}
+.syncdot.ok::before{background:var(--accent)}
+.syncdot.busy::before{background:#C9A227}
+.syncdot.err::before{background:#C0473A}
+.syncdot.err{color:#C0473A}
+
+.chartwrap{margin-top:18px}
+.charthead{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.charthead h3{font-family:var(--display); font-size:20px; font-weight:600; margin:0}
+.seg{display:flex; border:1px solid var(--line); border-radius:999px; overflow:hidden}
+.seg button{background:none; border:0; padding:4px 11px; font-size:13px; color:var(--mute); cursor:pointer}
+.seg button.on{background:var(--ink); color:var(--bg)}
+.chart{display:block; width:100%; height:auto; margin-top:8px}
+.chart .g{stroke:var(--line); stroke-width:1}
+.chart .ms{stroke:var(--accent); stroke-width:1; stroke-dasharray:4 4; opacity:.7}
+.chart .raw{fill:var(--mute); opacity:.55}
+.chart .avgl{stroke:var(--accent); stroke-width:2.5; fill:none; stroke-linejoin:round; stroke-linecap:round}
+.chart text{fill:var(--mute); font-size:10px; font-family:var(--body)}
+.legend{display:flex; gap:14px; font-size:12px; color:var(--mute); margin-top:4px}
+.legend i{display:inline-block; vertical-align:middle; margin-right:5px}
+.legend .ld{width:7px; height:7px; border-radius:50%; background:var(--mute); opacity:.55}
+.legend .ll{width:16px; height:3px; border-radius:2px; background:var(--accent)}
+
+#syncbox p{margin:4px 0 10px; font-size:15px}
+#syncbox ol{margin:0 0 12px; padding-left:20px; font-size:15px}
+#syncbox a{color:var(--accent)}
+#syncbox .cap{font-size:13px; color:var(--mute)}
+.tokrow{display:flex; gap:8px}
+.tokrow input{flex:1; min-width:0; height:46px; padding:0 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit; font-size:16px}
+.btnrow{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px}
+label.iconbtn{display:inline-flex; align-items:center}
+.syncerr{color:#C0473A}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>The Cut</h1>
+    <div class="goal"><span>127.4 → 105 kg</span><button class="syncdot" id="syncdot" data-opensync></button></div>
+  </div>
+
+  <div class="weeknav">
+    <button class="iconbtn" data-nav="-1" aria-label="Previous week">‹</button>
+    <div class="label" id="weeklabel"></div>
+    <button class="iconbtn" data-nav="1" aria-label="Next week">›</button>
+  </div>
+  <div class="weekmeta" id="weekmeta"></div>
+  <div class="strip" id="strip"></div>
+
+  <section class="card" id="day"></section>
+  <section class="card" id="weight"></section>
+
+  <details>
+    <summary>Plan reference</summary>
+    <h3>Deload</h3>
+    <ul>
+      <li>Every 6th week: same weights, fewer sets (the app trims them), stop 3–4 reps short of failure</li>
+      <li>Cardio stays easy. Weigh-ins and food logging carry on as normal.</li>
+    </ul>
+    <div class="setup" id="setup"></div>
+    <h3>Nutrition</h3>
+    <ul>
+      <li>~2,500 kcal/day average, 3 meals</li>
+      <li>Protein 175–190 g, fat 70–80 g, carbs fill the rest</li>
+      <li>Keep roti/rice, control portions. Protein in every meal.</li>
+      <li>No cheat days. If dinner is rich, keep the rest of the day lean and log it honestly.</li>
+      <li>Adjust: 7-day average loss under ~0.3 kg/week for 2–3 weeks, cut ~150–200 kcal. Over ~1 kg/week, add food back.</li>
+      <li>Pace: 105 kg by April is a stretch. 110 kg is the realistic checkpoint.</li>
+    </ul>
+    <h3>Training rules</h3>
+    <ul>
+      <li>Most working sets: 1–3 reps in reserve</li>
+      <li>Preserve strength, don't chase PRs every week</li>
+      <li>Lift ~50–60 min. Cardio is support, not punishment.</li>
+      <li>Hit the top of the rep range with clean form, then add load modestly</li>
+    </ul>
+    <h3>Pain rules</h3>
+    <ul>
+      <li>Foot/ankle: pain-free cardio only. Persistent pain, limping, or pain in daily life means get it assessed.</li>
+      <li>Knee sleeves are fine for comfort, not for masking pain</li>
+      <li>Shoulders: controlled pressing, no forced ranges</li>
+    </ul>
+    <h3>Check-in every 2–4 weeks</h3>
+    <ul>
+      <li>Weight trend down, waist down (47 in at the start), strength mostly held, recovery manageable, no worsening pain</li>
+    </ul>
+  </details>
+
+  <details id="syncbox">
+    <summary>Sync &amp; backup</summary>
+    <div id="sync-off">
+      <p>Keep a copy of your entries in a private GitHub Gist, so they survive cleared browser data or a new phone.</p>
+      <ol>
+        <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=The%20Cut%20app" target="_blank" rel="noopener">Create a GitHub token</a> with only the <b>gist</b> scope. Pick a long expiration.</li>
+        <li>Paste it below. It is stored on this device only.</li>
+      </ol>
+      <div class="tokrow">
+        <input id="tokenin" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ghp_…" aria-label="GitHub token">
+        <button class="btn" data-connect>Connect</button>
+      </div>
+      <p class="syncerr" id="connecterr"></p>
+    </div>
+    <div id="sync-on" hidden>
+      <p id="syncstatus"></p>
+      <p class="cap">Data file: <a id="gistlink" href="#" target="_blank" rel="noopener">your private gist</a></p>
+      <div class="btnrow">
+        <button class="btn" data-syncnow>Sync now</button>
+        <button class="iconbtn text" data-disconnect>Disconnect this device</button>
+      </div>
+    </div>
+    <h3>Backup file</h3>
+    <div class="btnrow">
+      <button class="iconbtn text" data-export>Download backup</button>
+      <label class="iconbtn text">Restore backup<input type="file" id="importfile" accept="application/json,.json" hidden></label>
+    </div>
+  </details>
+
+  <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your private GitHub Gist when connected.</p>
+</main>
+
+<script>
+/* ---------- Plan data: edit here ---------- */
+const START = 127.4, GOAL = 105, MILESTONES = [120, 115, 110, 105];
+const KEY = 'cutplan-v1';
+
+const PLAN = [
+  { day:'Mon', title:'Chest + Triceps', load:'Hard / controlled', lift:true,
+    note:"Fresh split start. Don't turn Day 1 into a max-out test.",
+    items:[
+      ['Warm-up','5–7 min treadmill + shoulder mobility + progressive bench warm-up'],
+      ['Barbell bench press','4 × 5–8'],
+      ['Incline dumbbell press','3 × 8–10'],
+      ['Machine chest press','3 × 10–12'],
+      ['Cable fly','2–3 × 12–15'],
+      ['Cable triceps pushdown','3 × 10–12'],
+      ['Overhead cable extension','3 × 10–12'],
+      ['Single-arm pushdown (optional)','2 × 12–15'],
+      ['Cardio','15–20 min easy/moderate treadmill or elliptical']
+    ]},
+  { day:'Tue', title:'Back + Biceps', load:'Hard / controlled', lift:true,
+    note:'Controlled reps and clean range beat chasing stack numbers.',
+    items:[
+      ['Warm-up','5–7 min treadmill + upper-back/scapular prep'],
+      ['Lat pulldown','4 × 8–10'],
+      ['Chest-supported row','3 × 8–10'],
+      ['Seated cable row','3 × 10–12'],
+      ['Single-arm lat pulldown','2 × 10–12'],
+      ['Straight-arm pulldown','2 × 12–15'],
+      ['EZ-bar curl','3 × 8–10'],
+      ['Incline DB curl','3 × 10–12'],
+      ['Hammer curl','2 × 10–12'],
+      ['Cardio','15–20 min easy/moderate']
+    ]},
+  { day:'Wed', title:'Legs', load:'Hard / controlled', lift:true,
+    note:"Knee sleeves are fine if they improve comfort. Don't push through pain. Shoulders get their work on Thursday.",
+    items:[
+      ['Warm-up','5–7 min treadmill/elliptical + hip/ankle mobility'],
+      ['Squat','4 × 5–8'],
+      ['Leg press','3 × 8–12'],
+      ['Romanian deadlift','3 × 8–10'],
+      ['Leg curl','3 × 10–12'],
+      ['Leg extension','2 × 12–15'],
+      ['Cardio','10–15 min easy']
+    ]},
+  { day:'Thu', title:'Chest + Shoulders + Triceps', load:'Moderate-hard', lift:true,
+    note:'Second push stimulus, not a second max-strength day.',
+    items:[
+      ['Warm-up','5–7 min treadmill/elliptical + shoulder prep'],
+      ['Incline machine press','3 × 8–10'],
+      ['Dumbbell flat press','3 × 8–12'],
+      ['Cable fly','3 × 12–15'],
+      ['Machine/DB shoulder press','3 × 8–10'],
+      ['Cable lateral raise','3 × 12–15'],
+      ['Rear-delt fly','2 × 15'],
+      ['Rope pushdown','3 × 10–12'],
+      ['Overhead extension','2 × 12–15'],
+      ['Cardio','15–20 min easy/moderate']
+    ]},
+  { day:'Fri', title:'Lower + Core', load:'Moderate', lift:true,
+    note:'Lower-volume lower day. Remove anything that aggravates the foot/ankle.',
+    items:[
+      ['Warm-up','5–7 min treadmill/elliptical + lower-body mobility'],
+      ['Hack squat / controlled squat variation','3 × 8–10'],
+      ['Romanian deadlift','3 × 8–10'],
+      ['Supported split squat','2 × 8–10 per leg'],
+      ['Leg curl','3 × 10–12'],
+      ['Leg extension','2 × 12–15'],
+      ['Calf raise','3 × 12–15'],
+      ['Cable crunch','3 × 12–15'],
+      ['Pallof press','3 × 10–12 per side'],
+      ['Cardio','15–20 min easy']
+    ]},
+  { day:'Sat', title:'Functional + Conditioning', load:'Moderate', lift:true,
+    note:'SkiErg is distance-based: 3 × 200 m at Level 10 with easy recovery between sets. Your first 200 m is the baseline. Box jumps stay out for now.',
+    items:[
+      ['Warm-up','5–7 min treadmill/elliptical'],
+      ['Farmer walk','3–4 × 30–40 m'],
+      ['Kettlebell swing','3 × 12–15'],
+      ['Cable wood chop','3 × 10–12 per side'],
+      ['Medicine-ball slams','3 × 10–15'],
+      ['Battle ropes','4 × 20–30 sec'],
+      ['Torque SkiErg, Level 10','3 × 200 m'],
+      ['Cable crunch','3 × 12–15'],
+      ['Pallof press','3 × 10–12 per side'],
+      ['Hanging/knee raises','3 × 10–15'],
+      ['Cardio','15–20 min easy/moderate']
+    ]},
+  { day:'Sun', title:'Active Recovery + Mobility', load:'Easy', lift:false,
+    note:'Still a gym day. Conversational pace. Finish feeling better than you started.',
+    items:[
+      ['Cardio','25–40 min easy treadmill and/or elliptical'],
+      ['Mobility','10–15 min: hips, ankles, thoracic spine, shoulders'],
+      ['Optional core','2–3 very easy sets']
+    ]}
+];
+
+const HABITS = [
+  ['Weighed in','After bathroom, before food or drink'],
+  ['Protein target','175–190 g'],
+  ['Logged food honestly','Even the rich dinner'],
+  ['Moved outside the gym','Pain-free walk only, no forcing step targets'],
+  ['No worsening pain','Foot/ankle, knees, shoulders']
+];
+
+/* ---------- State ---------- */
+function normalize(s){
+  s = (s && typeof s === 'object') ? s : {};
+  if (!s.checks || typeof s.checks !== 'object') s.checks = {};
+  if (!s.weights || typeof s.weights !== 'object') s.weights = {};
+  if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
+  return s;
+}
+let state = { checks:{}, weights:{} };
+try { const s = localStorage.getItem(KEY); if (s) state = JSON.parse(s); } catch(e) {}
+state = normalize(state);
+function writeLocal(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+// Every user edit bumps updatedAt; sync uses it to decide which copy is newer.
+function save(){ state.updatedAt = Date.now(); writeLocal(); scheduleSync(); }
+
+/* ---------- GitHub Gist sync ---------- */
+const SYNC_KEY = 'cutplan-sync', GIST_FILE = 'cut-plan-data.json', GIST_DESC = 'The Cut: training log data';
+let cfg = {};
+try { cfg = JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch(e) {}
+function saveCfg(){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); } catch(e) {} }
+let sync = { status: cfg.token ? 'idle' : 'off', msg:'', last:null };
+let syncBusy = false, syncAgain = false, syncTimer = null;
+
+async function gh(path, opts = {}){
+  const headers = { Authorization:`Bearer ${cfg.token}`, Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  const r = await fetch('https://api.github.com' + path, { ...opts, headers, cache:'no-store' });
+  if (!r.ok){
+    const err = new Error(r.status === 401 ? 'GitHub rejected the token. Check it or create a new one.'
+      : r.status === 403 || r.status === 404 && !path.startsWith('/gists/') ? 'Token is missing the gist permission.'
+      : `GitHub error ${r.status}`);
+    err.status = r.status; throw err;
+  }
+  return r.json();
+}
+async function ensureGist(){
+  if (cfg.gistId) return;
+  // Reuse an existing data gist (e.g. on a new phone) before creating one.
+  for (let page = 1; page <= 10; page++){
+    const list = await gh(`/gists?per_page=100&page=${page}`);
+    const hit = list.find(g => g.files && g.files[GIST_FILE]);
+    if (hit){ cfg.gistId = hit.id; saveCfg(); return; }
+    if (list.length < 100) break;
+  }
+  const g = await gh('/gists', { method:'POST', body: JSON.stringify({
+    description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: JSON.stringify(state) } } }) });
+  cfg.gistId = g.id; saveCfg();
+}
+async function pullRemote(){
+  const g = await gh(`/gists/${cfg.gistId}`);
+  const f = g.files && g.files[GIST_FILE];
+  if (!f) return null;
+  const text = f.truncated ? await (await fetch(f.raw_url, { cache:'no-store' })).text() : f.content;
+  return normalize(JSON.parse(text));
+}
+async function pushRemote(){
+  await gh(`/gists/${cfg.gistId}`, { method:'PATCH', body: JSON.stringify({
+    files: { [GIST_FILE]: { content: JSON.stringify(state) } } }) });
+}
+function scheduleSync(){
+  if (!cfg.token) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, 1200);
+  setSync('busy');
+}
+async function syncNow(){
+  if (!cfg.token) return;
+  if (syncBusy){ syncAgain = true; return; }
+  syncBusy = true; setSync('busy');
+  try {
+    await ensureGist();
+    const remote = await pullRemote();
+    if (remote && remote.updatedAt > state.updatedAt){
+      state = remote; writeLocal(); render();
+    } else if (!remote || state.updatedAt > remote.updatedAt){
+      await pushRemote();
+    }
+    sync.last = new Date();
+    setSync('ok');
+  } catch(e){
+    if (e.status === 404 && cfg.gistId){ cfg.gistId = null; saveCfg(); syncAgain = true; }
+    setSync('err', navigator.onLine === false ? 'Offline. Will sync when you are back online.' : e.message);
+  } finally {
+    syncBusy = false;
+    if (syncAgain){ syncAgain = false; syncNow(); }
+  }
+}
+function setSync(status, msg = ''){ sync.status = status; sync.msg = msg; renderSync(); }
+function renderSync(){
+  const on = !!cfg.token;
+  const dot = document.getElementById('syncdot');
+  const label = { off:'Not synced', idle:'Sync on', busy:'Syncing…', ok:'Synced', err: navigator.onLine === false ? 'Offline' : 'Sync error' }[sync.status];
+  dot.textContent = label;
+  dot.className = 'syncdot ' + ({ ok:'ok', busy:'busy', err:'err' }[sync.status] || '');
+  document.getElementById('sync-off').hidden = on;
+  document.getElementById('sync-on').hidden = !on;
+  const st = document.getElementById('syncstatus');
+  st.className = sync.status === 'err' ? 'syncerr' : '';
+  st.textContent = sync.status === 'err' ? sync.msg
+    : sync.status === 'busy' ? 'Syncing…'
+    : sync.last ? `Synced at ${sync.last.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'})}.` : 'Connected.';
+  const link = document.getElementById('gistlink');
+  link.href = cfg.gistId ? `https://gist.github.com/${cfg.gistId}` : 'https://gist.github.com/';
+  if (!on) document.getElementById('connecterr').textContent = sync.status === 'err' ? sync.msg : '';
+}
+async function connect(){
+  const token = document.getElementById('tokenin').value.trim();
+  if (!token) return;
+  cfg = { token }; saveCfg();
+  await syncNow();
+  if (sync.status === 'err' && !cfg.gistId){
+    const msg = sync.msg; cfg = {}; saveCfg(); setSync('err', msg);  // bad token: stay disconnected, show why
+  } else document.getElementById('tokenin').value = '';
+}
+
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(state, null, 1)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `the-cut-backup-${iso(today)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function importBackup(file){
+  const r = new FileReader();
+  r.onload = () => {
+    let data;
+    try { data = normalize(JSON.parse(r.result)); } catch(e){ alert('That file is not a valid backup.'); return; }
+    if (!confirm('Replace all current entries with this backup?')) return;
+    state = data; if (!state.start) state.start = iso(mon(today));
+    save(); weekStart = mon(today); sel = iso(today); render();
+  };
+  r.readAsText(file);
+}
+
+/* ---------- Dates ---------- */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromIso = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const today = new Date(); today.setHours(0,0,0,0);
+const dow = d => (d.getDay()+6)%7; // Mon = 0
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const mon = d => addDays(d, -dow(d));
+const fmt = d => d.toLocaleDateString(undefined,{month:'short', day:'numeric'});
+
+// Default start date is not a user edit: don't bump updatedAt, or a fresh device would overwrite synced data.
+if (!state.start){ state.start = iso(mon(today)); writeLocal(); }
+function weekInfo(ws){
+  const n = Math.round((ws - fromIso(state.start)) / (7*864e5)) + 1;
+  return { n, deload: n >= 1 && n % 6 === 0 };
+}
+function deloadRx(rx){
+  const m = rx.match(/^(\d+)(?:–(\d+))? × (.+)$/);
+  if (!m) return rx;
+  const sets = Math.max(2, Math.ceil(Number(m[2] || m[1]) * 0.6));
+  return `${sets} × ${m[3]}`;
+}
+
+let weekStart = mon(today);
+let sel = iso(today);
+let range = 90; // chart window in days, 0 = all
+
+/* ---------- Trend chart ---------- */
+function chartHtml(){
+  const all = Object.keys(state.weights).filter(k => typeof state.weights[k] === 'number').sort();
+  const seg = [[30,'30d'],[90,'90d'],[0,'All']].map(([v,l]) =>
+    `<button class="${range===v?'on':''}" data-range="${v}" aria-pressed="${range===v}">${l}</button>`).join('');
+  const head = `<div class="charthead"><h3>Trend</h3><div class="seg">${seg}</div></div>`;
+  if (all.length < 2) return `<div class="chartwrap">${head}<div class="cap" style="margin-top:8px">Log two or more weigh-ins to see your trend.</div></div>`;
+
+  const cutoff = range ? iso(addDays(today, -range + 1)) : all[0];
+  const pts = all.filter(d => d >= cutoff).map(d => {
+    // 7-day trailing average uses all data, so the window edge isn't skewed
+    const lo = iso(addDays(fromIso(d), -6));
+    const win = all.filter(x => x >= lo && x <= d).map(x => state.weights[x]);
+    return { d, t: fromIso(d).getTime(), w: state.weights[d], a: win.reduce((s,x)=>s+x,0) / win.length };
+  });
+  if (pts.length < 2) return `<div class="chartwrap">${head}<div class="cap" style="margin-top:8px">Fewer than two weigh-ins in this range.</div></div>`;
+
+  const W = 340, H = 170, L = 34, R = 8, T = 8, B = 20;
+  const vals = pts.flatMap(p => [p.w, p.a]);
+  let lo = Math.floor(Math.min(...vals) - 0.5), hi = Math.ceil(Math.max(...vals) + 0.5);
+  const step = [0.5,1,2,5,10].find(s => (hi - lo) / s <= 4) || 10;
+  lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+  const t0 = pts[0].t, t1 = pts[pts.length-1].t;
+  const x = t => L + (W - L - R) * (t - t0) / (t1 - t0);
+  const y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+
+  let g = '';
+  for (let v = lo; v <= hi + 1e-9; v += step){
+    g += `<line class="g" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${+v.toFixed(1)}</text>`;
+  }
+  MILESTONES.filter(m => m > lo && m < hi).forEach(m => {
+    g += `<line class="ms" x1="${L}" x2="${W-R}" y1="${y(m)}" y2="${y(m)}"/><text x="${W-R}" y="${y(m)-4}" text-anchor="end">${m}</text>`;
+  });
+  const dots = pts.map(p => `<circle class="raw" cx="${x(p.t).toFixed(1)}" cy="${y(p.w).toFixed(1)}" r="2.6"/>`).join('');
+  const line = `<polyline class="avgl" points="${pts.map(p => `${x(p.t).toFixed(1)},${y(p.a).toFixed(1)}`).join(' ')}"/>`;
+  const xl = `<text x="${L}" y="${H-5}">${fmt(fromIso(pts[0].d))}</text><text x="${W-R}" y="${H-5}" text-anchor="end">${fmt(fromIso(pts[pts.length-1].d))}</text>`;
+  const first = pts[0].a, last = pts[pts.length-1].a;
+  const desc = `Weight trend from ${pts[0].d} to ${pts[pts.length-1].d}: 7-day average ${first.toFixed(1)} to ${last.toFixed(1)} kg`;
+  return `<div class="chartwrap">${head}
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${desc}">${g}${dots}${line}${xl}</svg>
+    <div class="legend"><span><i class="ld"></i>Daily</span><span><i class="ll"></i>7-day average</span></div></div>`;
+}
+
+/* ---------- Helpers ---------- */
+function idsFor(date){
+  const i = dow(fromIso(date));
+  return [...PLAN[i].items.map((_,k)=>`${i}-${k}`), ...HABITS.map((_,k)=>`h${k}`)];
+}
+function isDone(date,id){ return !!state.checks[`${date}|${id}`]; }
+function progress(date){
+  const ids = idsFor(date);
+  const done = ids.filter(id => isDone(date,id)).length;
+  return { done, total: ids.length };
+}
+function sevenDayAvg(){
+  const vals = [];
+  for (let k=0; k<7; k++){
+    const w = state.weights[iso(addDays(today,-k))];
+    if (typeof w === 'number') vals.push(w);
+  }
+  if (vals.length) return { avg: vals.reduce((a,b)=>a+b,0)/vals.length, n: vals.length };
+  const all = Object.keys(state.weights).sort();
+  if (all.length) return { avg: state.weights[all[all.length-1]], n: 0 };
+  return null;
+}
+
+/* ---------- Render ---------- */
+function render(){
+  // week header + strip
+  const wi = weekInfo(weekStart);
+  const wm = document.getElementById('weekmeta');
+  wm.className = 'weekmeta' + (wi.deload ? ' deload' : '');
+  if (wi.n < 1) wm.textContent = `Plan starts ${fmt(fromIso(state.start))}`;
+  else if (wi.deload) wm.textContent = `Week ${wi.n} · Deload week`;
+  else { const k = 6 - (wi.n % 6); wm.textContent = `Week ${wi.n} · ${k === 1 ? 'deload next week' : `deload in ${k} weeks`}`; }
+  document.getElementById('setup').innerHTML = `<h3>Plan start</h3><p>Week 1 begins on this Monday. Every 6th week is a deload.</p><input type="date" id="startdate" value="${state.start}">`;
+  document.getElementById('weeklabel').textContent = `${fmt(weekStart)} – ${fmt(addDays(weekStart,6))}`;
+  let strip = '';
+  for (let k=0; k<7; k++){
+    const d = addDays(weekStart,k), s = iso(d), p = progress(s);
+    const pct = Math.round(100*p.done/p.total);
+    strip += `<button class="pill ${s===sel?'sel':''} ${s===iso(today)?'today':''}" data-date="${s}" aria-label="${PLAN[k].day} ${fmt(d)}, ${pct}% done">
+      <span class="dn">${PLAN[k].day}</span><span class="dd">${d.getDate()}</span>
+      <span class="bar"><i style="width:${pct}%"></i></span></button>`;
+  }
+  document.getElementById('strip').innerHTML = strip;
+
+  // day card
+  const i = dow(fromIso(sel)), day = PLAN[i], p = progress(sel);
+  const dl = wi.deload && day.lift;
+  const row = (id,name,rx) => `<label class="row"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''}>
+      <div><span class="name">${name}</span><span class="rx">${rx}</span></div></label>`;
+  document.getElementById('day').innerHTML = `
+    <h2 class="daytitle">${day.title}</h2>
+    <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}</div>
+    ${dl ? '<div class="banner"><b>Deload week</b>Sets are trimmed below. Keep your usual weights and stop 3–4 reps short of failure.</div>' : ''}
+    <div class="note">${day.note}</div>
+    <h3 class="sub">Session</h3>
+    ${day.items.map((it,k)=>row(`${i}-${k}`, it[0], dl ? deloadRx(it[1]) : it[1])).join('')}
+    ${day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : ''}
+    <h3 class="sub">Daily</h3>
+    ${HABITS.map((h,k)=>row(`h${k}`, h[0], h[1])).join('')}
+    <div class="foot">
+      <span class="count">${p.done} of ${p.total} done</span>
+      <button class="linkbtn" data-clear>Clear this day</button>
+    </div>`;
+
+  // weight card
+  const cur = state.weights[sel];
+  const a = sevenDayAvg();
+  let avgHtml = '<div class="cap" style="margin-top:14px">Log a weigh-in to see your 7-day average.</div>';
+  let barPct = 0, chips = '';
+  if (a){
+    const lost = START - a.avg;
+    const togo = a.avg - GOAL;
+    barPct = Math.max(0, Math.min(100, 100*lost/(START-GOAL)));
+    avgHtml = `<div class="avg">
+      <div><div class="big">${a.avg.toFixed(1)}</div><div class="cap">${a.n ? `7-day avg (${a.n} entries)` : 'last weigh-in'}</div></div>
+      <div><div class="big">${lost>=0?'−':'+'}${Math.abs(lost).toFixed(1)}</div><div class="cap">kg from start</div></div>
+      <div><div class="big">${Math.max(0,togo).toFixed(1)}</div><div class="cap">kg to ${GOAL}</div></div></div>`;
+    chips = MILESTONES.map(m => `<span class="chip ${a.avg<=m?'hit':''}">${m}</span>`).join('');
+  } else {
+    chips = MILESTONES.map(m => `<span class="chip">${m}</span>`).join('');
+  }
+  document.getElementById('weight').innerHTML = `
+    <h2 style="font-size:26px">Weigh-in</h2>
+    <div class="wgrid">
+      <div><label for="wt">${fromIso(sel).toLocaleDateString(undefined,{month:'short', day:'numeric'})} (kg)</label>
+        <input id="wt" type="number" inputmode="decimal" step="0.1" min="40" max="300" value="${typeof cur==='number'?cur:''}" placeholder="0.0"></div>
+      <button class="btn" data-saveweight>Save</button>
+    </div>
+    ${avgHtml}
+    <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(barPct)}"><i style="width:${barPct}%"></i></div>
+    <div class="chips">${chips}</div>
+    ${chartHtml()}`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.range !== undefined){ range = Number(t.dataset.range); render(); }
+  else if (t.hasAttribute('data-connect')) connect();
+  else if (t.hasAttribute('data-syncnow')) syncNow();
+  else if (t.hasAttribute('data-disconnect')){
+    if (confirm('Disconnect sync on this device? Your entries stay here and in your gist.')){ cfg = {}; saveCfg(); setSync('off'); }
+  }
+  else if (t.hasAttribute('data-export')) exportBackup();
+  else if (t.hasAttribute('data-opensync')){
+    const box = document.getElementById('syncbox'); box.open = true; box.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  else if (t.dataset.date){ sel = t.dataset.date; render(); }
+  else if (t.dataset.nav){
+    const n = Number(t.dataset.nav), k = dow(fromIso(sel));
+    weekStart = addDays(weekStart, 7*n);
+    sel = iso(addDays(weekStart,k));
+    render();
+  }
+  else if (t.hasAttribute('data-clear')){
+    idsFor(sel).forEach(id => delete state.checks[`${sel}|${id}`]);
+    save(); render();
+  }
+  else if (t.hasAttribute('data-saveweight')){
+    const v = parseFloat(document.getElementById('wt').value);
+    if (isNaN(v)) delete state.weights[sel]; else state.weights[sel] = Math.round(v*10)/10;
+    save(); render();
+  }
+});
+document.addEventListener('change', e => {
+  const c = e.target;
+  if (c.id === 'importfile'){ if (c.files[0]) importBackup(c.files[0]); c.value = ''; return; }
+  if (c.id === 'startdate'){
+    if (c.value){ state.start = iso(mon(fromIso(c.value))); save(); weekStart = mon(today); sel = iso(today); render(); }
+    return;
+  }
+  if (!c.dataset || !c.dataset.id) return;
+  const k = `${sel}|${c.dataset.id}`;
+  if (c.checked) state.checks[k] = true; else delete state.checks[k];
+  save(); render();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'wt') document.querySelector('[data-saveweight]').click();
+  if (e.key === 'Enter' && e.target.id === 'tokenin') connect();
+});
+// Pull fresh data whenever the app comes back to the foreground or the connection returns.
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
+window.addEventListener('online', syncNow);
+window.addEventListener('offline', renderSync);
+
+render();
+renderSync();
+syncNow();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
