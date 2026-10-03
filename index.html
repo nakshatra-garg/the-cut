@@ -324,6 +324,30 @@ label.iconbtn{display:inline-flex; align-items:center}
 @keyframes flash{0%{background:var(--soft)} 100%{background:transparent}}
 @keyframes bump{0%{transform:translateY(0)} 40%{transform:translateY(-3px) scale(1.08)} 100%{transform:none}}
 @keyframes blink{0%,80%,100%{opacity:.25; transform:translateY(0)} 40%{opacity:.9; transform:translateY(-3px)}}
+.row.hassteps{border-bottom:0; padding-bottom:4px}
+.steps{margin:0 0 4px; padding:0 0 10px 36px; border-bottom:.5px solid var(--line); list-style:none; counter-reset:st}
+.steps li{counter-increment:st; display:grid; grid-template-columns:22px 1fr; column-gap:6px; padding:5px 0; font-size:15px}
+.steps li::before{content:counter(st); grid-row:span 2; width:20px; height:20px; border-radius:50%; background:var(--fill); color:var(--mute); font-size:12px; font-weight:600; display:grid; place-items:center; font-family:var(--rounded)}
+.steps li b{font-weight:500}
+.steps li span{grid-column:2; font-size:13px; color:var(--mute)}
+.mins{display:inline-block; vertical-align:2px; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; font-family:var(--rounded); background:var(--fill); color:var(--ink)}
+.mins.short{background:var(--fill); color:var(--mute)}
+.mins.good{background:var(--soft); color:var(--accent)}
+.mins.solid{background:var(--soft); color:var(--accent); box-shadow:inset 0 0 0 1.5px var(--accent)}
+.mins.superb{background:var(--accent); color:var(--accent-ink)}
+#minsub{display:flex; flex-wrap:wrap; gap:6px; margin:0}
+#minsub .mins{margin:0}
+.actionsheet{height:auto; gap:12px}
+.actionsheet h2{font-size:22px; font-weight:700}
+.minsgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+.minsgrid button{height:52px; border:0; border-radius:12px; background:var(--fill); font-family:var(--rounded); font-size:20px; font-weight:600; cursor:pointer; color:var(--ink); transition:transform .12s}
+.minsgrid button:active{transform:scale(.95)}
+.minsgrid .t-short{color:var(--mute)}
+.minsgrid .t-good{background:var(--soft); color:var(--accent)}
+.minsgrid .t-solid{background:var(--soft); color:var(--accent); box-shadow:inset 0 0 0 2px var(--accent)}
+.minsgrid .t-superb{background:var(--accent); color:var(--accent-ink)}
+#minsother{font-family:var(--rounded); font-size:18px}
+.btn.cancel{background:var(--fill); color:var(--accent); width:100%}
 .confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:30}
 
 /* ================= Apple (iOS / macOS) look ================= */
@@ -615,6 +639,18 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your private GitHub repo when connected (encrypted if you set a passphrase).</p>
   </div>
   <div class="modal" id="modal" hidden></div>
+  <div class="sheet" id="minsheet" hidden>
+    <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="minstitle">
+      <h2 id="minstitle">How long was your cardio?</h2>
+      <p class="cap" id="minsub"></p>
+      <div class="minsgrid" id="minsgrid"></div>
+      <div class="tokrow">
+        <input id="minsother" type="number" inputmode="numeric" min="1" max="300" placeholder="Other" aria-label="Other minutes">
+        <button class="btn" data-minsother>Log</button>
+      </div>
+      <button class="btn cancel" data-minscancel>Cancel</button>
+    </div>
+  </div>
 
 
 
@@ -653,6 +689,18 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
 /* ---------- Plan data: edit here ---------- */
 const START = 127.4, GOAL = 105, MILESTONES = [120, 115, 110, 105];
 const KEY = 'cutplan-v1';
+
+// Sunday mobility circuit (~12 min). Pain-free range only; skip anything that pinches.
+const MOBILITY = [
+  ['Cat–cow', '8 slow reps'],
+  ['Open book (side-lying T-spine rotation)', '6 per side'],
+  ['90/90 hip switches', '6 per side, hands behind for support'],
+  ['Half-kneeling hip flexor stretch', '40 s per side, cushion under the knee'],
+  ['Knee-to-wall ankle rocks', '10 per side, pain-free range only'],
+  ['Wall slides', '10 slow reps, no forced range'],
+  ['Doorway chest stretch', '30 s per side'],
+  ["Child's pose with side reach", '30 s per side, then 5 slow breaths']
+];
 
 const PLAN = [
   { day:'Mon', title:'Chest + Triceps', load:'Hard / controlled', lift:true,
@@ -737,10 +785,10 @@ const PLAN = [
       ['Cardio','15–20 min easy/moderate']
     ]},
   { day:'Sun', title:'Active Recovery + Mobility', load:'Easy', lift:false,
-    note:'Still a gym day. Conversational pace. Finish feeling better than you started.',
+    note:'Still a gym day. Long easy treadmill: aim for 45 minutes (30 is solid). Finish feeling better than you started.',
     items:[
-      ['Cardio','25–40 min easy treadmill and/or elliptical'],
-      ['Mobility','10–15 min: hips, ankles, thoracic spine, shoulders'],
+      ['Cardio','45 min easy treadmill target · 30 is solid'],
+      ['Mobility','~12 min circuit, pain-free range only', MOBILITY],
       ['Optional core','2–3 very easy sets']
     ]}
 ];
@@ -760,7 +808,7 @@ const MODES = {
     note:'Gym off or skipping weights today. Keep it conversational and pain-free. Any cardio counts.',
     items:[
       ['Cardio','30–45 min easy/moderate: treadmill, elliptical, bike, or a brisk outdoor walk'],
-      ['Mobility','10 min: hips, ankles, thoracic spine, shoulders'],
+      ['Mobility','~12 min circuit, pain-free range only', MOBILITY],
       ['Optional core','2–3 easy sets: dead bugs, planks, Pallof press']
     ]},
   rest:   { label:'Rest day', tag:'Rest', title:'Rest Day', load:'Off',
@@ -835,7 +883,7 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
-  for (const k of ['closed','protein','checkins','ai']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['closed','protein','checkins','ai','cardio']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
   for (const k of ['close','week']) if (!s.ai[k] || typeof s.ai[k] !== 'object') s.ai[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
@@ -1103,7 +1151,7 @@ function aiContext(){
   const ciDates = Object.keys(state.checkins).sort(), ci = ciDates.length ? state.checkins[ciDates[ciDates.length-1]] : null;
   const days = [...Array(7)].map((_,k) => iso(addDays(today, k - 6))).map(d => {
     const v = dayView(d);
-    return `${d} ${PLAN[dow(fromIso(d))].day}: ${v.title}, ${pctOf(d)}% done${isClosed(d) ? ' (closed)' : ''}, protein ${state.protein[d] ?? '?'} g, weight ${state.weights[d] ?? '?'} kg`;
+    return `${d} ${PLAN[dow(fromIso(d))].day}: ${v.title}, ${pctOf(d)}% done${isClosed(d) ? ' (closed)' : ''}, protein ${state.protein[d] ?? '?'} g, cardio ${state.cardio[d] ?? '?'} min, weight ${state.weights[d] ?? '?'} kg`;
   });
   return `PLAN
 - Cutting from ${START} kg to ${GOAL} kg (milestones ${MILESTONES.join(', ')}). Waist started at ${WAIST_START} in.
@@ -1127,7 +1175,7 @@ async function coachNote(date){
 }
 async function weekInsights(ws){
   const r = weekReview(ws);
-  const text = await ai([{ role:'user', content: `${aiContext()}\n\nWEEK REVIEW ${iso(ws)}: weight change ${r.loss == null ? 'unknown' : (-r.loss).toFixed(2) + ' kg'}, avg protein ${r.prot == null ? 'unknown' : Math.round(r.prot) + ' g'}, good days ${r.good}/7, workouts ${r.lifts}, cardio-only ${r.cardio}, rest ${r.rest}. Rule-based tips already shown: ${r.tips.join(' ')}\n\nGive 2-3 specific suggestions for next week as bullet points, each under 25 words. Don't repeat the rule-based tips.` }], 500);
+  const text = await ai([{ role:'user', content: `${aiContext()}\n\nWEEK REVIEW ${iso(ws)}: weight change ${r.loss == null ? 'unknown' : (-r.loss).toFixed(2) + ' kg'}, avg protein ${r.prot == null ? 'unknown' : Math.round(r.prot) + ' g'}, good days ${r.good}/7, workouts ${r.lifts}, cardio ${r.cardioMin} min total, cardio-only ${r.cardio}, rest ${r.rest}. Rule-based tips already shown: ${r.tips.join(' ')}\n\nGive 2-3 specific suggestions for next week as bullet points, each under 25 words. Don't repeat the rule-based tips.` }], 500);
   state.ai.week[iso(ws)] = text; save();
   return text;
 }
@@ -1170,6 +1218,30 @@ function renderAiSettings(){
   document.getElementById('ai-off').hidden = !!cfg.aiKey;
   document.getElementById('ai-on').hidden = !cfg.aiKey;
 }
+
+/* ---------- Cardio minutes picker ---------- */
+// 20+ is good, 30 is solid, more than 30 is superb. Sunday is the long treadmill day: superb starts at 45.
+const cardioTiers = date => ({ good: 20, solid: 30, superb: dow(fromIso(date)) === 6 ? 45 : 31 });
+const TIER_LABEL = { short:'Short', good:'Good', solid:'Solid', superb:'Superb' };
+function minsTier(mins, date = sel){ const t = cardioTiers(date); return mins >= t.superb ? 'superb' : mins >= t.solid ? 'solid' : mins >= t.good ? 'good' : 'short'; }
+let minsFor = null;
+function openMins(id){
+  const t = cardioTiers(sel);
+  minsFor = id;
+  const opts = [10,15,20,25,30,35,40,45,50,60,75,90];
+  document.getElementById('minsub').innerHTML = `<span class="mins good">20+ good</span><span class="mins solid">${t.superb > 31 ? `30–${t.superb - 1}` : '30'} solid</span><span class="mins superb">${t.superb > 31 ? `${t.superb}+` : 'over 30'} superb ✦</span>`;
+  document.getElementById('minsgrid').innerHTML = opts.map(m =>
+    `<button class="t-${minsTier(m)}" data-mins="${m}">${m}</button>`).join('');
+  document.getElementById('minsother').value = '';
+  document.getElementById('minsheet').hidden = false;
+}
+function logMins(m){
+  m = Math.round(Number(m));
+  if (!minsFor || !(m > 0 && m <= 300)) return;
+  state.checks[`${sel}|${minsFor}`] = true; state.cardio[sel] = m; popRow = minsFor;
+  minsFor = null; fadeOut(document.getElementById('minsheet')); save(); render();
+}
+const closeMins = () => { minsFor = null; fadeOut(document.getElementById('minsheet')); };
 
 /* ---------- Motion (all of it is skipped when the phone asks for reduced motion) ---------- */
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1456,6 +1528,7 @@ function weekReview(ws){
   const w0 = wk(ws), w1 = wk(addDays(ws,-7)), w2 = wk(addDays(ws,-14));
   const loss = w0 != null && w1 != null ? w1 - w0 : null, prevLoss = w1 != null && w2 != null ? w2 - w1 : null;
   const prot = mean(days.map(d => state.protein[d]).filter(v => typeof v === 'number'));
+  const cardioMin = days.reduce((a,d) => a + (state.cardio[d] || 0), 0);
   const lifts = days.filter(d => { const v = dayView(d); if (!v.lift) return false;
     const done = v.items.filter(it => isDone(d, it[0])).length; return done / v.items.length >= 0.8; }).length;
   const tips = [];
@@ -1466,7 +1539,7 @@ function weekReview(ws){
   else tips.push('On pace (0.3–1 kg/week). Change nothing.');
   if (prot != null && prot < PROTEIN_MIN) tips.push(`Protein averaged ${Math.round(prot)} g. Add a protein source to one meal.`);
   if (restCount(ws) > MAX_REST) tips.push(`${restCount(ws)} full rest days. Swap one for cardio only next week.`);
-  return { ws, w0, loss, prot, lifts, good: days.filter(isGood).length, closed: days.filter(isClosed).length,
+  return { ws, w0, loss, prot, lifts, cardioMin, good: days.filter(isGood).length, closed: days.filter(isClosed).length,
     rest: restCount(ws), cardio: days.filter(d => modeOf(d) === 'cardio').length, tips,
     empty: !days.some(d => isClosed(d) || typeof state.weights[d] === 'number' || typeof state.protein[d] === 'number') };
 }
@@ -1517,8 +1590,12 @@ function render(){
   const day = dayView(sel), p = progress(sel);
   const dl = wi.deload && day.lift;
   const locked = isClosed(sel), dis = locked ? 'disabled' : '';
-  const row = (id,name,rx) => `<label class="row" data-row="${id}"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
-      <div><span class="name">${name}</span><span class="rx">${rx}</span></div></label>`;
+  const row = (id,name,rx,steps) => {
+    const mins = name === 'Cardio' && isDone(sel,id) ? state.cardio[sel] : null;
+    return `<label class="row${steps ? ' hassteps' : ''}" data-row="${id}"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
+      <div><span class="name">${name}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${rx}</span></div></label>
+      ${steps ? `<ol class="steps">${steps.map(([n,d]) => `<li><b>${n}</b><span>${d}</span></li>`).join('')}</ol>` : ''}`;
+  };
   const proteinRow = () => {
     const g = state.protein[sel], pa = proteinAvg(sel);
     return `<div class="row prow" data-row="h1"><span class="pmark ${isDone(sel,'h1')?'on':''}" aria-hidden="true"></span>
@@ -1552,7 +1629,7 @@ function render(){
     <div class="note">${day.note}</div>
     ${day.mode === 'rest' && restCount(mon(fromIso(sel))) > MAX_REST ? `<div class="warn">⚠️ ${restCount(mon(fromIso(sel)))} full rest days this week. The plan allows ${MAX_REST}. Consider <b>Cardio only</b> instead: an easy walk still counts.</div>` : ''}
     ${day.items.length ? '<h3 class="sub">Session</h3>' : ''}
-    ${day.items.map(([id,name,rx]) => row(id, name, dl ? deloadRx(rx) : rx)).join('')}
+    ${day.items.map(([id,name,rx,steps]) => row(id, name, dl ? deloadRx(rx) : rx, steps)).join('')}
     ${day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : ''}
     <h3 class="sub">Daily</h3>
     ${HABITS.map((h,k)=> k === 0 ? weightRow() : k === 1 ? proteinRow() : row(`h${k}`, h[0], h[1])).join('')}
@@ -1628,7 +1705,7 @@ function renderReview(){
       ${stat(r.prot == null ? '—' : Math.round(r.prot) + ' g', 'avg protein')}
       ${stat(`${r.good}/7`, 'good days')}
     </div>
-    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardio} cardio-only · ${r.rest} rest · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
+    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardioMin} cardio min · ${r.cardio} cardio-only · ${r.rest} rest · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
     <ul class="tips">${r.tips.map(t => `<li>${t}</li>`).join('')}</ul>
     ${state.ai.week[iso(r.ws)] ? `<div class="aibox"><b>✨ Coach insights</b><div>${md(state.ai.week[iso(r.ws)])}</div><button class="linkbtn" data-aiweek>Refresh</button></div>`
       : cfg.aiKey ? '<button class="iconbtn text" data-aiweek style="margin-top:12px">✨ Get AI insights</button>' : ''}
@@ -1757,6 +1834,9 @@ document.addEventListener('click', e => {
     showTab('more'); const box = document.getElementById('syncbox'); box.open = true; box.scrollIntoView({ block:'start' });
   }
   else if (t.hasAttribute('data-opencoach')) openCoach();
+  else if (t.dataset.mins) logMins(t.dataset.mins);
+  else if (t.hasAttribute('data-minsother')) logMins(document.getElementById('minsother').value);
+  else if (t.hasAttribute('data-minscancel')) closeMins();
   else if (t.hasAttribute('data-closecoach')) closeCoach();
   else if (t.dataset.mode){
     if (t.dataset.mode === 'rest' && modeOf(sel) !== 'rest' && restCount(mon(fromIso(sel))) >= MAX_REST
@@ -1844,6 +1924,11 @@ document.addEventListener('change', e => {
   }
   if (!c.dataset || !c.dataset.id || isClosed(sel)) return;
   const k = `${sel}|${c.dataset.id}`;
+  const item = dayView(sel).items.find(x => x[0] === c.dataset.id);
+  if (item && item[1] === 'Cardio'){
+    if (c.checked){ c.checked = false; openMins(c.dataset.id); return; }   // ask for minutes first
+    delete state.cardio[sel];
+  }
   if (c.checked) popRow = c.dataset.id;
   if (c.checked) state.checks[k] = true; else delete state.checks[k];
   save(); render();
@@ -1854,7 +1939,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.target.id === 'protein' || e.target.id === 'wt0')) e.target.blur();
   if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chatin'){ e.preventDefault(); sendChat(e.target.value); }
   if (e.key === 'Enter' && e.target.id === 'unlockpass') unlock();
-  if (e.key === 'Escape'){ hideModal(); closeCoach(); }
+  if (e.key === 'Enter' && e.target.id === 'minsother'){ e.preventDefault(); logMins(e.target.value); }
+  if (e.key === 'Escape'){ hideModal(); closeCoach(); if (!document.getElementById('minsheet').hidden) closeMins(); }
   // Mac shortcuts: 1–4 tabs, ←/→ day, C coach (ignored while typing)
   if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const tabs = ['today','progress','goals','more'];
@@ -1871,6 +1957,7 @@ window.addEventListener('online', syncNow);
 window.addEventListener('offline', renderSync);
 document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
 document.getElementById('coachsheet').addEventListener('click', e => { if (e.target.id === 'coachsheet') closeCoach(); });
+document.getElementById('minsheet').addEventListener('click', e => { if (e.target.id === 'minsheet') closeMins(); });
 
 render();
 renderSync();
