@@ -159,6 +159,62 @@ details h3{font-size:15px; margin:14px 0 4px}
 .btnrow{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px}
 label.iconbtn{display:inline-flex; align-items:center}
 .syncerr{color:#C0473A}
+
+.qotd{margin:6px 0 0; font-size:14px; color:var(--mute); font-style:italic}
+.pill.good{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent)}
+.closedbar{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin:-4px 0 12px; padding:8px 12px; background:var(--soft); border-radius:10px; font-size:14px; font-weight:600}
+.closedbar .linkbtn{padding:0}
+.locked .row{cursor:default}
+.locked .row input:not(:checked){opacity:.45}
+.modeseg button:disabled{cursor:default; opacity:.6}
+.closebtn{width:100%; margin-top:14px; font-size:17px}
+.closebtn:disabled{background:var(--line); color:var(--mute); cursor:default}
+
+.prow{cursor:default}
+.pmark{width:28px; height:28px; border:2px solid var(--mute); border-radius:8px; display:grid; place-items:center}
+.pmark.on{background:var(--accent); border-color:var(--accent)}
+.pmark.on::after{content:""; width:7px; height:14px; border:solid var(--accent-ink); border-width:0 3px 3px 0; transform:translateY(-1px) rotate(45deg)}
+.pin{display:flex; align-items:center; gap:8px; margin:6px 0}
+.pin input{width:96px; height:40px; padding:0 10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font-family:var(--display); font-size:20px; font-weight:600}
+.pin span{font-size:14px; color:var(--mute)}
+.pbar{height:6px; border-radius:3px; background:var(--line); overflow:hidden; max-width:220px; margin-bottom:4px}
+.pbar i{display:block; height:100%; background:var(--accent)}
+
+.badges{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px}
+.badge{border:1px solid var(--line); border-radius:12px; padding:10px 6px; text-align:center; display:flex; flex-direction:column; gap:4px; align-items:center; opacity:.4; filter:grayscale(1)}
+.badge.got{opacity:1; filter:none; border-color:var(--accent); background:var(--soft)}
+.badge .be{font-size:24px; line-height:1}
+.badge .bn{font-size:12px; line-height:1.2}
+
+.cgrid{display:grid; gap:12px; margin-top:12px}
+.cgrid label{display:block; font-size:14px; color:var(--mute); margin-bottom:4px}
+.cgrid input{width:100%; height:44px; padding:0 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit; font-size:16px}
+.cgrid #waist{width:130px; font-family:var(--display); font-size:20px; font-weight:600}
+.cgrid .seg{display:flex; width:100%}
+.cgrid .seg button{flex:1; padding:8px 2px; font-size:14px}
+.ctable{width:100%; border-collapse:collapse; margin-top:10px; font-size:14px}
+.ctable th{text-align:left; font-weight:600; color:var(--mute); font-size:12px; padding:6px 4px; border-bottom:1px solid var(--line)}
+.ctable td{padding:8px 4px; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums}
+.ctable small{margin-left:4px; color:var(--accent); font-size:11px}
+.ctable .cnote td{color:var(--mute); font-size:13px; padding-top:0}
+
+.modal{position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.45); display:grid; place-items:center; padding:16px}
+.modal[hidden]{display:none}
+.mcard{background:var(--card); border-radius:20px; padding:24px 20px; max-width:380px; width:100%; text-align:center; animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85); opacity:0}}
+@media (prefers-reduced-motion:reduce){.mcard{animation:none}}
+.memoji{font-size:52px; line-height:1}
+.mcard h2{font-size:36px; font-weight:700; margin-top:8px}
+.mline{margin:6px 0 14px; color:var(--mute)}
+.mstats{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:12px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.mstats b{display:block; font-family:var(--display); font-size:26px}
+.mstats span{font-size:12px; color:var(--mute)}
+.msum{font-size:14px; color:var(--mute); margin-top:10px}
+.mbadges{margin-top:12px; padding:10px; border-radius:12px; background:var(--soft); display:flex; flex-wrap:wrap; justify-content:center; gap:6px 12px; font-weight:600}
+.mbadges small{width:100%; font-weight:400; color:var(--mute)}
+.mquote{margin:16px 0; font-style:italic; font-size:15px}
+.mcard .btn{width:100%}
+.confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:30}
 </style>
 </head>
 <body>
@@ -167,6 +223,8 @@ label.iconbtn{display:inline-flex; align-items:center}
     <h1>The Cut</h1>
     <div class="goal"><span>127.4 → 105 kg</span><button class="syncdot" id="syncdot" data-opensync></button></div>
   </div>
+
+  <p class="qotd" id="qotd"></p>
 
   <div class="weeknav">
     <button class="iconbtn" data-nav="-1" aria-label="Previous week">‹</button>
@@ -178,6 +236,9 @@ label.iconbtn{display:inline-flex; align-items:center}
 
   <section class="card" id="day"></section>
   <section class="card" id="weight"></section>
+  <section class="card" id="badges"></section>
+  <section class="card" id="checkin"></section>
+  <div class="modal" id="modal" hidden></div>
 
   <details>
     <summary>Plan reference</summary>
@@ -345,7 +406,7 @@ const PLAN = [
 
 const HABITS = [
   ['Weighed in','After bathroom, before food or drink'],
-  ['Protein target','175–190 g'],
+  ['Protein','175–190 g'],  // h1: entered in grams, done at PROTEIN_MIN
   ['Logged food honestly','Even the rich dinner'],
   ['Moved outside the gym','Pain-free walk only, no forcing step targets'],
   ['No worsening pain','Foot/ankle, knees, shoulders']
@@ -365,6 +426,66 @@ const MODES = {
     note:'Full rest. Eat to plan, hit protein, sleep well. A light pain-free walk is fine.',
     items:[] }
 };
+const PROTEIN_MIN = 175, PROTEIN_MAX = 190, WAIST_START = 47, GOOD_PCT = 80;
+const PAIN = ['None','Mild','Moderate','Bad'];
+
+const QUOTES = [
+  "The scale lags. The habits don't.",
+  'Boring consistency beats exciting intensity.',
+  "You don't need a perfect day. You need another honest one.",
+  'Every logged meal is a vote for the person you are becoming.',
+  'Strength kept is progress made.',
+  'The plan works when you work the plan.',
+  'Small deficits, big months.',
+  'Show up tired. Show up busy. Just show up.',
+  "Today's reps are tomorrow's baseline.",
+  'Progress hides in the 7-day average.',
+  'Protein first, excuses never.',
+  "You're not starting over. You're continuing.",
+  'Rest is part of the program, not a break from it.',
+  "One rich dinner doesn't undo a good week.",
+  'Earn the next kilo the same way you earned the last.',
+  'Clean reps, honest logs, patient scale.',
+  'Motivation fades. Routine stays.',
+  'Good days are built, not found.',
+  'Stay in the fight long enough to win it.',
+  'Leave a rep in the tank and come back tomorrow.',
+  'Your future self is built by today’s choices.',
+  'Slow and steady is still 22 kg.',
+  "Win tomorrow's weigh-in at tonight's dinner.",
+  "It's not a diet. It's a season.",
+  'Pain-free beats PR.',
+  'Count the weeks, not the days.',
+  'Hard enough to keep muscle. Easy enough to keep going.',
+  "The streak isn't the goal. It's the proof.",
+  'Better than yesterday is the whole plan.',
+  'Log it, lift it, sleep on it.'
+];
+const GRADES = [
+  { min:100, title:'Perfect day', emoji:'💯', confetti:160, lines:[
+    'Every box ticked. That is what a cut looks like.',
+    'Flawless. Bank it and do it again tomorrow.',
+    'Nothing left on the table today.',
+    'Textbook. This is how 105 happens.'] },
+  { min:GOOD_PCT, title:'Solid day', emoji:'💪', confetti:70, lines:[
+    'Strong day. The streak lives on.',
+    'That is a day that moves the needle.',
+    'Good work. Consistency like this adds up fast.',
+    'Most of the plan, done well. That counts.'] },
+  { min:50, title:'Decent day', emoji:'👍', confetti:0, lines:[
+    'Not perfect, still progress. Tomorrow, push for 80%.',
+    'Half the battle is showing up, and you did.',
+    'Logged and honest. Build on it tomorrow.'] },
+  { min:0, title:'Day logged', emoji:'📝', confetti:0, lines:[
+    'Rough days happen. Logging it honestly is a win.',
+    'Tomorrow is a clean slate. Start with protein.',
+    'Off days are data, not failure. Reset and go.'] }
+];
+const hashDate = d => d.split('-').reduce((a,x) => a*31 + Number(x), 7);
+const quoteFor = d => QUOTES[hashDate(d) % QUOTES.length];
+const gradeFor = pct => GRADES.find(g => pct >= g.min);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 const modeOf = date => MODES[state.modes[date]] ? state.modes[date] : 'plan';
 
 /* ---------- State ---------- */
@@ -372,6 +493,7 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
+  for (const k of ['closed','protein','checkins']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
   return s;
@@ -586,7 +708,76 @@ function dayView(date){
 function idsFor(date){
   return [...dayView(date).items.map(it => it[0]), ...HABITS.map((_,k)=>`h${k}`)];
 }
-function isDone(date,id){ return !!state.checks[`${date}|${id}`]; }
+function isDone(date,id){
+  if (id === 'h1') return (state.protein[date] || 0) >= PROTEIN_MIN;
+  return !!state.checks[`${date}|${id}`];
+}
+const isClosed = d => !!state.closed[d];
+const pctOf = d => { const p = progress(d); return Math.round(100 * p.done / p.total); };
+const isGood = d => isClosed(d) && pctOf(d) >= GOOD_PCT;
+function avgOn(d){
+  const vals = [];
+  for (let k = 0; k < 7; k++){ const w = state.weights[iso(addDays(fromIso(d), -k))]; if (typeof w === 'number') vals.push(w); }
+  return vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
+}
+function proteinAvg(d){
+  const vals = [];
+  for (let k = 0; k < 5; k++){ const g = state.protein[iso(addDays(fromIso(d), -k))]; if (typeof g === 'number') vals.push(g); }
+  return vals.length ? { avg: vals.reduce((a,b)=>a+b,0) / vals.length, n: vals.length } : null;
+}
+// Longest run of consecutive ISO dates (sorted) passing a test.
+function bestRun(dates, test){
+  let best = 0, run = 0, prev = null;
+  for (const d of dates.sort()){
+    if (!test(d)){ run = 0; prev = null; continue; }
+    run = prev && iso(addDays(fromIso(prev), 1)) === d ? run + 1 : 1;
+    prev = d; best = Math.max(best, run);
+  }
+  return best;
+}
+const fullWeek = (ws, test) => [...Array(7)].every((_,k) => test(iso(addDays(ws, k))));
+
+/* Everything below is derived from entries, so reopening a day can't leave stale badges. */
+function stats(){
+  const closed = Object.keys(state.closed);
+  let cur = 0, d = today;
+  if (!isGood(iso(d))) d = addDays(d, -1);   // today still open: streak runs through yesterday
+  while (isGood(iso(d))){ cur++; d = addDays(d, -1); }
+  const mondays = closed.filter(x => dow(fromIso(x)) === 0).map(fromIso);
+  const wdates = Object.keys(state.weights).filter(x => typeof state.weights[x] === 'number');
+  const waists = Object.values(state.checkins).map(c => c.waist).filter(w => typeof w === 'number');
+  return {
+    cur, best: bestRun([...closed], isGood),
+    good: closed.filter(isGood).length, closed: closed.length,
+    perfect: closed.filter(x => pctOf(x) === 100).length,
+    goodWeek: mondays.some(m => fullWeek(m, isGood)),
+    deloadDone: mondays.some(m => weekInfo(m).deload && fullWeek(m, isGood)),
+    proteinRun: bestRun(Object.keys(state.protein), x => state.protein[x] >= PROTEIN_MIN),
+    minAvg: wdates.length ? Math.min(...wdates.map(avgOn)) : Infinity,
+    checkins: Object.keys(state.checkins).length,
+    waistDrop: waists.length ? WAIST_START - Math.min(...waists) : 0
+  };
+}
+const BADGES = [
+  ['🏁','First day closed', s => s.closed >= 1],
+  ['💯','Perfect day', s => s.perfect >= 1],
+  ['🔥','3-day streak', s => s.best >= 3],
+  ['🔥','7-day streak', s => s.best >= 7],
+  ['⚡','14-day streak', s => s.best >= 14],
+  ['🏆','30-day streak', s => s.best >= 30],
+  ['📅','Full good week', s => s.goodWeek],
+  ['🧘','Deload week done', s => s.deloadDone],
+  ['🥩','Protein 7 days running', s => s.proteinRun >= 7],
+  ['⬇️','Under 125 kg', s => s.minAvg <= 125],
+  ['⬇️','Under 120 kg', s => s.minAvg <= 120],
+  ['⬇️','Under 115 kg', s => s.minAvg <= 115],
+  ['⬇️','Under 110 kg', s => s.minAvg <= 110],
+  ['🎯','105 kg: goal!', s => s.minAvg <= 105],
+  ['📏','First check-in', s => s.checkins >= 1],
+  ['📉','Waist −2 in', s => s.waistDrop >= 2],
+  ['📉','Waist −4 in', s => s.waistDrop >= 4]
+].map(([icon,name,test]) => ({ icon, name, test }));
+const earned = s => new Set(BADGES.filter(b => b.test(s)).map(b => b.name));
 function progress(date){
   const ids = idsFor(date);
   const done = ids.filter(id => isDone(date,id)).length;
@@ -620,20 +811,37 @@ function render(){
     const d = addDays(weekStart,k), s = iso(d), p = progress(s);
     const pct = Math.round(100*p.done/p.total);
     const md = modeOf(s), tag = MODES[md].tag;
-    strip += `<button class="pill ${s===sel?'sel':''} ${s===iso(today)?'today':''} ${md!=='plan'?'alt':''}" data-date="${s}" aria-label="${PLAN[k].day} ${fmt(d)}${tag ? ', ' + MODES[md].label : ''}, ${pct}% done">
+    const cl = isClosed(s), good = cl && pct >= GOOD_PCT;
+    strip += `<button class="pill ${s===sel?'sel':''} ${s===iso(today)?'today':''} ${md!=='plan'?'alt':''} ${good?'good':''}" data-date="${s}" aria-label="${PLAN[k].day} ${fmt(d)}${tag ? ', ' + MODES[md].label : ''}, ${pct}% done${cl ? ', closed' : ''}">
       <span class="dn">${PLAN[k].day}</span><span class="dd">${d.getDate()}</span>
-      <span class="bar"><i style="width:${pct}%"></i></span><span class="mt">${tag || '&nbsp;'}</span></button>`;
+      <span class="bar"><i style="width:${pct}%"></i></span><span class="mt">${[tag, cl ? '✓' : ''].filter(Boolean).join(' ') || '&nbsp;'}</span></button>`;
   }
   document.getElementById('strip').innerHTML = strip;
 
   // day card
   const day = dayView(sel), p = progress(sel);
   const dl = wi.deload && day.lift;
-  const row = (id,name,rx) => `<label class="row"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''}>
+  const locked = isClosed(sel), dis = locked ? 'disabled' : '';
+  const row = (id,name,rx) => `<label class="row"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
       <div><span class="name">${name}</span><span class="rx">${rx}</span></div></label>`;
+  const proteinRow = () => {
+    const g = state.protein[sel], pa = proteinAvg(sel);
+    return `<div class="row prow"><span class="pmark ${isDone(sel,'h1')?'on':''}" aria-hidden="true"></span>
+      <div><label class="name" for="protein">Protein</label>
+        <div class="pin"><input id="protein" type="number" inputmode="numeric" min="0" max="600" step="1" value="${typeof g==='number'?g:''}" placeholder="0" ${dis}>
+          <span>g · target ${PROTEIN_MIN}–${PROTEIN_MAX}</span></div>
+        <div class="pbar"><i style="width:${Math.min(100, 100*(g||0)/PROTEIN_MIN)}%"></i></div>
+        <span class="rx">${pa ? `5-day avg <b>${Math.round(pa.avg)} g</b> (${pa.n} day${pa.n>1?'s':''} logged)` : 'Enter grams eaten today.'}</span></div></div>`;
+  };
   const modeSeg = Object.entries(MODES).map(([k,m]) =>
-    `<button class="${day.mode===k?'on':''}" data-mode="${k}" aria-pressed="${day.mode===k}">${m.label}</button>`).join('');
+    `<button class="${day.mode===k?'on':''}" data-mode="${k}" aria-pressed="${day.mode===k}" ${dis}>${m.label}</button>`).join('');
+  const pctNow = Math.round(100*p.done/p.total), gr = gradeFor(pctNow);
+  const future = sel > iso(today);
+  document.getElementById('qotd').textContent = `“${quoteFor(iso(today))}”`;
+  document.getElementById('day').className = 'card' + (locked ? ' locked' : '');
   document.getElementById('day').innerHTML = `
+    ${locked ? `<div class="closedbar"><span>🔒 Closed · ${pctNow}% · ${gr.title} ${gr.emoji}</span>
+      <span><button class="linkbtn" data-recap>Recap</button> · <button class="linkbtn" data-reopen>Reopen</button></span></div>` : ''}
     <div class="seg modeseg" role="group" aria-label="Day type">${modeSeg}</div>
     <h2 class="daytitle">${day.title}</h2>
     <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${day.planned ? ` · planned: ${day.planned}` : ''}</div>
@@ -643,11 +851,12 @@ function render(){
     ${day.items.map(([id,name,rx]) => row(id, name, dl ? deloadRx(rx) : rx)).join('')}
     ${day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : ''}
     <h3 class="sub">Daily</h3>
-    ${HABITS.map((h,k)=>row(`h${k}`, h[0], h[1])).join('')}
+    ${HABITS.map((h,k)=> k === 1 ? proteinRow() : row(`h${k}`, h[0], h[1])).join('')}
     <div class="foot">
-      <span class="count">${p.done} of ${p.total} done</span>
-      <button class="linkbtn" data-clear>Clear this day</button>
-    </div>`;
+      <span class="count">${p.done} of ${p.total} done · ${pctNow}%</span>
+      ${locked ? '' : `<button class="linkbtn" data-clear>Clear this day</button>`}
+    </div>
+    ${locked ? '' : `<button class="btn closebtn" data-closeday ${future?'disabled':''}>${future ? 'Can’t close a future day' : 'Close day'}</button>`}`;
 
   // weight card
   const cur = state.weights[sel];
@@ -677,6 +886,108 @@ function render(){
     <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(barPct)}"><i style="width:${barPct}%"></i></div>
     <div class="chips">${chips}</div>
     ${chartHtml()}`;
+
+  renderBadges();
+  renderCheckin();
+}
+
+function renderBadges(){
+  const st = stats(), got = earned(st);
+  document.getElementById('badges').innerHTML = `
+    <h2 style="font-size:26px">Streaks &amp; badges</h2>
+    <div class="avg">
+      <div><div class="big">🔥 ${st.cur}</div><div class="cap">current streak</div></div>
+      <div><div class="big">${st.best}</div><div class="cap">best streak</div></div>
+      <div><div class="big">${st.good}</div><div class="cap">good days</div></div>
+    </div>
+    <div class="cap" style="margin-top:8px">A good day is a closed day at ${GOOD_PCT}% or more. ${got.size} of ${BADGES.length} badges earned.</div>
+    <div class="badges">${BADGES.map(b => `<div class="badge ${got.has(b.name)?'got':''}" title="${b.name}"><span class="be">${b.icon}</span><span class="bn">${b.name}</span></div>`).join('')}</div>`;
+}
+
+function renderCheckin(){
+  const ci = state.checkins[sel] || {};
+  const dates = Object.keys(state.checkins).sort();
+  const last = dates.filter(d => d <= iso(today)).pop();
+  let due = 'No check-ins yet. Log your first one today.';
+  if (last){
+    const since = Math.round((today - fromIso(last)) / 864e5);
+    due = since < 14 ? `Last check-in ${since === 0 ? 'today' : `${since} day${since>1?'s':''} ago`}. Next one in ${14 - since} days.`
+      : since <= 28 ? `Check-in due (last was ${since} days ago).` : `Overdue: last check-in was ${since} days ago.`;
+  }
+  const seg = (attr, labels, val) => labels.map((l,i) =>
+    `<button class="${val===i?'on':''}" data-${attr}="${i}" aria-pressed="${val===i}">${l}</button>`).join('');
+  const rows = dates.slice().reverse().map(d => {
+    const c = state.checkins[d], w = avgOn(d);
+    const dw = typeof c.waist === 'number' ? c.waist - WAIST_START : null;
+    return `<tr><td>${fmt(fromIso(d))}</td><td>${typeof c.waist==='number' ? `${c.waist}<small>${dw<=0?'−':'+'}${Math.abs(dw).toFixed(1)}</small>` : '—'}</td>
+      <td>${w ? w.toFixed(1) : '—'}</td><td>${c.energy != null ? c.energy + 1 : '—'}/5</td><td>${c.pain != null ? PAIN[c.pain] : '—'}</td></tr>
+      ${c.note ? `<tr class="cnote"><td colspan="5">${esc(c.note)}</td></tr>` : ''}`;
+  }).join('');
+  document.getElementById('checkin').innerHTML = `
+    <h2 style="font-size:26px">Check-in</h2>
+    <div class="meta">${due}</div>
+    <div class="cgrid">
+      <div><label for="waist">Waist on ${fmt(fromIso(sel))} (in)</label>
+        <input id="waist" type="number" inputmode="decimal" step="0.1" min="20" max="80" placeholder="${WAIST_START}" value="${typeof ci.waist==='number'?ci.waist:''}"></div>
+      <div><label>Energy</label><div class="seg" id="energyseg">${seg('energy', ['1','2','3','4','5'], ci.energy)}</div></div>
+      <div><label>Pain (foot, knees, shoulders)</label><div class="seg" id="painseg">${seg('pain', PAIN, ci.pain)}</div></div>
+      <div><label for="cinote">Note</label><input id="cinote" type="text" maxlength="140" placeholder="Strength, sleep, how clothes fit…" value="${esc(ci.note || '')}"></div>
+    </div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn" data-savecheckin>${state.checkins[sel] ? 'Update check-in' : 'Save check-in'}</button>
+      ${state.checkins[sel] ? '<button class="linkbtn" data-delcheckin>Delete</button>' : ''}
+    </div>
+    ${dates.length ? `<table class="ctable"><thead><tr><th>Date</th><th>Waist</th><th>Wt avg</th><th>Energy</th><th>Pain</th></tr></thead><tbody>${rows}</tbody></table>` : ''}`;
+}
+
+/* ---------- Close day + celebration ---------- */
+function showRecap(date, celebrate, newBadges = []){
+  const p = progress(date), pct = Math.round(100*p.done/p.total), g = gradeFor(pct), st = stats();
+  const day = dayView(date), sess = day.items.filter(it => isDone(date, it[0])).length;
+  const hab = HABITS.filter((_,k) => isDone(date, `h${k}`)).length;
+  const prot = state.protein[date], wt = state.weights[date];
+  const good = pct >= GOOD_PCT;
+  const streakLine = good
+    ? `<div><b>🔥 ${st.cur}</b><span>day streak</span></div>`
+    : `<div><b>${st.best}</b><span>best streak</span></div>`;
+  const m = document.getElementById('modal');
+  m.innerHTML = `<div class="mcard" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <div class="memoji">${g.emoji}</div>
+    <h2 id="mtitle">${g.title}</h2>
+    <p class="mline">${g.lines[hashDate(date) % g.lines.length]}</p>
+    <div class="mstats"><div><b>${pct}%</b><span>done</span></div>${streakLine}
+      <div><b>${typeof prot==='number' ? prot + ' g' : '—'}</b><span>protein</span></div></div>
+    <div class="msum">${day.items.length ? `Session ${sess}/${day.items.length} · ` : ''}Daily ${hab}/${HABITS.length}${typeof wt==='number' ? ` · ${wt} kg` : ''}</div>
+    ${!good ? `<div class="msum">Streaks count days at ${GOOD_PCT}%+. Tomorrow starts a new one.</div>` : ''}
+    ${newBadges.length ? `<div class="mbadges">${newBadges.map(n => { const b = BADGES.find(x => x.name === n); return `<span>${b.icon} ${b.name}</span>`; }).join('')}<small>New badge${newBadges.length>1?'s':''} unlocked</small></div>` : ''}
+    <blockquote class="mquote">“${quoteFor(date)}”</blockquote>
+    <button class="btn" data-dismiss>${good ? 'Keep it going' : 'Got it'}</button></div>`;
+  m.hidden = false;
+  m.querySelector('[data-dismiss]').focus();
+  if (celebrate && (g.confetti || newBadges.length)) confetti(Math.max(g.confetti, newBadges.length ? 90 : 0));
+}
+function closeDay(){
+  const before = earned(stats());
+  state.closed[sel] = Date.now(); save(); render();
+  const fresh = [...earned(stats())].filter(n => !before.has(n));
+  showRecap(sel, true, fresh);
+}
+function confetti(n){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
+  const ctx = c.getContext('2d'), dpr = devicePixelRatio || 1;
+  c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+  const cols = ['#1F7A5C','#4CC59A','#F2C14E','#E86A50','#5B8DEF','#FFFFFF'];
+  const ps = [...Array(n)].map(() => ({ x: innerWidth/2 + (Math.random()-.5)*80, y: innerHeight*.35,
+    vx: (Math.random()-.5)*12, vy: -Math.random()*12 - 4, r: Math.random()*Math.PI, vr: (Math.random()-.5)*.3,
+    w: 6 + Math.random()*6, h: 3 + Math.random()*4, c: cols[Math.floor(Math.random()*cols.length)] }));
+  const t0 = performance.now();
+  (function frame(t){
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of ps){ p.vy += .28; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore(); }
+    if (t - t0 < 3200) requestAnimationFrame(frame); else c.remove();
+  })(t0);
 }
 
 /* ---------- Events ---------- */
@@ -709,8 +1020,31 @@ document.addEventListener('click', e => {
   }
   else if (t.hasAttribute('data-saveweight')){
     const v = parseFloat(document.getElementById('wt').value);
-    if (isNaN(v)) delete state.weights[sel]; else state.weights[sel] = Math.round(v*10)/10;
+    if (isNaN(v)) delete state.weights[sel];
+    else { state.weights[sel] = Math.round(v*10)/10; if (!isClosed(sel)) state.checks[`${sel}|h0`] = true; }
     save(); render();
+  }
+  else if (t.hasAttribute('data-closeday')) closeDay();
+  else if (t.hasAttribute('data-reopen')){ delete state.closed[sel]; save(); render(); }
+  else if (t.hasAttribute('data-recap')) showRecap(sel, false);
+  else if (t.hasAttribute('data-dismiss')) document.getElementById('modal').hidden = true;
+  else if (t.dataset.energy !== undefined || t.dataset.pain !== undefined){
+    // Selection is held in the DOM until "Save check-in", so no re-render while filling the form.
+    t.parentElement.querySelectorAll('button').forEach(b => { const on = b === t && !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  }
+  else if (t.hasAttribute('data-savecheckin')){
+    const waist = parseFloat(document.getElementById('waist').value);
+    const pick = id => { const b = document.querySelector(`#${id} .on`); return b ? Number(b.dataset.energy ?? b.dataset.pain) : null; };
+    const note = document.getElementById('cinote').value.trim();
+    const c = { waist: isNaN(waist) ? null : Math.round(waist*10)/10, energy: pick('energyseg'), pain: pick('painseg'), note };
+    if (c.waist == null && c.energy == null && c.pain == null && !note) return;
+    const before = earned(stats());
+    state.checkins[sel] = c; save(); render();
+    const fresh = [...earned(stats())].filter(n => !before.has(n));
+    if (fresh.length) confetti(90);
+  }
+  else if (t.hasAttribute('data-delcheckin')){
+    if (confirm('Delete this check-in?')){ delete state.checkins[sel]; save(); render(); }
   }
 });
 document.addEventListener('change', e => {
@@ -720,7 +1054,13 @@ document.addEventListener('change', e => {
     if (c.value){ state.start = iso(mon(fromIso(c.value))); save(); weekStart = mon(today); sel = iso(today); render(); }
     return;
   }
-  if (!c.dataset || !c.dataset.id) return;
+  if (c.id === 'protein'){
+    if (isClosed(sel)) return;
+    const v = parseFloat(c.value);
+    if (isNaN(v) || v <= 0) delete state.protein[sel]; else state.protein[sel] = Math.round(v);
+    save(); render(); return;
+  }
+  if (!c.dataset || !c.dataset.id || isClosed(sel)) return;
   const k = `${sel}|${c.dataset.id}`;
   if (c.checked) state.checks[k] = true; else delete state.checks[k];
   save(); render();
@@ -728,11 +1068,14 @@ document.addEventListener('change', e => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'wt') document.querySelector('[data-saveweight]').click();
   if (e.key === 'Enter' && e.target.id === 'tokenin') connect();
+  if (e.key === 'Enter' && e.target.id === 'protein') e.target.blur();
+  if (e.key === 'Escape') document.getElementById('modal').hidden = true;
 });
 // Pull fresh data whenever the app comes back to the foreground or the connection returns.
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
 window.addEventListener('online', syncNow);
 window.addEventListener('offline', renderSync);
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') e.target.hidden = true; });
 
 render();
 renderSync();
