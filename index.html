@@ -228,7 +228,6 @@ label.iconbtn{display:inline-flex; align-items:center}
 .msg{padding:9px 12px; border-radius:14px; max-width:88%; font-size:15px; line-height:1.4}
 .msg.user{align-self:flex-end; background:var(--accent); color:var(--accent-ink); border-bottom-right-radius:4px}
 .msg.assistant{align-self:flex-start; background:var(--soft); border-bottom-left-radius:4px}
-.typing{color:var(--mute); font-style:italic}
 .asks{margin-top:10px}
 .asks .chip{background:none; cursor:pointer}
 #chatin{flex:1; min-width:0; min-height:46px; max-height:120px; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit; font-size:16px; resize:vertical}
@@ -260,6 +259,68 @@ label.iconbtn{display:inline-flex; align-items:center}
 .sheethead h2{font-size:26px}
 .sheethead span{display:flex; align-items:center; gap:12px}
 .sheetcard .chatlog{flex:1; max-height:none; min-height:0}
+/* AI reply formatting */
+.msg p, .mcoach p, .aibox p{margin:0 0 8px}
+.msg > :last-child, .mcoach > :last-child, .aibox div > :last-child{margin-bottom:0}
+.msg ul, .msg ol, .mcoach ul, .mcoach ol, .aibox ul, .aibox ol{margin:4px 0 8px; padding-left:20px}
+.msg li, .mcoach li, .aibox li{margin:3px 0; padding-left:2px}
+.msg li::marker, .aibox li::marker, .mcoach li::marker{color:var(--accent)}
+.msg h4, .aibox h4{margin:10px 0 4px; font-size:15px; font-weight:700}
+.msg h4:first-child{margin-top:0}
+.msg b, .mcoach b, .aibox b{font-weight:700}
+.msg code{font-size:13px; background:rgba(128,128,128,.15); border-radius:4px; padding:1px 4px}
+.mdtable{overflow-x:auto; margin:6px 0 8px}
+.mdtable table{border-collapse:collapse; font-size:13px; min-width:100%}
+.mdtable th, .mdtable td{text-align:left; padding:5px 8px; border-bottom:1px solid var(--line)}
+.mdtable th{font-weight:700}
+.msg.assistant{line-height:1.5}
+.dots{display:inline-flex; gap:4px; align-items:center; padding:4px 0}
+.dots i, .msg.dots i{width:7px; height:7px; border-radius:50%; background:var(--mute); opacity:.5; display:inline-block}
+.msg.dots{display:inline-flex; gap:4px; align-self:flex-start; padding:13px 14px}
+
+/* Motion */
+[data-k]{transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.btn, .iconbtn, .pill, .chip, .coachpill, .tabbar button, .seg button, .linkbtn{transition:transform .12s ease, background-color .2s, color .2s, border-color .2s}
+.btn:active, .iconbtn:active, .pill:active, .chip:active, .coachpill:active, .seg button:active{transform:scale(.96)}
+.tabbar button:active{transform:scale(.92)}
+.row input, .pmark{transition:background-color .2s, border-color .2s}
+.row .name{transition:color .25s}
+@media (prefers-reduced-motion: no-preference){
+  .view.enter > *{animation:rise .34s cubic-bezier(.2,.8,.2,1) both}
+  .view.enter > *:nth-child(2){animation-delay:.04s}
+  .view.enter > *:nth-child(3){animation-delay:.08s}
+  .view.enter > *:nth-child(4){animation-delay:.12s}
+  .view.enter > *:nth-child(n+5){animation-delay:.16s}
+  .in-r{animation:inR .28s cubic-bezier(.2,.8,.2,1)}
+  .in-l{animation:inL .28s cubic-bezier(.2,.8,.2,1)}
+  .row.pop input, .row.pop .pmark{animation:tick .38s cubic-bezier(.3,1.6,.5,1)}
+  .row.pop{animation:flash .6s ease-out}
+  .tabbar button[aria-current] svg{animation:bump .3s cubic-bezier(.3,1.6,.5,1)}
+  .coachpill{animation:rise .4s .25s cubic-bezier(.2,.8,.2,1) both}
+  .msg.new{animation:rise .28s cubic-bezier(.2,.8,.2,1) both}
+  .dots i{animation:blink 1.1s infinite ease-in-out}
+  .dots i:nth-child(2){animation-delay:.15s}
+  .dots i:nth-child(3){animation-delay:.3s}
+  .fadein{animation:fade .3s ease-out}
+  details[open] > *:not(summary){animation:fade .25s ease-out}
+  .sheet{animation:fade .2s ease-out}
+  .modal{animation:fade .18s ease-out}
+  .sheet.closing, .modal.closing{animation:fadeout .18s ease-in forwards}
+  .sheet.closing .sheetcard{animation:down .18s ease-in forwards}
+  .modal.closing .mcard{animation:shrink .18s ease-in forwards}
+  .closebtn:not(:disabled){animation:none}
+}
+@keyframes rise{from{opacity:0; transform:translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes fadeout{to{opacity:0}}
+@keyframes down{to{transform:translateY(40px); opacity:0}}
+@keyframes shrink{to{transform:scale(.94); opacity:0}}
+@keyframes inR{from{opacity:.2; transform:translateX(18px)}}
+@keyframes inL{from{opacity:.2; transform:translateX(-18px)}}
+@keyframes tick{0%{transform:scale(.7)} 60%{transform:scale(1.18)} 100%{transform:scale(1)}}
+@keyframes flash{0%{background:var(--soft)} 100%{background:transparent}}
+@keyframes bump{0%{transform:translateY(0)} 40%{transform:translateY(-3px) scale(1.08)} 100%{transform:none}}
+@keyframes blink{0%,80%,100%{opacity:.25; transform:translateY(0)} 40%{opacity:.9; transform:translateY(-3px)}}
 .confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:30}
 </style>
 </head>
@@ -792,7 +853,7 @@ function setSync(status, msg = ''){ sync.status = status; sync.msg = msg; render
 function renderSync(){
   const on = !!cfg.token;
   const dot = document.getElementById('syncdot');
-  const label = { off:'Not synced', idle:'Sync on', busy:'Syncing…', ok: encKey ? 'Synced 🔒' : 'Synced', locked:'Locked', err: navigator.onLine === false ? 'Offline' : 'Sync error' }[sync.status];
+  const label = { off:'Not synced', idle:'Sync on', busy:'Syncing…', ok: encKey ? 'Encrypted' : 'Synced', locked:'Encrypted · unlock', err: navigator.onLine === false ? 'Offline' : 'Sync error' }[sync.status];
   dot.textContent = label;
   dot.className = 'syncdot ' + ({ ok:'ok', busy:'busy', err:'err', locked:'err' }[sync.status] || '');
   document.getElementById('enc-unlock').hidden = sync.status !== 'locked';
@@ -806,7 +867,7 @@ function renderSync(){
   st.className = sync.status === 'err' || sync.status === 'locked' ? 'syncerr' : '';
   st.textContent = sync.status === 'err' || sync.status === 'locked' ? sync.msg
     : sync.status === 'busy' ? 'Syncing…'
-    : sync.last ? `Synced at ${sync.last.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'})}.` : 'Connected.';
+    : sync.last ? `${encKey ? 'Synced and encrypted' : 'Synced'} at ${sync.last.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'})}.` : 'Connected.';
   const link = document.getElementById('gistlink');
   link.href = cfg.gistId ? `https://gist.github.com/${cfg.gistId}` : 'https://gist.github.com/';
   if (!on) document.getElementById('connecterr').textContent = sync.status === 'err' ? sync.msg : '';
@@ -823,9 +884,47 @@ async function connect(){
 
 /* ---------- AI coach via OpenRouter (key stays on this device, never synced) ---------- */
 const AI_PREF = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'qwen/qwen3.8-27b:free', 'google/gemma-4-26b-a4b-it:free'];
-const AI_SYSTEM = `You are the coach inside "The Cut", a personal fat-loss and strength tracking app. Be concise, warm and specific; use the numbers given. Prefer Indian food examples when talking about meals. You are not a doctor: never diagnose, and for persistent or worsening pain recommend getting it assessed by a physio or doctor. Stick to the user's plan rules unless there is a clear reason not to.`;
+const AI_SYSTEM = `You are the coach inside "The Cut", a personal fat-loss and strength tracking app. Be concise, warm and specific; use the numbers given. Prefer Indian food examples when talking about meals. You are not a doctor: never diagnose, and for persistent or worsening pain recommend getting it assessed by a physio or doctor. Stick to the user's plan rules unless there is a clear reason not to.
+
+FORMAT (replies are shown in a narrow phone chat bubble):
+- Lead with the direct answer in one short sentence.
+- Then short paragraphs of 1-2 sentences, or a "-" bullet list for options, foods or steps (3-5 bullets max).
+- Use **bold** only for key numbers or item names. No headings, no tables, no horizontal rules, no emoji strings.
+- Keep it under about 120 words unless the user asks for detail. Use kg, grams and minutes.`;
 let freeModels = null;
-const md = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^\s*#+\s*/gm, '').replace(/^\s*[-*•]\s+/gm, '• ').replace(/\n/g, '<br>');
+// Small Markdown renderer for model replies. Escapes first, so model output can never inject HTML.
+function md(src){
+  const inline = t => esc(t)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/__(.+?)__/g, '<b>$1</b>')
+    .replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?!\*)/g, '$1<i>$2</i>');
+  const cells = r => r.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+  let html = '', para = [], list = null, table = [];
+  const flushP = () => { if (para.length){ html += `<p>${para.map(inline).join(' ')}</p>`; para = []; } };
+  const flushL = () => { if (list){ html += `<${list.t}>${list.items.map(i => `<li>${inline(i)}</li>`).join('')}</${list.t}>`; list = null; } };
+  const flushT = () => {
+    if (!table.length) return;
+    const rows = table.filter(r => !/^\s*\|?\s*:?-{2,}/.test(r)).map(cells);
+    html += `<div class="mdtable"><table>${rows.map((r,i) => `<tr>${r.map(c => i ? `<td>${inline(c)}</td>` : `<th>${inline(c)}</th>`).join('')}</tr>`).join('')}</table></div>`;
+    table = [];
+  };
+  const flush = () => { flushP(); flushL(); flushT(); };
+  for (const raw of String(src).replace(/\r/g, '').split('\n')){
+    const line = raw.trimEnd(); let m;
+    if (!line.trim()){ flush(); continue; }
+    if (/^\s*\|.*\|\s*$/.test(line)){ flushP(); flushL(); table.push(line); continue; }
+    flushT();
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)){ flush(); continue; }
+    if ((m = line.match(/^\s*#{1,6}\s+(.*)$/))){ flush(); html += `<h4>${inline(m[1].replace(/[:#\s]+$/, ''))}</h4>`; continue; }
+    if ((m = line.match(/^\s*[-*•+]\s+(.*)$/))){ flushP(); if (!list || list.t !== 'ul'){ flushL(); list = { t:'ul', items:[] }; } list.items.push(m[1]); continue; }
+    if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))){ flushP(); if (!list || list.t !== 'ol'){ flushL(); list = { t:'ol', items:[] }; } list.items.push(m[1]); continue; }
+    if (list && /^\s{2,}\S/.test(raw)){ list.items[list.items.length - 1] += ' ' + line.trim(); continue; }
+    flushL(); para.push(line.trim());
+  }
+  flush();
+  return html;
+}
 
 async function ai(messages, max_tokens = 600){
   if (!cfg.aiKey) throw new Error('Add your OpenRouter key under AI coach first.');
@@ -882,9 +981,9 @@ async function weekInsights(ws){
 let chat = [];
 try { chat = JSON.parse(localStorage.getItem('cutplan-chat')) || []; } catch(e) {}
 const saveChat = () => { try { localStorage.setItem('cutplan-chat', JSON.stringify(chat.slice(-30))); } catch(e) {} };
-function renderChat(){
+function renderChat(animateLast = false){
   const log = document.getElementById('chatlog');
-  log.innerHTML = chat.length ? chat.map(m => `<div class="msg ${m.role}">${m.role === 'assistant' ? md(m.content) : esc(m.content)}</div>`).join('')
+  log.innerHTML = chat.length ? chat.map((m,i) => `<div class="msg ${m.role}${animateLast && i === chat.length - 1 ? ' new' : ''}">${m.role === 'assistant' ? md(m.content) : esc(m.content)}</div>`).join('')
     : `<div class="cap">${cfg.aiKey ? 'Ask anything about your plan, food, training or progress.' : 'Add a free OpenRouter key to start. <button class="linkbtn" data-tab="more" data-open="aibox">Open Settings → AI coach</button>'}</div>`;
   log.scrollTop = log.scrollHeight;
   document.getElementById('chatclear').hidden = !chat.length;
@@ -892,16 +991,16 @@ function renderChat(){
 async function sendChat(text){
   text = (text || '').trim(); if (!text) return;
   const input = document.getElementById('chatin'); input.value = '';
-  chat.push({ role:'user', content: text }); renderChat();
+  chat.push({ role:'user', content: text }); renderChat(true);
   const log = document.getElementById('chatlog');
-  log.insertAdjacentHTML('beforeend', '<div class="msg assistant typing">Coach is typing…</div>'); log.scrollTop = log.scrollHeight;
+  log.insertAdjacentHTML('beforeend', '<div class="msg assistant new dots" aria-label="Coach is typing"><i></i><i></i><i></i></div>'); log.scrollTop = log.scrollHeight;
   try {
     const history = chat.slice(-10).filter(m => !m.content.startsWith('⚠️'));
     const reply = await ai([{ role:'user', content: `Context for this conversation (my current data):\n${aiContext()}` },
       { role:'assistant', content:'Got it. What would you like to know?' }, ...history], 700);
     chat.push({ role:'assistant', content: reply });
   } catch(e){ chat.push({ role:'assistant', content: `⚠️ ${e.message}` }); }
-  saveChat(); renderChat();
+  saveChat(); renderChat(true);
 }
 async function loadFreeModels(){
   const sel = document.getElementById('aimodel');
@@ -918,9 +1017,30 @@ function renderAiSettings(){
   document.getElementById('ai-on').hidden = !cfg.aiKey;
 }
 
+/* ---------- Motion (all of it is skipped when the phone asks for reduced motion) ---------- */
+const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function replay(el, cls){ if (!el || calm()) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+// Bars are re-created on every render; start each one at its old width so the change glides.
+const captureBars = () => new Map([...document.querySelectorAll('[data-k]')].map(el => [el.dataset.k, el.style.width]));
+function animateBars(prev){
+  if (calm()) return;
+  const els = [...document.querySelectorAll('[data-k]')].filter(el => prev.has(el.dataset.k) && prev.get(el.dataset.k) !== el.style.width);
+  if (!els.length) return;
+  els.forEach(el => { el.dataset.to = el.style.width; el.style.transition = 'none'; el.style.width = prev.get(el.dataset.k); });
+  void document.body.offsetWidth;
+  els.forEach(el => { el.style.transition = ''; el.style.width = el.dataset.to; });
+}
+let popRow = null, lastSel = null, lastWeek = null;
+function fadeOut(el, after){
+  if (calm() || el.hidden){ el.hidden = true; if (after) after(); return; }
+  el.classList.add('closing');
+  setTimeout(() => { el.hidden = true; el.classList.remove('closing'); if (after) after(); }, 180);
+}
+const hideModal = () => fadeOut(document.getElementById('modal'));
+
 /* ---------- Tabs + coach sheet ---------- */
 function showTab(name){
-  document.querySelectorAll('.view').forEach(v => { v.hidden = v.dataset.view !== name; });
+  document.querySelectorAll('.view').forEach(v => { const show = v.dataset.view === name; if (show && v.hidden) replay(v, 'enter'); v.hidden = !show; });
   document.querySelectorAll('.tabbar button').forEach(b => b.toggleAttribute('aria-current', b.dataset.tab === name));
   if (name === 'more' && document.getElementById('aibox').open && !freeModels) loadFreeModels();
   window.scrollTo(0, 0);
@@ -931,8 +1051,9 @@ function openCoach(){
   renderChat();
 }
 function closeCoach(){
-  document.getElementById('coachsheet').hidden = true;
-  document.body.classList.remove('sheet-open');
+  const sh = document.getElementById('coachsheet');
+  if (sh.hidden) return;
+  fadeOut(sh, () => document.body.classList.remove('sheet-open'));
 }
 
 /* ---------- Evening reminder (push sent by .github/workflows/reminder.yml) ---------- */
@@ -1214,6 +1335,7 @@ function sevenDayAvg(){
 
 /* ---------- Render ---------- */
 function render(){
+  const bars = captureBars();
   // week header + strip
   const wi = weekInfo(weekStart);
   const wm = document.getElementById('weekmeta');
@@ -1231,7 +1353,7 @@ function render(){
     const cl = isClosed(s), good = cl && pct >= GOOD_PCT;
     strip += `<button class="pill ${s===sel?'sel':''} ${s===iso(today)?'today':''} ${md!=='plan'?'alt':''} ${good?'good':''}" data-date="${s}" aria-label="${PLAN[k].day} ${fmt(d)}${tag ? ', ' + MODES[md].label : ''}, ${pct}% done${cl ? ', closed' : ''}">
       <span class="dn">${PLAN[k].day}</span><span class="dd">${d.getDate()}</span>
-      <span class="bar"><i style="width:${pct}%"></i></span><span class="mt">${[tag, cl ? '✓' : ''].filter(Boolean).join(' ') || '&nbsp;'}</span></button>`;
+      <span class="bar"><i data-k="pill-${s}" style="width:${pct}%"></i></span><span class="mt">${[tag, cl ? '✓' : ''].filter(Boolean).join(' ') || '&nbsp;'}</span></button>`;
   }
   document.getElementById('strip').innerHTML = strip;
 
@@ -1239,20 +1361,20 @@ function render(){
   const day = dayView(sel), p = progress(sel);
   const dl = wi.deload && day.lift;
   const locked = isClosed(sel), dis = locked ? 'disabled' : '';
-  const row = (id,name,rx) => `<label class="row"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
+  const row = (id,name,rx) => `<label class="row" data-row="${id}"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
       <div><span class="name">${name}</span><span class="rx">${rx}</span></div></label>`;
   const proteinRow = () => {
     const g = state.protein[sel], pa = proteinAvg(sel);
-    return `<div class="row prow"><span class="pmark ${isDone(sel,'h1')?'on':''}" aria-hidden="true"></span>
+    return `<div class="row prow" data-row="h1"><span class="pmark ${isDone(sel,'h1')?'on':''}" aria-hidden="true"></span>
       <div><label class="name" for="protein">Protein</label>
         <div class="pin"><input id="protein" type="number" inputmode="numeric" min="0" max="600" step="1" value="${typeof g==='number'?g:''}" placeholder="0" ${dis}>
           <span>g · target ${PROTEIN_MIN}–${PROTEIN_MAX}</span></div>
-        <div class="pbar"><i style="width:${Math.min(100, 100*(g||0)/PROTEIN_MIN)}%"></i></div>
+        <div class="pbar"><i data-k="pbar" style="width:${Math.min(100, 100*(g||0)/PROTEIN_MIN)}%"></i></div>
         <span class="rx">${pa ? `5-day avg <b>${Math.round(pa.avg)} g</b> (${pa.n} day${pa.n>1?'s':''} logged)` : 'Enter grams eaten today.'}</span></div></div>`;
   };
   const weightRow = () => {
     const w = state.weights[sel], av = avgOn(sel);
-    return `<div class="row prow"><span class="pmark ${isDone(sel,'h0')?'on':''}" aria-hidden="true"></span>
+    return `<div class="row prow" data-row="h0"><span class="pmark ${isDone(sel,'h0')?'on':''}" aria-hidden="true"></span>
       <div><label class="name" for="wt0">Weigh-in</label>
         <div class="pin"><input id="wt0" type="number" inputmode="decimal" step="0.1" min="40" max="300" value="${typeof w==='number'?w:''}" placeholder="0.0" ${dis}>
           <span>kg · after bathroom, before food</span></div>
@@ -1309,7 +1431,7 @@ function render(){
       <button class="btn" data-saveweight>Save</button>
     </div>
     ${avgHtml}
-    <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(barPct)}"><i style="width:${barPct}%"></i></div>
+    <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(barPct)}"><i data-k="track" style="width:${barPct}%"></i></div>
     <div class="chips">${chips}</div>
     ${projHtml()}
     ${chartHtml()}`;
@@ -1318,6 +1440,12 @@ function render(){
   renderBadges();
   renderCheckin();
   renderRemind();
+
+  animateBars(bars);
+  if (lastWeek && lastWeek !== iso(weekStart)) replay(document.getElementById('strip'), iso(weekStart) > lastWeek ? 'in-r' : 'in-l');
+  else if (lastSel && lastSel !== sel) replay(document.getElementById('day'), sel > lastSel ? 'in-r' : 'in-l');
+  if (popRow){ replay(document.querySelector(`[data-row="${popRow}"]`), 'pop'); popRow = null; }
+  lastSel = sel; lastWeek = iso(weekStart);
 }
 
 function projHtml(){
@@ -1420,15 +1548,15 @@ function showRecap(date, celebrate, newBadges = []){
     <div class="msum">${day.items.length ? `Session ${sess}/${day.items.length} · ` : ''}Daily ${hab}/${HABITS.length}${typeof wt==='number' ? ` · ${wt} kg` : ''}</div>
     ${!good ? `<div class="msum">Streaks count days at ${GOOD_PCT}%+. Tomorrow starts a new one.</div>` : ''}
     ${newBadges.length ? `<div class="mbadges">${newBadges.map(n => { const b = BADGES.find(x => x.name === n); return `<span>${b.icon} ${b.name}</span>`; }).join('')}<small>New badge${newBadges.length>1?'s':''} unlocked</small></div>` : ''}
-    ${state.ai.close[date] ? `<p class="mcoach">${md(state.ai.close[date])}</p>` : celebrate && cfg.aiKey ? '<p class="mcoach typing" id="mcoach">Coach is writing…</p>' : ''}
+    ${state.ai.close[date] ? `<div class="mcoach">${md(state.ai.close[date])}</div>` : celebrate && cfg.aiKey ? '<div class="mcoach" id="mcoach"><span class="dots"><i></i><i></i><i></i></span></div>' : ''}
     <blockquote class="mquote">“${quoteFor(date)}”</blockquote>
     <button class="btn" data-dismiss>${good ? 'Keep it going' : 'Got it'}</button></div>`;
   m.hidden = false;
   m.querySelector('[data-dismiss]').focus();
   if (celebrate && (g.confetti || newBadges.length)) confetti(Math.max(g.confetti, newBadges.length ? 90 : 0));
   if (celebrate && cfg.aiKey && !state.ai.close[date]){
-    coachNote(date).then(t => { const el = document.getElementById('mcoach'); if (el){ el.innerHTML = md(t); el.classList.remove('typing'); } })
-      .catch(e => { const el = document.getElementById('mcoach'); if (el){ el.textContent = e.message; el.classList.remove('typing'); } });
+    coachNote(date).then(t => { const el = document.getElementById('mcoach'); if (el){ el.innerHTML = md(t); replay(el, 'fadein'); } })
+      .catch(e => { const el = document.getElementById('mcoach'); if (el){ el.textContent = e.message; } });
   }
 }
 function closeDay(){
@@ -1518,7 +1646,7 @@ document.addEventListener('click', e => {
   else if (t.hasAttribute('data-remindoff')) remindOff();
   else if (t.hasAttribute('data-reopen')){ delete state.closed[sel]; delete state.ai.close[sel]; save(); render(); }
   else if (t.hasAttribute('data-recap')) showRecap(sel, false);
-  else if (t.hasAttribute('data-dismiss')) document.getElementById('modal').hidden = true;
+  else if (t.hasAttribute('data-dismiss')) hideModal();
   else if (t.dataset.energy !== undefined || t.dataset.pain !== undefined){
     // Selection is held in the DOM until "Save check-in", so no re-render while filling the form.
     t.parentElement.querySelectorAll('button').forEach(b => { const on = b === t && !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
@@ -1549,17 +1677,18 @@ document.addEventListener('change', e => {
   if (c.id === 'wt0'){
     if (isClosed(sel)) return;
     const v = parseFloat(c.value);
-    if (isNaN(v)) delete state.weights[sel]; else state.weights[sel] = Math.round(v*10)/10;
+    if (isNaN(v)) delete state.weights[sel]; else { state.weights[sel] = Math.round(v*10)/10; popRow = 'h0'; }
     save(); render(); return;
   }
   if (c.id === 'protein'){
     if (isClosed(sel)) return;
     const v = parseFloat(c.value);
-    if (isNaN(v) || v <= 0) delete state.protein[sel]; else state.protein[sel] = Math.round(v);
+    if (isNaN(v) || v <= 0) delete state.protein[sel]; else { if (v >= PROTEIN_MIN && !isDone(sel,'h1')) popRow = 'h1'; state.protein[sel] = Math.round(v); }
     save(); render(); return;
   }
   if (!c.dataset || !c.dataset.id || isClosed(sel)) return;
   const k = `${sel}|${c.dataset.id}`;
+  if (c.checked) popRow = c.dataset.id;
   if (c.checked) state.checks[k] = true; else delete state.checks[k];
   save(); render();
 });
@@ -1569,13 +1698,13 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.target.id === 'protein' || e.target.id === 'wt0')) e.target.blur();
   if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chatin'){ e.preventDefault(); sendChat(e.target.value); }
   if (e.key === 'Enter' && e.target.id === 'unlockpass') unlock();
-  if (e.key === 'Escape'){ document.getElementById('modal').hidden = true; closeCoach(); }
+  if (e.key === 'Escape'){ hideModal(); closeCoach(); }
 });
 // Pull fresh data whenever the app comes back to the foreground or the connection returns.
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
 window.addEventListener('online', syncNow);
 window.addEventListener('offline', renderSync);
-document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') e.target.hidden = true; });
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
 document.getElementById('coachsheet').addEventListener('click', e => { if (e.target.id === 'coachsheet') closeCoach(); });
 
 render();
