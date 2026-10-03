@@ -7,26 +7,29 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="theme-color" content="#1F7A5C">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="The Cut">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F1F3F2; --card:#FFFFFF; --ink:#16201C; --mute:#5E6B66; --line:#D9DFDC;
-  --accent:#1F7A5C; --accent-ink:#FFFFFF; --soft:#E4EFEA;
-  --display:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
-  --body:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --bg:#F2F2F7; --card:#FFFFFF; --ink:#000000; --mute:#8A8A8E; --line:#D8D8DC;
+  --accent:#248A3D; --accent-ink:#FFFFFF; --soft:#E6F4EA;
+  --fill:rgba(118,118,128,.12); --material:rgba(249,249,249,.8); --grabber:#C7C7CC;
+  --red:#FF3B30; --orange:#FF9500; --seg-on:#FFFFFF;
+  --display:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,'Segoe UI',Roboto,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI',Roboto,sans-serif;
+  --rounded:ui-rounded,'SF Pro Rounded',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   box-sizing:border-box;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#0F1513; --card:#18201D; --ink:#E8EEEB; --mute:#98A59F; --line:#2A3531;
-    --accent:#4CC59A; --accent-ink:#06150F; --soft:#1E2B26;
+    --bg:#000000; --card:#1C1C1E; --ink:#FFFFFF; --mute:#8E8E93; --line:#38383A;
+    --accent:#30D158; --accent-ink:#00230C; --soft:#1B3022;
+    --fill:rgba(118,118,128,.24); --material:rgba(28,28,30,.78); --grabber:#48484A;
+    --red:#FF453A; --orange:#FF9F0A; --seg-on:#636366;
   }
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -322,6 +325,135 @@ label.iconbtn{display:inline-flex; align-items:center}
 @keyframes bump{0%{transform:translateY(0)} 40%{transform:translateY(-3px) scale(1.08)} 100%{transform:none}}
 @keyframes blink{0%,80%,100%{opacity:.25; transform:translateY(0)} 40%{opacity:.9; transform:translateY(-3px)}}
 .confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:30}
+
+/* ================= Apple (iOS / macOS) look ================= */
+body{font-size:17px; line-height:1.35; -webkit-font-smoothing:antialiased; letter-spacing:-.01em; -webkit-tap-highlight-color:transparent}
+h1,h2{letter-spacing:-.02em; line-height:1.15}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.top{align-items:flex-end; margin-top:6px}
+.top h1{font-size:34px; font-weight:700; letter-spacing:.01em}
+.top .goal{font-size:15px}
+.qotd{font-style:normal; font-size:15px; margin-top:4px}
+.sect{font-size:22px; font-weight:700}
+.card{border:0; border-radius:14px; padding:16px; margin-top:14px}
+.daytitle{font-size:28px; font-weight:700}
+.meta{font-size:15px}
+.note{border-left:0; border-radius:10px; font-size:15px; padding:10px 12px}
+.sub{font-family:var(--body); font-size:13px; font-weight:400; text-transform:uppercase; letter-spacing:.02em; color:var(--mute); margin:22px 0 0}
+
+/* Reminders-style rows with round checkmarks */
+.row{grid-template-columns:24px 1fr; gap:12px; padding:11px 0; border-bottom:.5px solid var(--line)}
+.row input, .pmark{width:24px; height:24px; border-radius:50%; border:1.5px solid #C7C7CC}
+.row input:checked, .pmark.on{background:var(--accent); border-color:var(--accent)}
+.row input:checked::after, .pmark.on::after{width:5px; height:10px; border-width:0 2.2px 2.2px 0; transform:translateY(-1px) rotate(45deg)}
+.row .name{font-weight:400; font-size:17px}
+.row .rx{font-size:14px; margin-top:1px}
+.row input:checked ~ div .name{text-decoration:none; color:var(--mute)}
+.count{font-weight:600; font-size:15px}
+.prog{font-size:14px}
+
+/* Controls */
+.btn{height:50px; border-radius:12px; font-size:17px; font-weight:600; padding:0 20px}
+.iconbtn{background:var(--fill); border:0; border-radius:10px; height:36px; min-width:40px; color:var(--accent); font-size:20px}
+.iconbtn.text{font-size:15px; font-weight:500; color:var(--accent)}
+.linkbtn{color:var(--accent); text-decoration:none; font-size:15px}
+.wgrid input, .pin input, .cgrid input, .tokrow input, #chatin, .aisel, .setup input{background:var(--fill); border:0; border-radius:10px; color:var(--ink)}
+.wgrid input, .pin input, .cgrid #waist{font-family:var(--rounded); font-weight:600}
+.seg{background:var(--fill); border:0; border-radius:9px; padding:2px; gap:0; overflow:visible}
+.seg button{border-radius:7px; padding:6px 10px; font-size:13px; font-weight:500; color:var(--ink)}
+.seg button.on{background:var(--seg-on); color:var(--ink); box-shadow:0 3px 8px rgba(0,0,0,.12), 0 1px 1px rgba(0,0,0,.04)}
+.modeseg{margin-bottom:16px}
+.chip{border:0; background:var(--fill); color:var(--ink); font-size:13px; padding:5px 12px}
+.chip.hit{background:var(--accent); color:var(--accent-ink)}
+.track, .pbar, .pill .bar{background:var(--fill)}
+.closebtn:disabled{background:var(--fill)}
+
+/* Week strip, like Fitness/Calendar */
+.weeknav{margin:16px 0 6px}
+.weeknav .label{font-size:17px; font-weight:600}
+.weekmeta{font-size:13px; margin:0 0 8px}
+.weekmeta.deload{color:var(--accent)}
+.strip{background:var(--card); border-radius:14px; padding:8px 4px; gap:0}
+.pill{background:transparent; border:0; border-radius:12px; padding:4px 0; gap:3px}
+.pill .dn{font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.03em}
+.pill .dd{font-family:var(--rounded); font-size:19px; font-weight:600; width:36px; height:36px; display:grid; place-items:center; border-radius:50%; line-height:1; transition:background-color .2s, color .2s}
+.pill.sel{background:transparent; border:0}
+.pill.sel .dd{background:var(--accent); color:var(--accent-ink)}
+.pill.sel .dn, .pill.sel .mt{color:var(--accent)}
+.pill.today .dd{color:var(--accent)}
+.pill.today.sel .dd{color:var(--accent-ink)}
+.pill.good{box-shadow:none; border:0}
+.pill.good:not(.sel) .dd{box-shadow:inset 0 0 0 2px var(--accent)}
+.pill.alt:not(.sel) .dd{opacity:.6}
+.pill .bar{width:55%; height:3px; margin-top:2px}
+.pill.sel .bar{background:var(--fill)}
+.pill .mt{font-size:10px}
+
+/* Numbers in SF Rounded */
+.big, .mstats b, .projrow b, .badge .be + .bn{font-variant-numeric:tabular-nums}
+.big, .mstats b, .projrow b{font-family:var(--rounded); font-weight:700}
+.avg .big{font-size:30px}
+
+/* Grouped lists in Settings */
+details{border:0; border-radius:14px; padding:0 16px; margin-top:14px}
+summary{list-style:none; font-family:var(--body); font-size:17px; font-weight:400; display:flex; justify-content:space-between; align-items:center; padding:13px 0}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"›"; color:var(--grabber); font-size:24px; line-height:1; transition:transform .2s}
+details[open] summary::after{transform:rotate(90deg)}
+details[open] summary{border-bottom:.5px solid var(--line); margin-bottom:10px}
+details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spacing:.02em; color:var(--mute); margin:18px 0 6px}
+.badge{border:0; background:var(--bg); border-radius:12px}
+.badge.got{background:var(--soft); border:0}
+.closedbar{background:var(--fill); border-radius:10px; font-weight:500}
+.warn{border-radius:10px}
+.tag{font-size:12px}
+.ctable td{font-size:15px}
+.syncdot.ok::before{background:var(--accent)}
+.syncdot.busy::before{background:var(--orange)}
+.syncdot.err::before{background:var(--red)}
+.syncdot.err, .syncerr{color:var(--red)}
+
+/* Tab bar with system material */
+.tabbar{background:var(--material); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border-top:.5px solid var(--line); padding:5px 8px calc(4px + env(safe-area-inset-bottom,0px))}
+.tabbar button{font-size:10px; font-weight:500; gap:1px; padding:4px 0}
+.tabbar svg{width:26px; height:26px; stroke-width:1.7}
+.tabbar button[aria-current]{font-weight:600}
+.tabbar button[aria-current] svg{stroke-width:2.1}
+
+/* Floating coach capsule + sheet with grabber */
+.coachpill{background:var(--material); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); color:var(--accent);
+  border:.5px solid var(--line); height:44px; font-size:15px; box-shadow:0 4px 18px rgba(0,0,0,.14)}
+.sheetcard{border-radius:14px 14px 0 0; position:relative; padding-top:22px}
+.sheetcard::before{content:""; position:absolute; top:6px; left:50%; width:36px; height:5px; margin-left:-18px; border-radius:3px; background:var(--grabber)}
+.sheethead h2{font-size:22px; font-weight:700}
+.sheethead .iconbtn{width:30px; min-width:30px; height:30px; border-radius:50%; color:var(--mute); font-size:14px; padding:0}
+.msg{border-radius:18px; font-size:16px; padding:8px 13px}
+.msg.user{border-bottom-right-radius:6px}
+.msg.assistant{background:var(--fill); border-bottom-left-radius:6px}
+.mcard{border-radius:14px}
+.mcard h2{font-size:28px}
+
+/* Mac: sidebar instead of a bottom tab bar */
+@media (min-width:900px){
+  body{padding:28px 32px 48px 252px}
+  main{max-width:680px}
+  .tabbar{top:0; bottom:0; right:auto; width:220px; display:flex; flex-direction:column; gap:2px;
+    padding:56px 10px 12px; border-top:0; border-right:.5px solid var(--line)}
+  .tabbar button{flex-direction:row; justify-content:flex-start; gap:10px; font-size:14px; padding:7px 10px; border-radius:8px; color:var(--ink)}
+  .tabbar button[aria-current]{background:var(--fill); color:var(--accent)}
+  .tabbar svg{width:20px; height:20px; color:var(--accent)}
+  .coachpill{bottom:24px; right:24px}
+  .sheet{align-items:center}
+  .sheetcard{border-radius:14px; max-width:520px; height:min(80vh,680px)}
+  .sheetcard::before{display:none}
+}
+@media (hover:hover){
+  .pill:not(.sel):hover .dd{background:var(--fill)}
+  .btn:hover{filter:brightness(1.07)}
+  .iconbtn:hover, .chip:hover{filter:brightness(.96)}
+  .tabbar button:not([aria-current]):hover{background:var(--fill)}
+  summary:hover{opacity:.75}
+}
 </style>
 </head>
 <body>
@@ -394,7 +526,7 @@ label.iconbtn{display:inline-flex; align-items:center}
   <details id="syncbox">
     <summary>Sync &amp; backup</summary>
     <div id="sync-off">
-      <p>Keep a copy of your entries in a private GitHub Gist, so they survive cleared browser data or a new phone.</p>
+      <p>Keep a copy of your entries in a secret GitHub Gist (encrypt it below), so they survive cleared browser data or a new phone.</p>
       <ol>
         <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=The%20Cut%20app" target="_blank" rel="noopener">Create a GitHub token</a> with only the <b>gist</b> scope. Pick a long expiration.</li>
         <li>Paste it below. It is stored on this device only.</li>
@@ -1424,7 +1556,7 @@ function render(){
     chips = MILESTONES.map(m => `<span class="chip">${m}</span>`).join('');
   }
   document.getElementById('weight').innerHTML = `
-    <h2 style="font-size:26px">Weigh-in</h2>
+    <h2 class="sect">Weigh-in</h2>
     <div class="wgrid">
       <div><label for="wt">${fromIso(sel).toLocaleDateString(undefined,{month:'short', day:'numeric'})} (kg)</label>
         <input id="wt" type="number" inputmode="decimal" step="0.1" min="40" max="300" value="${typeof cur==='number'?cur:''}" placeholder="0.0"></div>
@@ -1462,10 +1594,10 @@ function renderReview(){
   const label = `${fmt(r.ws)} – ${fmt(addDays(r.ws,6))}`;
   const isLastWeek = iso(weekStart) === iso(mon(today));
   const el = document.getElementById('review');
-  if (r.empty){ el.innerHTML = `<h2 style="font-size:26px">Week review</h2><div class="meta">${label}: nothing logged that week.</div>`; return; }
+  if (r.empty){ el.innerHTML = `<h2 class="sect">Week review</h2><div class="meta">${label}: nothing logged that week.</div>`; return; }
   const stat = (v, cap) => `<div><div class="big">${v}</div><div class="cap">${cap}</div></div>`;
   el.innerHTML = `
-    <h2 style="font-size:26px">Week review ${isLastWeek && dow(today) <= 1 ? '<span class="newtag">New</span>' : ''}</h2>
+    <h2 class="sect">Week review ${isLastWeek && dow(today) <= 1 ? '<span class="newtag">New</span>' : ''}</h2>
     <div class="meta">${isLastWeek ? 'Last week' : 'Week before this one'} · ${label}</div>
     <div class="avg">
       ${stat(r.loss == null ? '—' : (r.loss >= 0 ? '−' : '+') + Math.abs(r.loss).toFixed(1), 'kg vs week before')}
@@ -1482,7 +1614,7 @@ function renderReview(){
 function renderBadges(){
   const st = stats(), got = earned(st);
   document.getElementById('badges').innerHTML = `
-    <h2 style="font-size:26px">Streaks &amp; badges</h2>
+    <h2 class="sect">Streaks &amp; badges</h2>
     <div class="avg">
       <div><div class="big">🔥 ${st.cur}</div><div class="cap">current streak</div></div>
       <div><div class="big">${st.best}</div><div class="cap">best streak</div></div>
@@ -1512,7 +1644,7 @@ function renderCheckin(){
       ${c.note ? `<tr class="cnote"><td colspan="5">${esc(c.note)}</td></tr>` : ''}`;
   }).join('');
   document.getElementById('checkin').innerHTML = `
-    <h2 style="font-size:26px">Check-in</h2>
+    <h2 class="sect">Check-in</h2>
     <div class="meta">${due}</div>
     <div class="cgrid">
       <div><label for="waist">Waist on ${fmt(fromIso(sel))} (in)</label>
@@ -1699,6 +1831,15 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chatin'){ e.preventDefault(); sendChat(e.target.value); }
   if (e.key === 'Enter' && e.target.id === 'unlockpass') unlock();
   if (e.key === 'Escape'){ hideModal(); closeCoach(); }
+  // Mac shortcuts: 1–4 tabs, ←/→ day, C coach (ignored while typing)
+  if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const tabs = ['today','progress','goals','more'];
+  if (/^[1-4]$/.test(e.key)){ closeCoach(); showTab(tabs[e.key - 1]); }
+  else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !document.querySelector('.view[data-view="today"]').hidden){
+    const d = addDays(fromIso(sel), e.key === 'ArrowLeft' ? -1 : 1);
+    sel = iso(d); weekStart = mon(d); render();
+  }
+  else if (e.key.toLowerCase() === 'c'){ document.getElementById('coachsheet').hidden ? openCoach() : closeCoach(); }
 });
 // Pull fresh data whenever the app comes back to the foreground or the connection returns.
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
