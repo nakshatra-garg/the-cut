@@ -29,6 +29,24 @@ your history is pulled down automatically.
 > iOS keeps the home-screen app's storage separate from Safari's. Connect sync
 > **inside the installed app**, not in a Safari tab.
 
+## Evening reminder
+
+A GitHub Action ([reminder.yml](.github/workflows/reminder.yml)) runs every 15 minutes. If it's past
+your reminder time and today isn't closed, it sends a push notification to your phone.
+
+One-time setup (two repo secrets):
+
+- `VAPID_PRIVATE_KEY`: the push signing key (already set). Its public half is in `index.html` and `remind.mjs`.
+- `GIST_TOKEN`: a classic token with only the `gist` scope, so the Action can read your data gist.
+
+Then in the app, opened from the home-screen icon: **Evening reminder** → pick a time → **Turn on**.
+
+Send a test notification:
+
+```bash
+gh workflow run reminder.yml -f force=true
+```
+
 ## Updating the app
 
 Edit `index.html`, bump `VERSION` in `sw.js` (e.g. `thecut-v2`), commit and push.

@@ -214,6 +214,16 @@ label.iconbtn{display:inline-flex; align-items:center}
 .mbadges small{width:100%; font-weight:400; color:var(--mute)}
 .mquote{margin:16px 0; font-style:italic; font-size:15px}
 .mcard .btn{width:100%}
+.warn{margin:10px 0 0; padding:10px 12px; border-radius:10px; background:#FBEFD5; color:#5A4210; font-size:14px}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .warn{background:#3A3018; color:#F2DFA8} }
+.proj{margin-top:14px}
+.projrow{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:4px; font-size:15px}
+.projrow b{font-family:var(--display); font-size:20px; margin-right:4px}
+.tips{margin:12px 0 0; padding-left:20px}
+.tips li{margin:4px 0}
+.newtag{font-family:var(--body); font-size:12px; font-weight:600; vertical-align:middle; background:var(--accent); color:var(--accent-ink); border-radius:999px; padding:2px 8px; margin-left:6px}
+#remindbox p{margin:4px 0 10px; font-size:15px}
+#remindbox .cap{font-size:13px; color:var(--mute)}
 .confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:30}
 </style>
 </head>
@@ -236,6 +246,7 @@ label.iconbtn{display:inline-flex; align-items:center}
 
   <section class="card" id="day"></section>
   <section class="card" id="weight"></section>
+  <section class="card" id="review"></section>
   <section class="card" id="badges"></section>
   <section class="card" id="checkin"></section>
   <div class="modal" id="modal" hidden></div>
@@ -274,6 +285,20 @@ label.iconbtn{display:inline-flex; align-items:center}
     <ul>
       <li>Weight trend down, waist down (47 in at the start), strength mostly held, recovery manageable, no worsening pain</li>
     </ul>
+  </details>
+
+  <details id="remindbox">
+    <summary>Evening reminder</summary>
+    <div id="remindbody">
+      <p>A notification at this time if you haven't closed the day yet. Needs sync connected and the app opened from its home-screen icon.</p>
+      <div class="tokrow">
+        <input id="remindtime" type="time" value="21:00" aria-label="Reminder time">
+        <button class="btn" data-remindon>Turn on</button>
+      </div>
+      <p class="cap" id="remindstatus" style="margin-top:8px"></p>
+      <p class="syncerr" id="remindmsg"></p>
+      <div class="btnrow"><button class="iconbtn text" data-remindoff hidden>Turn off</button></div>
+    </div>
   </details>
 
   <details id="syncbox">
@@ -428,6 +453,7 @@ const MODES = {
 };
 const PROTEIN_MIN = 175, PROTEIN_MAX = 190, WAIST_START = 47, GOOD_PCT = 80;
 const PAIN = ['None','Mild','Moderate','Bad'];
+const MAX_REST = 2; // full rest days per week before the app warns
 
 const QUOTES = [
   "The scale lags. The habits don't.",
@@ -510,6 +536,9 @@ const SYNC_KEY = 'cutplan-sync', GIST_FILE = 'cut-plan-data.json', GIST_DESC = '
 let cfg = {};
 try { cfg = JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch(e) {}
 function saveCfg(){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); } catch(e) {} }
+const PUSH_FILE = 'cut-push.json';
+const VAPID_PUBLIC = 'BMGx86N2Apj1n5afkZPF1YhIbtAS44ahMVLJtaJfJFV2R1bBMhvlwJa4SjDluY8Z49PYlTtfewh7nxBri2eYpf4';
+let remind = null;   // cut-push.json as last read from the gist (the Action updates it too)
 let sync = { status: cfg.token ? 'idle' : 'off', msg:'', last:null };
 let syncBusy = false, syncAgain = false, syncTimer = null;
 
@@ -540,6 +569,8 @@ async function ensureGist(){
 }
 async function pullRemote(){
   const g = await gh(`/gists/${cfg.gistId}`);
+  const pf = g.files && g.files[PUSH_FILE];
+  if (pf && !pf.truncated){ try { remind = JSON.parse(pf.content); renderRemind(); } catch(e) {} }
   const f = g.files && g.files[GIST_FILE];
   if (!f) return null;
   const text = f.truncated ? await (await fetch(f.raw_url, { cache:'no-store' })).text() : f.content;
@@ -603,6 +634,52 @@ async function connect(){
   if (sync.status === 'err' && !cfg.gistId){
     const msg = sync.msg; cfg = {}; saveCfg(); setSync('err', msg);  // bad token: stay disconnected, show why
   } else document.getElementById('tokenin').value = '';
+}
+
+/* ---------- Evening reminder (push sent by .github/workflows/reminder.yml) ---------- */
+function renderRemind(){
+  const el = document.getElementById('remindbody'); if (!el) return;
+  const on = remind && remind.enabled, time = (remind && remind.time) || '21:00';
+  let status = 'Off.';
+  if (on) status = `On: a nudge at ${time} (${remind.tz}) if the day isn't closed.`;
+  else if (remind && remind.expired) status = 'Stopped: this phone’s notification permission expired. Turn it on again.';
+  el.querySelector('#remindstatus').textContent = status;
+  const ti = el.querySelector('#remindtime'); if (document.activeElement !== ti) ti.value = time;
+  el.querySelector('[data-remindon]').textContent = on ? 'Update time' : 'Turn on';
+  el.querySelector('[data-remindoff]').hidden = !on;
+}
+const remindMsg = t => { document.getElementById('remindmsg').textContent = t; };
+function b64uToBytes(s){
+  const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from(b, c => c.charCodeAt(0));
+}
+async function writePush(obj){
+  await gh(`/gists/${cfg.gistId}`, { method:'PATCH', body: JSON.stringify({ files: { [PUSH_FILE]: { content: JSON.stringify(obj) } } }) });
+  remind = obj; renderRemind();
+}
+async function remindOn(){
+  remindMsg('');
+  if (!cfg.token || !cfg.gistId) return remindMsg('Connect sync first: reminders are sent through your gist.');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window))
+    return remindMsg('Open The Cut from its home-screen icon to turn on reminders (needs iOS 16.4 or later).');
+  try {
+    if (await Notification.requestPermission() !== 'granted')
+      return remindMsg('Notifications are blocked. Allow them in Settings → Notifications → The Cut.');
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription()
+      || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(VAPID_PUBLIC) });
+    const time = document.getElementById('remindtime').value || '21:00';
+    await writePush({ enabled: true, subscription: sub.toJSON(), time,
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone, lastSent: null });
+    reg.showNotification('Reminders on', { body: `You'll get a nudge at ${time} if the day isn't closed.`, icon: 'icon-192.png' });
+  } catch(e){ remindMsg(`Couldn't turn on reminders: ${e.message}`); }
+}
+async function remindOff(){
+  try {
+    const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if (sub) await sub.unsubscribe();
+    await writePush({ enabled: false, time: (remind && remind.time) || '21:00' });
+  } catch(e){ remindMsg(`Couldn't turn off reminders: ${e.message}`); }
 }
 
 function exportBackup(){
@@ -777,6 +854,46 @@ const BADGES = [
   ['📉','Waist −2 in', s => s.waistDrop >= 2],
   ['📉','Waist −4 in', s => s.waistDrop >= 4]
 ].map(([icon,name,test]) => ({ icon, name, test }));
+const restCount = ws => [...Array(7)].filter((_,k) => modeOf(iso(addDays(ws,k))) === 'rest').length;
+const fmtY = d => d.getFullYear() === today.getFullYear() ? fmt(d) : d.toLocaleDateString(undefined,{month:'short', day:'numeric', year:'numeric'});
+
+// Least-squares slope through the last 4 weeks of weigh-ins, projected to upcoming milestones.
+function projection(){
+  const all = Object.keys(state.weights).filter(k => typeof state.weights[k] === 'number').sort();
+  if (!all.length) return null;
+  const last = fromIso(all[all.length-1]), from = iso(addDays(last, -27));
+  const pts = all.filter(d => d >= from).map(d => [(fromIso(d) - last) / 864e5, state.weights[d]]);
+  if (pts.length < 5 || -pts[0][0] < 10) return { msg:'Log at least 5 weigh-ins over 10+ days to see a projected date.' };
+  const n = pts.length, mx = pts.reduce((a,p)=>a+p[0],0)/n, my = pts.reduce((a,p)=>a+p[1],0)/n;
+  const b = pts.reduce((a,p)=>a+(p[0]-mx)*(p[1]-my),0) / pts.reduce((a,p)=>a+(p[0]-mx)**2,0);
+  const now = my - b*mx;           // fitted weight on the last weigh-in day
+  if (b > -0.005) return { msg:'Trend is flat or rising over the last 4 weeks, so there is no projected date yet.' };
+  const targets = [...new Set([...MILESTONES.filter(m => m < now).slice(0,1), 110, GOAL])].filter(m => m < now);
+  return { rate: b*7, hits: targets.map(m => ({ m, d: addDays(last, Math.ceil((now - m) / -b)) })) };
+}
+
+function weekReview(ws){
+  const days = [...Array(7)].map((_,k) => iso(addDays(ws,k)));
+  const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+  const wk = s => mean([...Array(7)].map((_,k) => state.weights[iso(addDays(s,k))]).filter(v => typeof v === 'number'));
+  const w0 = wk(ws), w1 = wk(addDays(ws,-7)), w2 = wk(addDays(ws,-14));
+  const loss = w0 != null && w1 != null ? w1 - w0 : null, prevLoss = w1 != null && w2 != null ? w2 - w1 : null;
+  const prot = mean(days.map(d => state.protein[d]).filter(v => typeof v === 'number'));
+  const lifts = days.filter(d => { const v = dayView(d); if (!v.lift) return false;
+    const done = v.items.filter(it => isDone(d, it[0])).length; return done / v.items.length >= 0.8; }).length;
+  const tips = [];
+  if (loss == null) tips.push('Weigh in on at least a couple of days this week and last to get a pace check.');
+  else if (loss > 1) tips.push('Losing over 1 kg/week. Add ~150–200 kcal back to protect muscle.');
+  else if (loss < 0.3 && prevLoss != null && prevLoss < 0.3) tips.push('Under 0.3 kg/week for 2 weeks running. Cut ~150–200 kcal a day.');
+  else if (loss < 0.3) tips.push('Slow week. If next week is also under 0.3 kg, cut ~150–200 kcal a day.');
+  else tips.push('On pace (0.3–1 kg/week). Change nothing.');
+  if (prot != null && prot < PROTEIN_MIN) tips.push(`Protein averaged ${Math.round(prot)} g. Add a protein source to one meal.`);
+  if (restCount(ws) > MAX_REST) tips.push(`${restCount(ws)} full rest days. Swap one for cardio only next week.`);
+  return { ws, w0, loss, prot, lifts, good: days.filter(isGood).length, closed: days.filter(isClosed).length,
+    rest: restCount(ws), cardio: days.filter(d => modeOf(d) === 'cardio').length, tips,
+    empty: !days.some(d => isClosed(d) || typeof state.weights[d] === 'number' || typeof state.protein[d] === 'number') };
+}
+
 const earned = s => new Set(BADGES.filter(b => b.test(s)).map(b => b.name));
 function progress(date){
   const ids = idsFor(date);
@@ -847,6 +964,7 @@ function render(){
     <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${day.planned ? ` · planned: ${day.planned}` : ''}</div>
     ${dl ? '<div class="banner"><b>Deload week</b>Sets are trimmed below. Keep your usual weights and stop 3–4 reps short of failure.</div>' : ''}
     <div class="note">${day.note}</div>
+    ${day.mode === 'rest' && restCount(mon(fromIso(sel))) > MAX_REST ? `<div class="warn">⚠️ ${restCount(mon(fromIso(sel)))} full rest days this week. The plan allows ${MAX_REST}. Consider <b>Cardio only</b> instead: an easy walk still counts.</div>` : ''}
     ${day.items.length ? '<h3 class="sub">Session</h3>' : ''}
     ${day.items.map(([id,name,rx]) => row(id, name, dl ? deloadRx(rx) : rx)).join('')}
     ${day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : ''}
@@ -885,10 +1003,41 @@ function render(){
     ${avgHtml}
     <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(barPct)}"><i style="width:${barPct}%"></i></div>
     <div class="chips">${chips}</div>
+    ${projHtml()}
     ${chartHtml()}`;
 
+  renderReview();
   renderBadges();
   renderCheckin();
+  renderRemind();
+}
+
+function projHtml(){
+  const pr = projection();
+  if (!pr) return '';
+  if (pr.msg) return `<div class="proj cap">${pr.msg}</div>`;
+  if (!pr.hits.length) return '';
+  return `<div class="proj"><div class="cap">At your 4-week pace (${pr.rate.toFixed(2).replace('-','−')} kg/week)</div>
+    <div class="projrow">${pr.hits.map(h => `<span><b>${h.m}</b> ${fmtY(h.d)}</span>`).join('')}</div></div>`;
+}
+
+function renderReview(){
+  const r = weekReview(addDays(weekStart, -7));
+  const label = `${fmt(r.ws)} – ${fmt(addDays(r.ws,6))}`;
+  const isLastWeek = iso(weekStart) === iso(mon(today));
+  const el = document.getElementById('review');
+  if (r.empty){ el.innerHTML = `<h2 style="font-size:26px">Week review</h2><div class="meta">${label}: nothing logged that week.</div>`; return; }
+  const stat = (v, cap) => `<div><div class="big">${v}</div><div class="cap">${cap}</div></div>`;
+  el.innerHTML = `
+    <h2 style="font-size:26px">Week review ${isLastWeek && dow(today) <= 1 ? '<span class="newtag">New</span>' : ''}</h2>
+    <div class="meta">${isLastWeek ? 'Last week' : 'Week before this one'} · ${label}</div>
+    <div class="avg">
+      ${stat(r.loss == null ? '—' : (r.loss >= 0 ? '−' : '+') + Math.abs(r.loss).toFixed(1), 'kg vs week before')}
+      ${stat(r.prot == null ? '—' : Math.round(r.prot) + ' g', 'avg protein')}
+      ${stat(`${r.good}/7`, 'good days')}
+    </div>
+    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardio} cardio-only · ${r.rest} rest · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
+    <ul class="tips">${r.tips.map(t => `<li>${t}</li>`).join('')}</ul>`;
 }
 
 function renderBadges(){
@@ -1004,6 +1153,8 @@ document.addEventListener('click', e => {
     const box = document.getElementById('syncbox'); box.open = true; box.scrollIntoView({ behavior:'smooth', block:'start' });
   }
   else if (t.dataset.mode){
+    if (t.dataset.mode === 'rest' && modeOf(sel) !== 'rest' && restCount(mon(fromIso(sel))) >= MAX_REST
+        && !confirm(`This would be rest day #${restCount(mon(fromIso(sel))) + 1} this week. The plan works best with ${MAX_REST} at most. Mark it as rest anyway?`)) return;
     if (t.dataset.mode === 'plan') delete state.modes[sel]; else state.modes[sel] = t.dataset.mode;
     save(); render();
   }
@@ -1025,6 +1176,8 @@ document.addEventListener('click', e => {
     save(); render();
   }
   else if (t.hasAttribute('data-closeday')) closeDay();
+  else if (t.hasAttribute('data-remindon')) remindOn();
+  else if (t.hasAttribute('data-remindoff')) remindOff();
   else if (t.hasAttribute('data-reopen')){ delete state.closed[sel]; save(); render(); }
   else if (t.hasAttribute('data-recap')) showRecap(sel, false);
   else if (t.hasAttribute('data-dismiss')) document.getElementById('modal').hidden = true;

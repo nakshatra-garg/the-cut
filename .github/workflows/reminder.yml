@@ -1,0 +1,38 @@
+name: Evening reminder
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # GitHub may run these a few minutes late
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Send a test notification now (ignores time and closed day)'
+        type: boolean
+        default: false
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency: reminder
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-audit --no-fund web-push@3
+      - run: node .github/scripts/remind.mjs
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          FORCE: ${{ inputs.force }}
+      # GitHub pauses scheduled workflows in repos with no activity for 60 days; re-enabling keeps it running.
+      - name: Keep schedule alive
+        run: gh api -X PUT repos/${{ github.repository }}/actions/workflows/reminder.yml/enable
+        env:
+          GH_TOKEN: ${{ github.token }}

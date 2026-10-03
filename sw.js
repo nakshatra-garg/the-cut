@@ -1,5 +1,5 @@
 // Bump VERSION whenever you change index.html so phones pick up the new shell.
-const VERSION = 'thecut-v3';
+const VERSION = 'thecut-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -45,5 +45,23 @@ self.addEventListener('fetch', e => {
       return res;
     }).catch(() => hit);
     return hit || net;
+  }));
+});
+
+// Evening reminder pushed from the GitHub Action (.github/scripts/remind.mjs).
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'The Cut', {
+    body: d.body || 'Time to close your day.', icon: 'icon-192.png', badge: 'icon-192.png',
+    tag: 'close-day', data: { url: d.url || './' }
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    const open = list.find(c => 'focus' in c);
+    return open ? open.focus() : self.clients.openWindow(e.notification.data.url);
   }));
 });
