@@ -28,7 +28,8 @@ jobs:
       - run: npm install --no-save --no-audit --no-fund web-push@3
       - run: node .github/scripts/remind.mjs
         env:
-          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          DATA_TOKEN: ${{ secrets.DATA_TOKEN }}
+          DATA_REPO: ${{ github.repository_owner }}/the-cut-data
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           DATA_PASSPHRASE: ${{ secrets.DATA_PASSPHRASE }}
           FORCE: ${{ inputs.force }}

@@ -18,14 +18,17 @@ Open the URL in Safari → Share → **Add to Home Screen**. Open the app from t
 
 ## Turn on sync
 
-1. Create a classic token with only the `gist` scope:
-   https://github.com/settings/tokens/new?scopes=gist&description=The%20Cut%20app
-2. In the app: **Sync & backup** → paste the token → **Connect**.
+Data lives in a **private** repo (default `the-cut-data`) as `data.json`, plus `push.json` for reminder settings.
 
-Entries are saved on the phone first (works offline), then copied to a secret (unlisted) gist
-named `cut-plan-data.json` in your account. Secret gists are viewable by anyone with the link, so set a
-passphrase under **Sync & backup → Encrypt synced data**: the gist then holds only AES-GCM ciphertext. On a new phone, connect with a token and
-your history is pulled down automatically.
+1. Create the private repo.
+2. Create a fine-grained token: https://github.com/settings/personal-access-tokens/new
+   - Repository access: *Only select repositories* → the data repo
+   - Permissions → Repository → **Contents: Read and write**
+3. In the app: **Settings → Sync & backup** → repo name + token → **Connect**.
+4. Optional but recommended: **Encrypt synced data** with a passphrase (AES-GCM).
+
+Every sync is a commit, so the repo's history doubles as version history. The app refuses to sync
+to a repo that isn't private.
 
 > iOS keeps the home-screen app's storage separate from Safari's. Connect sync
 > **inside the installed app**, not in a Safari tab.
@@ -38,7 +41,7 @@ your reminder time and today isn't closed, it sends a push notification to your 
 One-time setup (two repo secrets):
 
 - `VAPID_PRIVATE_KEY`: the push signing key (already set). Its public half is in `index.html` and `remind.mjs`.
-- `GIST_TOKEN`: a classic token with only the `gist` scope, so the Action can read your data gist.
+- `DATA_TOKEN`: the fine-grained token above (Contents read/write on the data repo only).
 - `DATA_PASSPHRASE`: only if you encrypted your data. Same passphrase as in the app.
 
 Then in the app, opened from the home-screen icon: **Evening reminder** → pick a time → **Turn on**.

@@ -526,20 +526,25 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   <details id="syncbox">
     <summary>Sync &amp; backup</summary>
     <div id="sync-off">
-      <p>Keep a copy of your entries in a secret GitHub Gist (encrypt it below), so they survive cleared browser data or a new phone.</p>
+      <p class="warn" id="migratenote" hidden>Sync now uses a <b>private repo</b> instead of a gist. Connect below; your data and passphrase on this phone are kept.</p>
+      <p>Keep a copy of your entries in a <b>private</b> GitHub repo, so they survive cleared browser data or a new phone.</p>
       <ol>
-        <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=The%20Cut%20app" target="_blank" rel="noopener">Create a GitHub token</a> with only the <b>gist</b> scope. Pick a long expiration.</li>
+        <li>Create a private repo (e.g. <b>the-cut-data</b>).</li>
+        <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a fine-grained token</a>: <i>Repository access → Only select repositories →</i> that repo; <i>Permissions → Contents → Read and write</i>. Pick the longest expiration.</li>
         <li>Paste it below. It is stored on this device only.</li>
       </ol>
-      <div class="tokrow">
-        <input id="tokenin" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ghp_…" aria-label="GitHub token">
-        <button class="btn" data-connect>Connect</button>
+      <div class="cgrid">
+        <input id="repoin" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="the-cut-data" placeholder="the-cut-data" aria-label="Repository name">
+        <div class="tokrow">
+          <input id="tokenin" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…" aria-label="GitHub token">
+          <button class="btn" data-connect>Connect</button>
+        </div>
       </div>
       <p class="syncerr" id="connecterr"></p>
     </div>
     <div id="sync-on" hidden>
       <p id="syncstatus"></p>
-      <p class="cap">Data file: <a id="gistlink" href="#" target="_blank" rel="noopener">your secret gist</a></p>
+      <p class="cap">Data repo: <a id="repolink" href="#" target="_blank" rel="noopener"></a></p>
       <div class="btnrow">
         <button class="btn" data-syncnow>Sync now</button>
         <button class="iconbtn text" data-disconnect>Disconnect this device</button>
@@ -556,7 +561,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
     </div>
     <div id="enc-set" hidden>
       <h3 id="enc-title">Encrypt synced data</h3>
-      <p class="cap">Your gist will hold only scrambled data. You'll enter this passphrase once on each new device. If you forget it, the synced copy can't be recovered (this phone keeps its own copy).</p>
+      <p class="cap">Your repo will hold only scrambled data. You'll enter this passphrase once on each new device. If you forget it, the synced copy can't be recovered (this phone keeps its own copy).</p>
       <div class="cgrid" style="margin-top:6px">
         <input id="pass1" type="password" autocomplete="new-password" placeholder="Passphrase (8+ characters)" aria-label="New passphrase">
         <input id="pass2" type="password" autocomplete="new-password" placeholder="Repeat passphrase" aria-label="Repeat passphrase">
@@ -605,7 +610,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
       <li>Weight trend down, waist down (47 in at the start), strength mostly held, recovery manageable, no worsening pain</li>
     </ul>
   </details>
-  <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your GitHub Gist when connected (encrypted if you set a passphrase).</p>
+  <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your private GitHub repo when connected (encrypted if you set a passphrase).</p>
   </div>
   <div class="modal" id="modal" hidden></div>
 
@@ -841,41 +846,59 @@ function writeLocal(){ try { localStorage.setItem(KEY, JSON.stringify(state)); }
 // Every user edit bumps updatedAt; sync uses it to decide which copy is newer.
 function save(){ state.updatedAt = Date.now(); writeLocal(); scheduleSync(); }
 
-/* ---------- GitHub Gist sync ---------- */
-const SYNC_KEY = 'cutplan-sync', GIST_FILE = 'cut-plan-data.json', GIST_DESC = 'The Cut: training log data';
+/* ---------- Sync to a private GitHub repo (Contents API) ---------- */
+const SYNC_KEY = 'cutplan-sync', DATA_FILE = 'data.json', PUSH_FILE = 'push.json', DEFAULT_REPO = 'the-cut-data';
 let cfg = {};
 try { cfg = JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch(e) {}
 function saveCfg(){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); } catch(e) {} }
-const PUSH_FILE = 'cut-push.json';
+// Connection fields only; the encryption key and AI key in cfg must survive connect/disconnect.
+const dropConnection = () => { for (const k of ['token','repo','gistId']) delete cfg[k]; saveCfg(); };
+let migrated = false;
+if (cfg.gistId && !cfg.repo){ dropConnection(); migrated = true; }   // old gist setup: reconnect to a repo
 const VAPID_PUBLIC = 'BMGx86N2Apj1n5afkZPF1YhIbtAS44ahMVLJtaJfJFV2R1bBMhvlwJa4SjDluY8Z49PYlTtfewh7nxBri2eYpf4';
-let remind = null;   // cut-push.json as last read from the gist (the Action updates it too)
+let remind = null;   // push.json as last read from the data repo (the Action updates it too)
 let sync = { status: cfg.token ? 'idle' : 'off', msg:'', last:null };
-let syncBusy = false, syncAgain = false, syncTimer = null;
+let syncBusy = false, syncAgain = false, syncTimer = null, conflicts = 0;
 
 async function gh(path, opts = {}){
-  const headers = { Authorization:`Bearer ${cfg.token}`, Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
+  const headers = { Authorization:`Bearer ${cfg.token}`, Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28', ...(opts.headers || {}) };
   if (opts.body) headers['Content-Type'] = 'application/json';
   const r = await fetch('https://api.github.com' + path, { ...opts, headers, cache:'no-store' });
   if (!r.ok){
     const err = new Error(r.status === 401 ? 'GitHub rejected the token. Check it or create a new one.'
-      : r.status === 403 || r.status === 404 && !path.startsWith('/gists/') ? 'Token is missing the gist permission.'
+      : r.status === 403 ? `The token can't write to ${cfg.repo}. Give it Contents: Read and write.`
+      : r.status === 409 ? 'Data changed on another device. Retrying.'
       : `GitHub error ${r.status}`);
     err.status = r.status; throw err;
   }
-  return r.json();
+  return opts.raw ? r.text() : r.json();
 }
-async function ensureGist(){
-  if (cfg.gistId) return;
-  // Reuse an existing data gist (e.g. on a new phone) before creating one.
-  for (let page = 1; page <= 10; page++){
-    const list = await gh(`/gists?per_page=100&page=${page}`);
-    const hit = list.find(g => g.files && g.files[GIST_FILE]);
-    if (hit){ cfg.gistId = hit.id; saveCfg(); return; }
-    if (list.length < 100) break;
-  }
-  const g = await gh('/gists', { method:'POST', body: JSON.stringify({
-    description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: JSON.stringify(state) } } }) });
-  cfg.gistId = g.id; saveCfg();
+let repoOk = false, shas = {};
+async function ensureRepo(){
+  if (repoOk) return;
+  if (!cfg.repo.includes('/')){ cfg.repo = `${(await gh('/user')).login}/${cfg.repo}`; saveCfg(); }
+  let info;
+  try { info = await gh(`/repos/${cfg.repo}`); }
+  catch(e){ if (e.status === 404) e.message = `Can't find ${cfg.repo}. Check the name and that the token has access to it.`; throw e; }
+  // Never sync into a repo anyone can read.
+  if (!info.private) throw Object.assign(new Error(`${cfg.repo} is public. Sync only works with a private repo.`), { status: 0 });
+  repoOk = true;
+}
+const utf8b64 = t => b64(new TextEncoder().encode(t));
+async function readFile(name){
+  let f;
+  try { f = await gh(`/repos/${cfg.repo}/contents/${name}`); }
+  catch(e){ if (e.status === 404){ delete shas[name]; return null; } throw e; }
+  shas[name] = f.sha;
+  const text = f.content ? new TextDecoder().decode(unb64(f.content.replace(/\n/g, '')))
+    : await gh(`/repos/${cfg.repo}/contents/${name}`, { raw: true, headers: { Accept:'application/vnd.github.raw+json' } });   // files over 1 MB
+  return JSON.parse(text);
+}
+async function writeFile(name, obj, message){
+  const body = { message, content: utf8b64(JSON.stringify(obj)) };
+  if (shas[name]) body.sha = shas[name];
+  const r = await gh(`/repos/${cfg.repo}/contents/${name}`, { method:'PUT', body: JSON.stringify(body) });
+  shas[name] = r.content.sha;
 }
 /* ---------- Encryption: PBKDF2 → AES-GCM. Only the derived key is kept on the device. ---------- */
 const KDF_ITER = 310000;
@@ -905,13 +928,9 @@ async function decryptEnv(env, key){
 function lockedError(msg){ const e = new Error(msg); e.locked = true; return e; }
 
 async function pullRemote(){
-  const g = await gh(`/gists/${cfg.gistId}`);
-  const pf = g.files && g.files[PUSH_FILE];
-  if (pf && !pf.truncated){ try { remind = JSON.parse(pf.content); renderRemind(); } catch(e) {} }
-  const f = g.files && g.files[GIST_FILE];
-  if (!f) return null;
-  const text = f.truncated ? await (await fetch(f.raw_url, { cache:'no-store' })).text() : f.content;
-  const raw = JSON.parse(text);
+  try { remind = await readFile(PUSH_FILE); renderRemind(); } catch(e) {}
+  const raw = await readFile(DATA_FILE);
+  if (!raw) return null;
   if (!raw.enc){ lockedEnv = null; return { data: normalize(raw), encrypted: false }; }
   // Encrypted remote: never fall through to a push without the right key, or we'd overwrite it.
   if (!encKey){ lockedEnv = raw; throw lockedError('Synced data is encrypted. Enter your passphrase to unlock it.'); }
@@ -919,8 +938,7 @@ async function pullRemote(){
   catch(e){ lockedEnv = raw; throw lockedError('Passphrase on this device no longer matches the synced data. Enter the current one.'); }
 }
 async function pushRemote(){
-  const content = JSON.stringify(encKey ? await encryptState() : state);
-  await gh(`/gists/${cfg.gistId}`, { method:'PATCH', body: JSON.stringify({ files: { [GIST_FILE]: { content } } }) });
+  await writeFile(DATA_FILE, encKey ? await encryptState() : state, `Sync ${new Date().toISOString().slice(0,16).replace('T',' ')}`);
 }
 async function setPassphrase(){
   const p1 = document.getElementById('pass1').value, p2 = document.getElementById('pass2').value;
@@ -962,7 +980,7 @@ async function syncNow(){
   syncBusy = true; setSync('busy');
   try {
     await keyReady;
-    await ensureGist();
+    await ensureRepo();
     const pulled = await pullRemote(), remote = pulled && pulled.data;
     if (remote && remote.updatedAt > state.updatedAt){
       state = remote; writeLocal(); render();
@@ -970,10 +988,10 @@ async function syncNow(){
     } else if (!remote || state.updatedAt > remote.updatedAt || (encKey && !pulled.encrypted)){
       await pushRemote();
     }
-    sync.last = new Date();
+    sync.last = new Date(); conflicts = 0;
     setSync('ok');
   } catch(e){
-    if (e.status === 404 && cfg.gistId){ cfg.gistId = null; saveCfg(); syncAgain = true; }
+    if (e.status === 409 && ++conflicts <= 3){ syncAgain = true; return; }   // someone saved in between: pull and retry
     if (e.locked){ setSync('locked', e.message); return; }
     setSync('err', navigator.onLine === false ? 'Offline. Will sync when you are back online.' : e.message);
   } finally {
@@ -1000,18 +1018,20 @@ function renderSync(){
   st.textContent = sync.status === 'err' || sync.status === 'locked' ? sync.msg
     : sync.status === 'busy' ? 'Syncing…'
     : sync.last ? `${encKey ? 'Synced and encrypted' : 'Synced'} at ${sync.last.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'})}.` : 'Connected.';
-  const link = document.getElementById('gistlink');
-  link.href = cfg.gistId ? `https://gist.github.com/${cfg.gistId}` : 'https://gist.github.com/';
+  const link = document.getElementById('repolink');
+  link.href = `https://github.com/${cfg.repo || ''}`; link.textContent = `${cfg.repo || DEFAULT_REPO} (private)`;
   if (!on) document.getElementById('connecterr').textContent = sync.status === 'err' ? sync.msg : '';
+  document.getElementById('migratenote').hidden = !migrated || on;
 }
 async function connect(){
   const token = document.getElementById('tokenin').value.trim();
+  const repo = document.getElementById('repoin').value.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '') || DEFAULT_REPO;
   if (!token) return;
-  cfg = { token }; saveCfg();
+  delete cfg.gistId; cfg.token = token; cfg.repo = repo; repoOk = false; shas = {}; saveCfg();
   await syncNow();
-  if (sync.status === 'err' && !cfg.gistId){
-    const msg = sync.msg; cfg = {}; saveCfg(); setSync('err', msg);  // bad token: stay disconnected, show why
-  } else document.getElementById('tokenin').value = '';
+  if (sync.status === 'err' && !repoOk){
+    const msg = sync.msg; dropConnection(); setSync('err', msg);   // bad token or repo: stay disconnected, show why
+  } else { document.getElementById('tokenin').value = ''; migrated = false; renderSync(); }
 }
 
 /* ---------- AI coach via OpenRouter (key stays on this device, never synced) ---------- */
@@ -1206,12 +1226,14 @@ function b64uToBytes(s){
   return Uint8Array.from(b, c => c.charCodeAt(0));
 }
 async function writePush(obj){
-  await gh(`/gists/${cfg.gistId}`, { method:'PATCH', body: JSON.stringify({ files: { [PUSH_FILE]: { content: JSON.stringify(obj) } } }) });
+  await ensureRepo();
+  try { await writeFile(PUSH_FILE, obj, 'Update reminder settings'); }
+  catch(e){ if (e.status !== 409 && e.status !== 422) throw e; await readFile(PUSH_FILE); await writeFile(PUSH_FILE, obj, 'Update reminder settings'); }
   remind = obj; renderRemind();
 }
 async function remindOn(){
   remindMsg('');
-  if (!cfg.token || !cfg.gistId) return remindMsg('Connect sync first: reminders are sent through your gist.');
+  if (!cfg.token || !cfg.repo) return remindMsg('Connect sync first: reminder settings are stored in your data repo.');
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window))
     return remindMsg('Open The Cut from its home-screen icon to turn on reminders (needs iOS 16.4 or later).');
   try {
@@ -1726,7 +1748,7 @@ document.addEventListener('click', e => {
   else if (t.hasAttribute('data-connect')) connect();
   else if (t.hasAttribute('data-syncnow')) syncNow();
   else if (t.hasAttribute('data-disconnect')){
-    if (confirm('Disconnect sync on this device? Your entries stay here and in your gist.')){ cfg = {}; saveCfg(); setSync('off'); }
+    if (confirm('Disconnect sync on this device? Your entries stay here and in your repo.')){ dropConnection(); repoOk = false; shas = {}; setSync('off'); }
   }
   else if (t.hasAttribute('data-export')) exportBackup();
   else if (t.hasAttribute('data-opensync')){

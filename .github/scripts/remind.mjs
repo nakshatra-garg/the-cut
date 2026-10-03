@@ -1,12 +1,12 @@
 // Sends the evening "close your day" push. Runs every 15 min from reminder.yml.
-// Reads settings (time, timezone, push subscription) from cut-push.json in the same
-// private gist the app syncs to, and skips days that are already closed.
+// Reads settings (time, timezone, push subscription) from push.json in the private data repo,
+// and skips days that are already closed (data.json, decrypted with DATA_PASSPHRASE).
 import webpush from 'web-push';
 
 const VAPID_PUBLIC = 'BMGx86N2Apj1n5afkZPF1YhIbtAS44ahMVLJtaJfJFV2R1bBMhvlwJa4SjDluY8Z49PYlTtfewh7nxBri2eYpf4';
 const SITE = 'https://nakshatra-garg.github.io/the-cut/';
-const DATA = 'cut-plan-data.json', PUSH = 'cut-push.json', PROTEIN_MIN = 175;
-const { GIST_TOKEN, VAPID_PRIVATE_KEY, DATA_PASSPHRASE, FORCE } = process.env;
+const DATA = 'data.json', PUSH = 'push.json', PROTEIN_MIN = 175;
+const { DATA_TOKEN, DATA_REPO, VAPID_PRIVATE_KEY, DATA_PASSPHRASE, FORCE } = process.env;
 const force = FORCE === 'true';
 
 const log = m => console.log(m);
@@ -23,25 +23,21 @@ async function decrypt(env){
 
 async function gh(path, opts = {}){
   const r = await fetch('https://api.github.com' + path, { ...opts, headers: {
-    Authorization: `Bearer ${GIST_TOKEN}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' } });
+    Authorization: `Bearer ${DATA_TOKEN}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' } });
+  if (r.status === 404 && opts.optional) return null;
   if (!r.ok) throw new Error(`GitHub ${r.status} on ${path}`);
   return r.json();
 }
 
-if (!GIST_TOKEN || !VAPID_PRIVATE_KEY) warn('GIST_TOKEN or VAPID_PRIVATE_KEY secret is not set. See README.');
+if (!DATA_TOKEN || !VAPID_PRIVATE_KEY) warn('DATA_TOKEN or VAPID_PRIVATE_KEY secret is not set. See README.');
 
 try {
-  let gist = null;
-  for (let page = 1; page <= 10 && !gist; page++){
-    const list = await gh(`/gists?per_page=100&page=${page}`);
-    gist = list.find(g => g.files && g.files[DATA]);
-    if (list.length < 100) break;
-  }
-  if (!gist) warn('No synced data gist found. Connect sync in the app first.');
-  const full = await gh(`/gists/${gist.id}`);
-  const read = async f => {
-    const x = full.files[f]; if (!x) return null;
-    return JSON.parse(x.truncated ? await (await fetch(x.raw_url)).text() : x.content);
+  const sha = {};
+  const read = async name => {
+    const f = await gh(`/repos/${DATA_REPO}/contents/${name}`, { optional: true });
+    if (!f) return null;
+    sha[name] = f.sha;
+    return JSON.parse(Buffer.from(f.content, 'base64').toString('utf8'));
   };
 
   const push = await read(PUSH);
@@ -86,7 +82,8 @@ try {
       log('Subscription expired. The app will ask you to turn reminders on again.');
     } else throw e;
   }
-  await gh(`/gists/${gist.id}`, { method: 'PATCH', body: JSON.stringify({ files: { [PUSH]: { content: JSON.stringify(push) } } }) });
+  await gh(`/repos/${DATA_REPO}/contents/${PUSH}`, { method: 'PUT', body: JSON.stringify({
+    message: 'Reminder sent', sha: sha[PUSH], content: Buffer.from(JSON.stringify(push)).toString('base64') }) });
 } catch (e) {
   warn(e.message);
 }
