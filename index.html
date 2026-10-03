@@ -62,6 +62,11 @@ button{font:inherit; color:inherit}
 .pill.sel{background:var(--ink); border-color:var(--ink)}
 .pill.sel .dn,.pill.sel .dd{color:var(--bg)}
 .pill.sel .bar{background:rgba(128,128,128,.4)}
+.pill .mt{font-size:10px; line-height:1.2; color:var(--accent); font-weight:600; letter-spacing:.02em}
+.pill.alt:not(.sel) .dd{opacity:.55}
+.pill.sel .mt{color:var(--bg)}
+.modeseg{display:flex; margin:0 0 14px; width:100%}
+.modeseg button{flex:1; padding:8px 4px; font-size:14px}
 
 .weekmeta{text-align:center; font-size:14px; color:var(--mute); margin:-2px 0 10px}
 .weekmeta.deload{color:var(--accent); font-weight:600}
@@ -346,10 +351,27 @@ const HABITS = [
   ['No worsening pain','Foot/ankle, knees, shoulders']
 ];
 
+// Per-date overrides: gym closed, skipping weights, or a planned day off.
+const MODES = {
+  plan:   { label:'Planned' },
+  cardio: { label:'Cardio only', tag:'Cardio', title:'Cardio Only', load:'Easy / moderate',
+    note:'Gym off or skipping weights today. Keep it conversational and pain-free. Any cardio counts.',
+    items:[
+      ['Cardio','30–45 min easy/moderate: treadmill, elliptical, bike, or a brisk outdoor walk'],
+      ['Mobility','10 min: hips, ankles, thoracic spine, shoulders'],
+      ['Optional core','2–3 easy sets: dead bugs, planks, Pallof press']
+    ]},
+  rest:   { label:'Rest day', tag:'Rest', title:'Rest Day', load:'Off',
+    note:'Full rest. Eat to plan, hit protein, sleep well. A light pain-free walk is fine.',
+    items:[] }
+};
+const modeOf = date => MODES[state.modes[date]] ? state.modes[date] : 'plan';
+
 /* ---------- State ---------- */
 function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
+  if (!s.modes || typeof s.modes !== 'object') s.modes = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
   return s;
@@ -552,9 +574,17 @@ function chartHtml(){
 }
 
 /* ---------- Helpers ---------- */
+// What a date's session looks like after applying its mode. Item ids differ per mode
+// (`3-2` planned, `cardio-0`), so switching modes never mixes up ticked boxes.
+function dayView(date){
+  const i = dow(fromIso(date)), mode = modeOf(date);
+  if (mode === 'plan') return { mode, ...PLAN[i], items: PLAN[i].items.map((it,k) => [`${i}-${k}`, ...it]) };
+  const m = MODES[mode];
+  return { mode, day: PLAN[i].day, title: m.title, load: m.load, note: m.note, lift: false,
+    planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, ...it]) };
+}
 function idsFor(date){
-  const i = dow(fromIso(date));
-  return [...PLAN[i].items.map((_,k)=>`${i}-${k}`), ...HABITS.map((_,k)=>`h${k}`)];
+  return [...dayView(date).items.map(it => it[0]), ...HABITS.map((_,k)=>`h${k}`)];
 }
 function isDone(date,id){ return !!state.checks[`${date}|${id}`]; }
 function progress(date){
@@ -589,24 +619,28 @@ function render(){
   for (let k=0; k<7; k++){
     const d = addDays(weekStart,k), s = iso(d), p = progress(s);
     const pct = Math.round(100*p.done/p.total);
-    strip += `<button class="pill ${s===sel?'sel':''} ${s===iso(today)?'today':''}" data-date="${s}" aria-label="${PLAN[k].day} ${fmt(d)}, ${pct}% done">
+    const md = modeOf(s), tag = MODES[md].tag;
+    strip += `<button class="pill ${s===sel?'sel':''} ${s===iso(today)?'today':''} ${md!=='plan'?'alt':''}" data-date="${s}" aria-label="${PLAN[k].day} ${fmt(d)}${tag ? ', ' + MODES[md].label : ''}, ${pct}% done">
       <span class="dn">${PLAN[k].day}</span><span class="dd">${d.getDate()}</span>
-      <span class="bar"><i style="width:${pct}%"></i></span></button>`;
+      <span class="bar"><i style="width:${pct}%"></i></span><span class="mt">${tag || '&nbsp;'}</span></button>`;
   }
   document.getElementById('strip').innerHTML = strip;
 
   // day card
-  const i = dow(fromIso(sel)), day = PLAN[i], p = progress(sel);
+  const day = dayView(sel), p = progress(sel);
   const dl = wi.deload && day.lift;
   const row = (id,name,rx) => `<label class="row"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''}>
       <div><span class="name">${name}</span><span class="rx">${rx}</span></div></label>`;
+  const modeSeg = Object.entries(MODES).map(([k,m]) =>
+    `<button class="${day.mode===k?'on':''}" data-mode="${k}" aria-pressed="${day.mode===k}">${m.label}</button>`).join('');
   document.getElementById('day').innerHTML = `
+    <div class="seg modeseg" role="group" aria-label="Day type">${modeSeg}</div>
     <h2 class="daytitle">${day.title}</h2>
-    <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}</div>
+    <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${day.planned ? ` · planned: ${day.planned}` : ''}</div>
     ${dl ? '<div class="banner"><b>Deload week</b>Sets are trimmed below. Keep your usual weights and stop 3–4 reps short of failure.</div>' : ''}
     <div class="note">${day.note}</div>
-    <h3 class="sub">Session</h3>
-    ${day.items.map((it,k)=>row(`${i}-${k}`, it[0], dl ? deloadRx(it[1]) : it[1])).join('')}
+    ${day.items.length ? '<h3 class="sub">Session</h3>' : ''}
+    ${day.items.map(([id,name,rx]) => row(id, name, dl ? deloadRx(rx) : rx)).join('')}
     ${day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : ''}
     <h3 class="sub">Daily</h3>
     ${HABITS.map((h,k)=>row(`h${k}`, h[0], h[1])).join('')}
@@ -657,6 +691,10 @@ document.addEventListener('click', e => {
   else if (t.hasAttribute('data-export')) exportBackup();
   else if (t.hasAttribute('data-opensync')){
     const box = document.getElementById('syncbox'); box.open = true; box.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  else if (t.dataset.mode){
+    if (t.dataset.mode === 'plan') delete state.modes[sel]; else state.modes[sel] = t.dataset.mode;
+    save(); render();
   }
   else if (t.dataset.date){ sel = t.dataset.date; render(); }
   else if (t.dataset.nav){
