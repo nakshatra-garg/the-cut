@@ -30,6 +30,7 @@ jobs:
         env:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          DATA_PASSPHRASE: ${{ secrets.DATA_PASSPHRASE }}
           FORCE: ${{ inputs.force }}
       # GitHub pauses scheduled workflows in repos with no activity for 60 days; re-enabling keeps it running.
       - name: Keep schedule alive

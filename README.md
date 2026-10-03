@@ -22,8 +22,9 @@ Open the URL in Safari → Share → **Add to Home Screen**. Open the app from t
    https://github.com/settings/tokens/new?scopes=gist&description=The%20Cut%20app
 2. In the app: **Sync & backup** → paste the token → **Connect**.
 
-Entries are saved on the phone first (works offline), then copied to a private gist
-named `cut-plan-data.json` in your account. On a new phone, connect with a token and
+Entries are saved on the phone first (works offline), then copied to a secret (unlisted) gist
+named `cut-plan-data.json` in your account. Secret gists are viewable by anyone with the link, so set a
+passphrase under **Sync & backup → Encrypt synced data**: the gist then holds only AES-GCM ciphertext. On a new phone, connect with a token and
 your history is pulled down automatically.
 
 > iOS keeps the home-screen app's storage separate from Safari's. Connect sync
@@ -38,6 +39,7 @@ One-time setup (two repo secrets):
 
 - `VAPID_PRIVATE_KEY`: the push signing key (already set). Its public half is in `index.html` and `remind.mjs`.
 - `GIST_TOKEN`: a classic token with only the `gist` scope, so the Action can read your data gist.
+- `DATA_PASSPHRASE`: only if you encrypted your data. Same passphrase as in the app.
 
 Then in the app, opened from the home-screen icon: **Evening reminder** → pick a time → **Turn on**.
 
@@ -46,6 +48,12 @@ Send a test notification:
 ```bash
 gh workflow run reminder.yml -f force=true
 ```
+
+## AI coach (OpenRouter, free)
+
+Create a key at https://openrouter.ai/settings/keys (credit limit 0), paste it under **AI coach**.
+It powers the coach note on Close day, weekly insights, and the chat. The key stays on the device;
+only numbers are sent (no check-in notes). Free models are rate-limited and may log prompts.
 
 ## Updating the app
 

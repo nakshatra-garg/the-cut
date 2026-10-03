@@ -224,6 +224,21 @@ label.iconbtn{display:inline-flex; align-items:center}
 .newtag{font-family:var(--body); font-size:12px; font-weight:600; vertical-align:middle; background:var(--accent); color:var(--accent-ink); border-radius:999px; padding:2px 8px; margin-left:6px}
 #remindbox p{margin:4px 0 10px; font-size:15px}
 #remindbox .cap{font-size:13px; color:var(--mute)}
+.chatlog{max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-top:10px}
+.msg{padding:9px 12px; border-radius:14px; max-width:88%; font-size:15px; line-height:1.4}
+.msg.user{align-self:flex-end; background:var(--accent); color:var(--accent-ink); border-bottom-right-radius:4px}
+.msg.assistant{align-self:flex-start; background:var(--soft); border-bottom-left-radius:4px}
+.typing{color:var(--mute); font-style:italic}
+.asks{margin-top:10px}
+.asks .chip{background:none; cursor:pointer}
+#chatin{flex:1; min-width:0; min-height:46px; max-height:120px; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit; font-size:16px; resize:vertical}
+.aibox{margin-top:12px; padding:10px 12px; border-radius:10px; background:var(--soft); font-size:15px}
+.aibox b:first-child{display:block; margin-bottom:4px}
+.mcoach{margin:12px 0 0; padding:10px 12px; border-radius:12px; background:var(--soft); font-size:15px; text-align:left}
+.aisel{display:block; width:100%; height:44px; margin-top:4px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit; font-size:16px; padding:0 8px}
+#aibox p{margin:4px 0 10px; font-size:15px}
+#aibox ol{margin:0 0 12px; padding-left:20px; font-size:15px}
+#aibox a{color:var(--accent)}
 .confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:30}
 </style>
 </head>
@@ -287,6 +302,44 @@ label.iconbtn{display:inline-flex; align-items:center}
     </ul>
   </details>
 
+  <section class="card" id="coach">
+    <h2 style="font-size:26px">Ask the coach</h2>
+    <div class="chatlog" id="chatlog" aria-live="polite"></div>
+    <div class="chips asks">
+      <button class="chip" data-ask="What should I eat for dinner to hit my protein today?">Dinner for protein?</button>
+      <button class="chip" data-ask="Am I on pace for my goal? What should I change?">Am I on pace?</button>
+      <button class="chip" data-ask="My knee hurts a bit on squats. What can I swap in?">Knee-friendly swap?</button>
+    </div>
+    <div class="tokrow" style="margin-top:10px">
+      <textarea id="chatin" rows="1" placeholder="Ask the coach…" aria-label="Message the coach"></textarea>
+      <button class="btn" data-chatsend>Send</button>
+    </div>
+    <button class="linkbtn" data-chatclear id="chatclear" hidden>Clear chat</button>
+  </section>
+
+  <details id="aibox">
+    <summary>AI coach</summary>
+    <div id="ai-off">
+      <p>Free AI through OpenRouter powers the coach note when you close a day, weekly insights and the chat.</p>
+      <ol>
+        <li>Sign up free at <a href="https://openrouter.ai" target="_blank" rel="noopener">openrouter.ai</a>.</li>
+        <li><a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">Create a key</a> and set its credit limit to <b>0</b>, so it can never be charged.</li>
+        <li>Paste it here. It is stored on this device only and never synced.</li>
+      </ol>
+      <div class="tokrow">
+        <input id="aikey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-or-…" aria-label="OpenRouter key">
+        <button class="btn" data-aisave>Save</button>
+      </div>
+    </div>
+    <div id="ai-on" hidden>
+      <p>Key saved on this device.</p>
+      <label for="aimodel" class="cap">Model (free)</label>
+      <select id="aimodel" class="aisel"></select>
+      <p class="cap" style="margin-top:8px">If this model is busy, the app falls back to another free one. Free models may log prompts, so the app sends only your numbers, never check-in notes.</p>
+      <div class="btnrow"><button class="iconbtn text" data-airemove>Remove key</button></div>
+    </div>
+  </details>
+
   <details id="remindbox">
     <summary>Evening reminder</summary>
     <div id="remindbody">
@@ -317,11 +370,30 @@ label.iconbtn{display:inline-flex; align-items:center}
     </div>
     <div id="sync-on" hidden>
       <p id="syncstatus"></p>
-      <p class="cap">Data file: <a id="gistlink" href="#" target="_blank" rel="noopener">your private gist</a></p>
+      <p class="cap">Data file: <a id="gistlink" href="#" target="_blank" rel="noopener">your secret gist</a></p>
       <div class="btnrow">
         <button class="btn" data-syncnow>Sync now</button>
         <button class="iconbtn text" data-disconnect>Disconnect this device</button>
       </div>
+    </div>
+    <div id="enc-unlock" hidden>
+      <h3>Unlock synced data</h3>
+      <p id="unlocktext"></p>
+      <div class="tokrow">
+        <input id="unlockpass" type="password" autocomplete="current-password" placeholder="Passphrase" aria-label="Passphrase">
+        <button class="btn" data-unlock>Unlock</button>
+      </div>
+      <p class="syncerr" id="unlockmsg"></p>
+    </div>
+    <div id="enc-set" hidden>
+      <h3 id="enc-title">Encrypt synced data</h3>
+      <p class="cap">Your gist will hold only scrambled data. You'll enter this passphrase once on each new device. If you forget it, the synced copy can't be recovered (this phone keeps its own copy).</p>
+      <div class="cgrid" style="margin-top:6px">
+        <input id="pass1" type="password" autocomplete="new-password" placeholder="Passphrase (8+ characters)" aria-label="New passphrase">
+        <input id="pass2" type="password" autocomplete="new-password" placeholder="Repeat passphrase" aria-label="Repeat passphrase">
+      </div>
+      <div class="btnrow" style="margin-top:8px"><button class="btn" id="enc-btn" data-encrypt>Encrypt</button></div>
+      <p class="syncerr" id="passmsg"></p>
     </div>
     <h3>Backup file</h3>
     <div class="btnrow">
@@ -330,7 +402,7 @@ label.iconbtn{display:inline-flex; align-items:center}
     </div>
   </details>
 
-  <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your private GitHub Gist when connected.</p>
+  <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your GitHub Gist when connected (encrypted if you set a passphrase).</p>
 </main>
 
 <script>
@@ -519,7 +591,8 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
-  for (const k of ['closed','protein','checkins']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['closed','protein','checkins','ai']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['close','week']) if (!s.ai[k] || typeof s.ai[k] !== 'object') s.ai[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
   return s;
@@ -567,6 +640,33 @@ async function ensureGist(){
     description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: JSON.stringify(state) } } }) });
   cfg.gistId = g.id; saveCfg();
 }
+/* ---------- Encryption: PBKDF2 → AES-GCM. Only the derived key is kept on the device. ---------- */
+const KDF_ITER = 310000;
+let encKey = null, lockedEnv = null;
+function b64(buf){ const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); }
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pass, salt){
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt: unb64(salt), iterations: KDF_ITER, hash:'SHA-256' },
+    base, { name:'AES-GCM', length:256 }, true, ['encrypt','decrypt']);
+}
+const keyReady = (async () => {
+  try { if (cfg.encKey) encKey = await crypto.subtle.importKey('jwk', cfg.encKey, 'AES-GCM', true, ['encrypt','decrypt']); } catch(e) {}
+})();
+async function storeKey(key, salt){
+  encKey = key; cfg.encKey = await crypto.subtle.exportKey('jwk', key); cfg.encSalt = salt; saveCfg();
+}
+async function encryptState(){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, encKey, new TextEncoder().encode(JSON.stringify(state)));
+  return { v:1, enc:'AES-GCM', kdf:'PBKDF2-SHA256', iter: KDF_ITER, salt: cfg.encSalt, iv: b64(iv), ct: b64(ct) };
+}
+async function decryptEnv(env, key){
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv: unb64(env.iv) }, key, unb64(env.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function lockedError(msg){ const e = new Error(msg); e.locked = true; return e; }
+
 async function pullRemote(){
   const g = await gh(`/gists/${cfg.gistId}`);
   const pf = g.files && g.files[PUSH_FILE];
@@ -574,11 +674,44 @@ async function pullRemote(){
   const f = g.files && g.files[GIST_FILE];
   if (!f) return null;
   const text = f.truncated ? await (await fetch(f.raw_url, { cache:'no-store' })).text() : f.content;
-  return normalize(JSON.parse(text));
+  const raw = JSON.parse(text);
+  if (!raw.enc){ lockedEnv = null; return { data: normalize(raw), encrypted: false }; }
+  // Encrypted remote: never fall through to a push without the right key, or we'd overwrite it.
+  if (!encKey){ lockedEnv = raw; throw lockedError('Synced data is encrypted. Enter your passphrase to unlock it.'); }
+  try { lockedEnv = null; return { data: normalize(await decryptEnv(raw, encKey)), encrypted: true }; }
+  catch(e){ lockedEnv = raw; throw lockedError('Passphrase on this device no longer matches the synced data. Enter the current one.'); }
 }
 async function pushRemote(){
-  await gh(`/gists/${cfg.gistId}`, { method:'PATCH', body: JSON.stringify({
-    files: { [GIST_FILE]: { content: JSON.stringify(state) } } }) });
+  const content = JSON.stringify(encKey ? await encryptState() : state);
+  await gh(`/gists/${cfg.gistId}`, { method:'PATCH', body: JSON.stringify({ files: { [GIST_FILE]: { content } } }) });
+}
+async function setPassphrase(){
+  const p1 = document.getElementById('pass1').value, p2 = document.getElementById('pass2').value;
+  const msg = t => { document.getElementById('passmsg').textContent = t; };
+  if (p1.length < 8) return msg('Use at least 8 characters.');
+  if (p1 !== p2) return msg('The two passphrases do not match.');
+  msg('Encrypting…');
+  try {
+    if (encKey) await syncNow();                      // changing: catch up with the old key first
+    const salt = b64(crypto.getRandomValues(new Uint8Array(16)));
+    await storeKey(await deriveKey(p1, salt), salt);
+    await pushRemote();
+    document.getElementById('pass1').value = document.getElementById('pass2').value = '';
+    msg(''); renderSync();
+  } catch(e){ msg(`Couldn't encrypt: ${e.message}`); }
+}
+async function unlock(){
+  const pass = document.getElementById('unlockpass').value;
+  const msg = t => { document.getElementById('unlockmsg').textContent = t; };
+  if (!lockedEnv || !pass) return;
+  msg('Unlocking…');
+  try {
+    const key = await deriveKey(pass, lockedEnv.salt);
+    await decryptEnv(lockedEnv, key);                 // throws on a wrong passphrase
+    await storeKey(key, lockedEnv.salt);
+    document.getElementById('unlockpass').value = ''; msg('');
+    await syncNow();
+  } catch(e){ msg('Wrong passphrase.'); }
 }
 function scheduleSync(){
   if (!cfg.token) return;
@@ -591,17 +724,20 @@ async function syncNow(){
   if (syncBusy){ syncAgain = true; return; }
   syncBusy = true; setSync('busy');
   try {
+    await keyReady;
     await ensureGist();
-    const remote = await pullRemote();
+    const pulled = await pullRemote(), remote = pulled && pulled.data;
     if (remote && remote.updatedAt > state.updatedAt){
       state = remote; writeLocal(); render();
-    } else if (!remote || state.updatedAt > remote.updatedAt){
+      if (encKey && !pulled.encrypted) await pushRemote();   // first sync after turning encryption on
+    } else if (!remote || state.updatedAt > remote.updatedAt || (encKey && !pulled.encrypted)){
       await pushRemote();
     }
     sync.last = new Date();
     setSync('ok');
   } catch(e){
     if (e.status === 404 && cfg.gistId){ cfg.gistId = null; saveCfg(); syncAgain = true; }
+    if (e.locked){ setSync('locked', e.message); return; }
     setSync('err', navigator.onLine === false ? 'Offline. Will sync when you are back online.' : e.message);
   } finally {
     syncBusy = false;
@@ -612,14 +748,19 @@ function setSync(status, msg = ''){ sync.status = status; sync.msg = msg; render
 function renderSync(){
   const on = !!cfg.token;
   const dot = document.getElementById('syncdot');
-  const label = { off:'Not synced', idle:'Sync on', busy:'Syncing…', ok:'Synced', err: navigator.onLine === false ? 'Offline' : 'Sync error' }[sync.status];
+  const label = { off:'Not synced', idle:'Sync on', busy:'Syncing…', ok: encKey ? 'Synced 🔒' : 'Synced', locked:'Locked', err: navigator.onLine === false ? 'Offline' : 'Sync error' }[sync.status];
   dot.textContent = label;
-  dot.className = 'syncdot ' + ({ ok:'ok', busy:'busy', err:'err' }[sync.status] || '');
+  dot.className = 'syncdot ' + ({ ok:'ok', busy:'busy', err:'err', locked:'err' }[sync.status] || '');
+  document.getElementById('enc-unlock').hidden = sync.status !== 'locked';
+  document.getElementById('enc-set').hidden = !on || sync.status === 'locked';
+  document.getElementById('enc-title').textContent = encKey ? '🔒 Encrypted. Change passphrase' : 'Encrypt synced data';
+  document.getElementById('enc-btn').textContent = encKey ? 'Change passphrase' : 'Encrypt';
+  document.getElementById('unlocktext').textContent = sync.msg;
   document.getElementById('sync-off').hidden = on;
   document.getElementById('sync-on').hidden = !on;
   const st = document.getElementById('syncstatus');
-  st.className = sync.status === 'err' ? 'syncerr' : '';
-  st.textContent = sync.status === 'err' ? sync.msg
+  st.className = sync.status === 'err' || sync.status === 'locked' ? 'syncerr' : '';
+  st.textContent = sync.status === 'err' || sync.status === 'locked' ? sync.msg
     : sync.status === 'busy' ? 'Syncing…'
     : sync.last ? `Synced at ${sync.last.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'})}.` : 'Connected.';
   const link = document.getElementById('gistlink');
@@ -634,6 +775,103 @@ async function connect(){
   if (sync.status === 'err' && !cfg.gistId){
     const msg = sync.msg; cfg = {}; saveCfg(); setSync('err', msg);  // bad token: stay disconnected, show why
   } else document.getElementById('tokenin').value = '';
+}
+
+/* ---------- AI coach via OpenRouter (key stays on this device, never synced) ---------- */
+const AI_PREF = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'qwen/qwen3.8-27b:free', 'google/gemma-4-26b-a4b-it:free'];
+const AI_SYSTEM = `You are the coach inside "The Cut", a personal fat-loss and strength tracking app. Be concise, warm and specific; use the numbers given. Prefer Indian food examples when talking about meals. You are not a doctor: never diagnose, and for persistent or worsening pain recommend getting it assessed by a physio or doctor. Stick to the user's plan rules unless there is a clear reason not to.`;
+let freeModels = null;
+const md = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^\s*#+\s*/gm, '').replace(/^\s*[-*•]\s+/gm, '• ').replace(/\n/g, '<br>');
+
+async function ai(messages, max_tokens = 600){
+  if (!cfg.aiKey) throw new Error('Add your OpenRouter key under AI coach first.');
+  const first = cfg.aiModel || AI_PREF[0];
+  const models = [first, ...AI_PREF.filter(m => m !== first && (!freeModels || freeModels.includes(m)))].slice(0, 3);
+  const r = await fetch('https://openrouter.ai/api/v1/chat/completions', { method:'POST',
+    headers: { Authorization:`Bearer ${cfg.aiKey}`, 'Content-Type':'application/json', 'HTTP-Referer': location.origin + location.pathname, 'X-Title':'The Cut' },
+    body: JSON.stringify({ models, messages: [{ role:'system', content: AI_SYSTEM }, ...messages], max_tokens, temperature: 0.7,
+      reasoning: { effort:'low', exclude: true } }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(r.status === 401 ? 'OpenRouter rejected the key.'
+    : r.status === 429 ? 'Free limit reached for now. Try again later or pick another model.'
+    : r.status === 402 ? 'That model needs credits. Pick one ending in :free.'
+    : (j.error && j.error.message) || `OpenRouter error ${r.status}`);
+  const text = ((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  if (!text) throw new Error('Empty reply from the model. Try again or switch model.');
+  return text;
+}
+// Numbers only: no check-in notes leave the device.
+function aiContext(){
+  const a = sevenDayAvg(), pr = projection(), st = stats(), wi = weekInfo(mon(today));
+  const ciDates = Object.keys(state.checkins).sort(), ci = ciDates.length ? state.checkins[ciDates[ciDates.length-1]] : null;
+  const days = [...Array(7)].map((_,k) => iso(addDays(today, k - 6))).map(d => {
+    const v = dayView(d);
+    return `${d} ${PLAN[dow(fromIso(d))].day}: ${v.title}, ${pctOf(d)}% done${isClosed(d) ? ' (closed)' : ''}, protein ${state.protein[d] ?? '?'} g, weight ${state.weights[d] ?? '?'} kg`;
+  });
+  return `PLAN
+- Cutting from ${START} kg to ${GOAL} kg (milestones ${MILESTONES.join(', ')}). Waist started at ${WAIST_START} in.
+- Nutrition: ~2,500 kcal/day, protein ${PROTEIN_MIN}-${PROTEIN_MAX} g, fat 70-80 g, carbs fill the rest. Indian diet with roti/rice, 3 meals, protein every meal, no cheat days.
+- Training: Mon Chest+Triceps, Tue Back+Biceps, Wed Legs, Thu Chest+Shoulders+Triceps, Fri Lower+Core, Sat Functional+Conditioning, Sun active recovery. Working sets at 1-3 reps in reserve. Deload every 6th week. Max ${MAX_REST} full rest days a week.
+- Pace rule: 7-day average loss under 0.3 kg/week for 2-3 weeks → cut 150-200 kcal; over 1 kg/week → add food back.
+- Pain rules: foot/ankle pain-free cardio only; knee sleeves OK but don't push through pain; shoulders controlled pressing, no forced ranges.
+NOW (today ${iso(today)})
+- 7-day avg weight: ${a ? a.avg.toFixed(1) + ' kg' : 'unknown'}; 4-week pace: ${pr && pr.rate ? pr.rate.toFixed(2) + ' kg/week' : 'unknown'}.
+- Plan week ${wi.n}${wi.deload ? ' (deload week)' : ''}. Streak ${st.cur} good days, best ${st.best}.
+- Latest check-in: ${ci ? `waist ${ci.waist ?? '?'} in, energy ${ci.energy != null ? ci.energy + 1 : '?'}/5, pain ${ci.pain != null ? PAIN[ci.pain] : '?'}` : 'none yet'}.
+LAST 7 DAYS
+${days.join('\n')}`;
+}
+async function coachNote(date){
+  const p = progress(date), pct = Math.round(100*p.done/p.total), v = dayView(date);
+  const missed = [...v.items.filter(it => !isDone(date, it[0])).map(it => it[1]), ...HABITS.filter((_,k) => !isDone(date, `h${k}`)).map(h => h[0])];
+  const text = await ai([{ role:'user', content: `${aiContext()}\n\nI just closed ${date} (${v.title}) at ${pct}%. Missed: ${missed.join(', ') || 'nothing'}. Write a personal coach note: 1-2 sentences, under 40 words, reacting to today's specific numbers and naming one focus for tomorrow. No greeting, at most one emoji.` }], 300);
+  state.ai.close[date] = text; save();
+  return text;
+}
+async function weekInsights(ws){
+  const r = weekReview(ws);
+  const text = await ai([{ role:'user', content: `${aiContext()}\n\nWEEK REVIEW ${iso(ws)}: weight change ${r.loss == null ? 'unknown' : (-r.loss).toFixed(2) + ' kg'}, avg protein ${r.prot == null ? 'unknown' : Math.round(r.prot) + ' g'}, good days ${r.good}/7, workouts ${r.lifts}, cardio-only ${r.cardio}, rest ${r.rest}. Rule-based tips already shown: ${r.tips.join(' ')}\n\nGive 2-3 specific suggestions for next week as bullet points, each under 25 words. Don't repeat the rule-based tips.` }], 500);
+  state.ai.week[iso(ws)] = text; save();
+  return text;
+}
+
+let chat = [];
+try { chat = JSON.parse(localStorage.getItem('cutplan-chat')) || []; } catch(e) {}
+const saveChat = () => { try { localStorage.setItem('cutplan-chat', JSON.stringify(chat.slice(-30))); } catch(e) {} };
+function renderChat(){
+  const log = document.getElementById('chatlog');
+  log.innerHTML = chat.length ? chat.map(m => `<div class="msg ${m.role}">${m.role === 'assistant' ? md(m.content) : esc(m.content)}</div>`).join('')
+    : `<div class="cap">${cfg.aiKey ? 'Ask anything about your plan, food, training or progress.' : 'Add a free OpenRouter key under <b>AI coach</b> below to start.'}</div>`;
+  log.scrollTop = log.scrollHeight;
+  document.getElementById('chatclear').hidden = !chat.length;
+}
+async function sendChat(text){
+  text = (text || '').trim(); if (!text) return;
+  const input = document.getElementById('chatin'); input.value = '';
+  chat.push({ role:'user', content: text }); renderChat();
+  const log = document.getElementById('chatlog');
+  log.insertAdjacentHTML('beforeend', '<div class="msg assistant typing">Coach is typing…</div>'); log.scrollTop = log.scrollHeight;
+  try {
+    const history = chat.slice(-10).filter(m => !m.content.startsWith('⚠️'));
+    const reply = await ai([{ role:'user', content: `Context for this conversation (my current data):\n${aiContext()}` },
+      { role:'assistant', content:'Got it. What would you like to know?' }, ...history], 700);
+    chat.push({ role:'assistant', content: reply });
+  } catch(e){ chat.push({ role:'assistant', content: `⚠️ ${e.message}` }); }
+  saveChat(); renderChat();
+}
+async function loadFreeModels(){
+  const sel = document.getElementById('aimodel');
+  try {
+    const j = await (await fetch('https://openrouter.ai/api/v1/models')).json();
+    freeModels = j.data.filter(m => m.id.endsWith(':free')).map(m => m.id).sort();
+  } catch(e){ freeModels = null; }
+  const list = freeModels && freeModels.length ? freeModels : AI_PREF;
+  const cur = cfg.aiModel && list.includes(cfg.aiModel) ? cfg.aiModel : (AI_PREF.find(m => list.includes(m)) || list[0]);
+  sel.innerHTML = list.map(m => `<option value="${esc(m)}" ${m === cur ? 'selected' : ''}>${esc(m.replace(':free',''))}</option>`).join('');
+}
+function renderAiSettings(){
+  document.getElementById('ai-off').hidden = !!cfg.aiKey;
+  document.getElementById('ai-on').hidden = !cfg.aiKey;
 }
 
 /* ---------- Evening reminder (push sent by .github/workflows/reminder.yml) ---------- */
@@ -1037,7 +1275,10 @@ function renderReview(){
       ${stat(`${r.good}/7`, 'good days')}
     </div>
     <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardio} cardio-only · ${r.rest} rest · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
-    <ul class="tips">${r.tips.map(t => `<li>${t}</li>`).join('')}</ul>`;
+    <ul class="tips">${r.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+    ${state.ai.week[iso(r.ws)] ? `<div class="aibox"><b>✨ Coach insights</b><div>${md(state.ai.week[iso(r.ws)])}</div><button class="linkbtn" data-aiweek>Refresh</button></div>`
+      : cfg.aiKey ? '<button class="iconbtn text" data-aiweek style="margin-top:12px">✨ Get AI insights</button>' : ''}
+    <p class="syncerr" id="aiweekmsg"></p>`;
 }
 
 function renderBadges(){
@@ -1109,11 +1350,16 @@ function showRecap(date, celebrate, newBadges = []){
     <div class="msum">${day.items.length ? `Session ${sess}/${day.items.length} · ` : ''}Daily ${hab}/${HABITS.length}${typeof wt==='number' ? ` · ${wt} kg` : ''}</div>
     ${!good ? `<div class="msum">Streaks count days at ${GOOD_PCT}%+. Tomorrow starts a new one.</div>` : ''}
     ${newBadges.length ? `<div class="mbadges">${newBadges.map(n => { const b = BADGES.find(x => x.name === n); return `<span>${b.icon} ${b.name}</span>`; }).join('')}<small>New badge${newBadges.length>1?'s':''} unlocked</small></div>` : ''}
+    ${state.ai.close[date] ? `<p class="mcoach">${md(state.ai.close[date])}</p>` : celebrate && cfg.aiKey ? '<p class="mcoach typing" id="mcoach">Coach is writing…</p>' : ''}
     <blockquote class="mquote">“${quoteFor(date)}”</blockquote>
     <button class="btn" data-dismiss>${good ? 'Keep it going' : 'Got it'}</button></div>`;
   m.hidden = false;
   m.querySelector('[data-dismiss]').focus();
   if (celebrate && (g.confetti || newBadges.length)) confetti(Math.max(g.confetti, newBadges.length ? 90 : 0));
+  if (celebrate && cfg.aiKey && !state.ai.close[date]){
+    coachNote(date).then(t => { const el = document.getElementById('mcoach'); if (el){ el.innerHTML = md(t); el.classList.remove('typing'); } })
+      .catch(e => { const el = document.getElementById('mcoach'); if (el){ el.textContent = e.message; el.classList.remove('typing'); } });
+  }
 }
 function closeDay(){
   const before = earned(stats());
@@ -1177,8 +1423,24 @@ document.addEventListener('click', e => {
   }
   else if (t.hasAttribute('data-closeday')) closeDay();
   else if (t.hasAttribute('data-remindon')) remindOn();
+  else if (t.hasAttribute('data-encrypt')) setPassphrase();
+  else if (t.hasAttribute('data-unlock')) unlock();
+  else if (t.hasAttribute('data-aiweek')){
+    t.disabled = true; t.textContent = 'Thinking…';
+    weekInsights(addDays(weekStart, -7)).then(render).catch(e => { document.getElementById('aiweekmsg').textContent = e.message; t.disabled = false; t.textContent = '✨ Get AI insights'; });
+  }
+  else if (t.hasAttribute('data-chatsend')) sendChat(document.getElementById('chatin').value);
+  else if (t.dataset.ask) sendChat(t.dataset.ask);
+  else if (t.hasAttribute('data-chatclear')){ chat = []; saveChat(); renderChat(); }
+  else if (t.hasAttribute('data-aisave')){
+    const k = document.getElementById('aikey').value.trim(); if (!k) return;
+    cfg.aiKey = k; saveCfg(); document.getElementById('aikey').value = ''; renderAiSettings(); renderChat(); render(); loadFreeModels();
+  }
+  else if (t.hasAttribute('data-airemove')){
+    if (confirm('Remove the OpenRouter key from this device?')){ delete cfg.aiKey; saveCfg(); renderAiSettings(); renderChat(); render(); }
+  }
   else if (t.hasAttribute('data-remindoff')) remindOff();
-  else if (t.hasAttribute('data-reopen')){ delete state.closed[sel]; save(); render(); }
+  else if (t.hasAttribute('data-reopen')){ delete state.closed[sel]; delete state.ai.close[sel]; save(); render(); }
   else if (t.hasAttribute('data-recap')) showRecap(sel, false);
   else if (t.hasAttribute('data-dismiss')) document.getElementById('modal').hidden = true;
   else if (t.dataset.energy !== undefined || t.dataset.pain !== undefined){
@@ -1202,6 +1464,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const c = e.target;
+  if (c.id === 'aimodel'){ cfg.aiModel = c.value; saveCfg(); return; }
   if (c.id === 'importfile'){ if (c.files[0]) importBackup(c.files[0]); c.value = ''; return; }
   if (c.id === 'startdate'){
     if (c.value){ state.start = iso(mon(fromIso(c.value))); save(); weekStart = mon(today); sel = iso(today); render(); }
@@ -1222,6 +1485,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'wt') document.querySelector('[data-saveweight]').click();
   if (e.key === 'Enter' && e.target.id === 'tokenin') connect();
   if (e.key === 'Enter' && e.target.id === 'protein') e.target.blur();
+  if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chatin'){ e.preventDefault(); sendChat(e.target.value); }
+  if (e.key === 'Enter' && e.target.id === 'unlockpass') unlock();
   if (e.key === 'Escape') document.getElementById('modal').hidden = true;
 });
 // Pull fresh data whenever the app comes back to the foreground or the connection returns.
@@ -1232,6 +1497,9 @@ document.getElementById('modal').addEventListener('click', e => { if (e.target.i
 
 render();
 renderSync();
+renderChat();
+renderAiSettings();
+document.getElementById('aibox').addEventListener('toggle', e => { if (e.target.open && !freeModels) loadFreeModels(); });
 syncNow();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
 </script>

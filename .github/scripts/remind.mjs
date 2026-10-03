@@ -6,12 +6,20 @@ import webpush from 'web-push';
 const VAPID_PUBLIC = 'BMGx86N2Apj1n5afkZPF1YhIbtAS44ahMVLJtaJfJFV2R1bBMhvlwJa4SjDluY8Z49PYlTtfewh7nxBri2eYpf4';
 const SITE = 'https://nakshatra-garg.github.io/the-cut/';
 const DATA = 'cut-plan-data.json', PUSH = 'cut-push.json', PROTEIN_MIN = 175;
-const { GIST_TOKEN, VAPID_PRIVATE_KEY, FORCE } = process.env;
+const { GIST_TOKEN, VAPID_PRIVATE_KEY, DATA_PASSPHRASE, FORCE } = process.env;
 const force = FORCE === 'true';
 
 const log = m => console.log(m);
 // Warnings instead of failures: a red run every 15 minutes would flood your inbox.
 const warn = m => { console.log(`::warning::${m}`); process.exit(0); };
+
+// Same scheme as the app: PBKDF2-SHA256 → AES-GCM-256.
+async function decrypt(env){
+  const subtle = globalThis.crypto.subtle, b = s => Buffer.from(s, 'base64');
+  const base = await subtle.importKey('raw', new TextEncoder().encode(DATA_PASSPHRASE), 'PBKDF2', false, ['deriveKey']);
+  const key = await subtle.deriveKey({ name:'PBKDF2', salt: b(env.salt), iterations: env.iter, hash:'SHA-256' }, base, { name:'AES-GCM', length:256 }, false, ['decrypt']);
+  return JSON.parse(new TextDecoder().decode(await subtle.decrypt({ name:'AES-GCM', iv: b(env.iv) }, key, b(env.ct))));
+}
 
 async function gh(path, opts = {}){
   const r = await fetch('https://api.github.com' + path, { ...opts, headers: {
@@ -45,7 +53,14 @@ try {
   const date = `${parts.year}-${parts.month}-${parts.day}`, now = `${parts.hour}:${parts.minute}`;
   log(`Local ${date} ${now} (${push.tz}), reminder at ${push.time}`);
 
-  const data = (await read(DATA)) || {};
+  let data = (await read(DATA)) || {}, locked = false;
+  if (data.enc){
+    if (!DATA_PASSPHRASE){ console.log('::warning::Data is encrypted but DATA_PASSPHRASE secret is not set. Sending a generic reminder.'); data = {}; locked = true; }
+    else {
+      try { data = await decrypt(data); }
+      catch (e) { console.log('::warning::DATA_PASSPHRASE does not match the app passphrase. Sending a generic reminder.'); data = {}; locked = true; }
+    }
+  }
   if (!force){
     if (now < (push.time || '21:00')){ log('Not time yet.'); process.exit(0); }
     if (push.lastSent === date){ log('Already reminded today.'); process.exit(0); }
@@ -54,11 +69,11 @@ try {
 
   const g = data.protein && data.protein[date];
   const weighed = data.weights && typeof data.weights[date] === 'number';
-  const bits = [
+  const bits = locked ? [] : [
     typeof g === 'number' ? `Protein ${g} g${g >= PROTEIN_MIN ? ' ✓' : ` of ${PROTEIN_MIN}`}` : 'Protein not logged',
     weighed ? 'weigh-in ✓' : 'no weigh-in yet'
   ];
-  const payload = JSON.stringify({ title: 'Time to close your day 🔒', body: `${bits.join(' · ')}. Tick off what you did and keep the streak going.`, url: SITE });
+  const payload = JSON.stringify({ title: 'Time to close your day 🔒', body: locked ? "If today isn't closed yet, tick off what you did and keep the streak going." : `${bits.join(' · ')}. Tick off what you did and keep the streak going.`, url: SITE });
 
   webpush.setVapidDetails(SITE, VAPID_PUBLIC, VAPID_PRIVATE_KEY);
   try {
