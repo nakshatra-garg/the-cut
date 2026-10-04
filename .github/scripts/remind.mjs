@@ -5,7 +5,7 @@ import webpush from 'web-push';
 
 const VAPID_PUBLIC = 'BMGx86N2Apj1n5afkZPF1YhIbtAS44ahMVLJtaJfJFV2R1bBMhvlwJa4SjDluY8Z49PYlTtfewh7nxBri2eYpf4';
 const SITE = 'https://nakshatra-garg.github.io/the-cut/';
-const DATA = 'data.json', PUSH = 'push.json', PROTEIN_MIN = 175;
+const DATA = 'data.json', PUSH = 'push.json', PROTEIN_MIN = 175, PROTEIN_DONE = 158;   // 90% counts
 const { DATA_TOKEN, DATA_REPO, VAPID_PRIVATE_KEY, DATA_PASSPHRASE, FORCE } = process.env;
 const force = FORCE === 'true';
 
@@ -66,7 +66,7 @@ try {
   const g = data.protein && data.protein[date];
   const weighed = data.weights && typeof data.weights[date] === 'number';
   const bits = locked ? [] : [
-    typeof g === 'number' ? `Protein ${g} g${g >= PROTEIN_MIN ? ' ✓' : ` of ${PROTEIN_MIN}`}` : 'Protein not logged',
+    typeof g === 'number' ? `Protein ${g} g${g >= PROTEIN_DONE ? ' ✓' : ` of ${PROTEIN_MIN}`}` : 'Protein not logged',
     weighed ? 'weigh-in ✓' : 'no weigh-in yet'
   ];
   const payload = JSON.stringify({ title: 'Time to close your day 🔒', body: locked ? "If today isn't closed yet, tick off what you did and keep the streak going." : `${bits.join(' · ')}. Tick off what you did and keep the streak going.`, url: SITE });

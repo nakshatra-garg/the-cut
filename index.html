@@ -354,6 +354,12 @@ details.stepsbox .steps{padding-left:0}
 .ringstats b{color:var(--ink); font-family:var(--rounded); font-weight:700; font-size:16px}
 .ringstats i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:1px}
 .swaplist{display:grid; gap:6px}
+.sheeth{font-size:13px; font-weight:400; text-transform:uppercase; letter-spacing:.02em; color:var(--mute); margin:10px 0 0}
+.sheetnote{margin:-2px 0 2px; font-size:13px}
+.item.skipped .row{opacity:.55}
+.item.skipped .name{text-decoration:line-through; text-decoration-thickness:1.5px}
+.skiptag{text-decoration:none; display:inline-block; background:var(--fill); color:var(--orange)}
+.tool .dot{fill:currentColor; stroke:none}
 .swaplist button{display:flex; justify-content:space-between; align-items:center; width:100%; min-height:48px; padding:0 14px; border:0; border-radius:12px; background:var(--fill); color:var(--ink); font-size:16px; text-align:left; cursor:pointer}
 .swaplist button.on{background:var(--soft); color:var(--accent); font-weight:600}
 .swaplist small{margin-left:6px; font-size:11px; font-weight:600; color:var(--mute); text-transform:uppercase}
@@ -386,7 +392,7 @@ details.stepsbox .steps{padding-left:0}
 .mins.superb{background:var(--accent); color:var(--accent-ink)}
 #minsub{display:flex; flex-wrap:wrap; gap:6px; margin:0}
 #minsub .mins{margin:0}
-.actionsheet{height:auto; gap:12px}
+.actionsheet{height:auto; max-height:88dvh; overflow-y:auto; gap:12px}
 .actionsheet h2{font-size:22px; font-weight:700}
 .minsgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
 .minsgrid button{height:52px; border:0; border-radius:12px; background:var(--fill); font-family:var(--rounded); font-size:20px; font-weight:600; cursor:pointer; color:var(--ink); transition:transform .12s}
@@ -676,7 +682,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
     </ul>
     <h3>Pain rules</h3>
     <ul>
-      <li>Foot/ankle: pain-free cardio only. Persistent pain, limping, or pain in daily life means get it assessed.</li>
+      <li>Foot/ankle: occasional niggles only. On a day it flares, pick bike or elliptical over the treadmill.</li>
       <li>Knee sleeves are fine for comfort, not for masking pain</li>
       <li>Shoulders: controlled pressing, no forced ranges</li>
     </ul>
@@ -762,7 +768,7 @@ const MOBILITY = [
   ['Open book (side-lying T-spine rotation)', '6 per side'],
   ['90/90 hip switches', '6 per side, hands behind for support'],
   ['Half-kneeling hip flexor stretch', '40 s per side, cushion under the knee'],
-  ['Knee-to-wall ankle rocks', '10 per side, pain-free range only'],
+  ['Knee-to-wall ankle rocks', '10 per side'],
   ['Wall slides', '10 slow reps, no forced range'],
   ['Doorway chest stretch', '30 s per side'],
   ["Child's pose with side reach", '30 s per side, then 5 slow breaths']
@@ -811,7 +817,7 @@ const DEMOS = {
     ghost:{ h:[141,45], s:[138,58], p:[136,98], k:[114,132], f:[84,136], k2:[164,100], f2:[168,136], e:[160,62], w:[192,64] },
     pose: { h:[141,45], s:[138,58], p:[136,98], k:[114,132], f:[84,136], k2:[178,104], f2:[168,136], e:[160,62], w:[192,64], e2:[160,68], w2:[192,72] },
     arrow:'M158,90 L184,94',
-    cues:['Front foot a few centimetres from the wall, heel down.', 'Drive the knee toward the wall over the middle toes.', 'Stop before any ankle pain. Heel stays on the floor.'] },
+    cues:['Front foot a few centimetres from the wall, heel down.', 'Drive the knee toward the wall over the middle toes.', 'Ease off if it pinches. Heel stays on the floor.'] },
   'Wall slides': { view:'Front view', alt:'Back to a wall, arms sliding from a W to a Y',
     props:'<rect class="propsoft" x="70" y="10" width="100" height="130" rx="8"/>',
     ghost:{ h:[120,47], s:[120,62], p:[120,104], k:[111,121], f:[108,137], k2:[129,121], f2:[132,137], e:[98,66], w:[96,42], e2:[142,66], w2:[144,42] },
@@ -900,8 +906,8 @@ const PLAN = [
   { day:'Wed', title:'Legs', load:'Hard / controlled', lift:true,
     note:"Knee sleeves are fine if they improve comfort. Don't push through pain. Hip thrusts replace RDLs today because you deadlifted yesterday.",
     items:[
-      W(['Easy elliptical or bike', '5 min (ankle-friendly)'], ['Leg swings', '10 front-back, 10 side-to-side each leg'],
-        ['Bodyweight box squat', '10 reps'], ['Glute bridge', '12 reps'], ['Knee-to-wall ankle rocks', '8 per side, pain-free'],
+      W(['Easy treadmill, elliptical or bike', '5 min'], ['Leg swings', '10 front-back, 10 side-to-side each leg'],
+        ['Bodyweight box squat', '10 reps'], ['Glute bridge', '12 reps'], ['Knee-to-wall ankle rocks', '8 per side'],
         ['Squat ramp-up', 'bar × 10, 40% × 5, 60% × 3, 80% × 2']),
       I('Squat','4 × 5–8', { alts:['Hack squat','Smith machine squat','Safety-bar squat'] }),
       I('Leg press','3 × 8–12', { alts:['Hack squat','Pendulum squat','Belt squat'] }),
@@ -926,7 +932,7 @@ const PLAN = [
       I('Cardio','15–20 min easy/moderate')
     ]},
   { day:'Fri', title:'Lower + Core', load:'Moderate', lift:true,
-    note:'Lower-volume lower day. Keep RDLs moderate, 3 days after deadlifts. Remove anything that aggravates the foot/ankle.',
+    note:'Lower-volume lower day. Keep RDLs moderate, 3 days after deadlifts.',
     items:[
       W(['Easy treadmill or bike', '5 min'], ['Cat–cow', '8 slow reps'], ['Half-kneeling hip flexor stretch', '30 s per side'],
         ['Leg swings', '10 each direction, each leg'], ['Glute bridge', '12 reps'], ['Dead bug', '6 per side']),
@@ -971,7 +977,7 @@ const HABITS = [
   ['Protein','175–190 g'],  // h1: entered in grams, done at PROTEIN_MIN
   ['Logged food honestly','Even the rich dinner'],
   ['Moved outside the gym','Pain-free walk only, no forcing step targets'],
-  ['No worsening pain','Foot/ankle, knees, shoulders']
+  ['No worsening pain','Knees, shoulders, anything that flares up']
 ];
 
 // Per-date overrides: gym closed, skipping weights, or a planned day off.
@@ -988,7 +994,8 @@ const MODES = {
     note:'Full rest. Eat to plan, hit protein, sleep well. A light pain-free walk is fine.',
     items:[] }
 };
-const PROTEIN_MIN = 175, PROTEIN_MAX = 190, WAIST_START = 47, GOOD_PCT = 80;
+const PROTEIN_MIN = 175, PROTEIN_MAX = 190, PROTEIN_DONE = Math.ceil(PROTEIN_MIN * 0.9),   // 158 g counts as done
+ WAIST_START = 47, GOOD_PCT = 80;
 const PAIN = ['None','Mild','Moderate','Bad'];
 const MAX_REST = 2; // full rest days per week before the app warns
 
@@ -1056,7 +1063,7 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
-  for (const k of ['closed','protein','checkins','ai','cardio','swaps']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['closed','protein','checkins','ai','cardio','swaps','skips']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
   for (const k of ['close','week']) if (!s.ai[k] || typeof s.ai[k] !== 'object') s.ai[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
@@ -1324,14 +1331,14 @@ function aiContext(){
   const ciDates = Object.keys(state.checkins).sort(), ci = ciDates.length ? state.checkins[ciDates[ciDates.length-1]] : null;
   const days = [...Array(7)].map((_,k) => iso(addDays(today, k - 6))).map(d => {
     const v = dayView(d);
-    return `${d} ${PLAN[dow(fromIso(d))].day}: ${v.title}, ${pctOf(d)}% done${isClosed(d) ? ' (closed)' : ''}, protein ${state.protein[d] ?? '?'} g, cardio ${state.cardio[d] ?? '?'} min, weight ${state.weights[d] ?? '?'} kg`;
+    return `${d} ${PLAN[dow(fromIso(d))].day}: ${v.title}, ${pctOf(d)}% done${isClosed(d) ? ' (closed)' : ''}, protein ${state.protein[d] ?? '?'} g, cardio ${state.cardio[d] ?? '?'} min, weight ${state.weights[d] ?? '?'} kg${skippedOn(d).length ? `, skipped: ${skippedOn(d).join(', ')}` : ''}`;
   });
   return `PLAN
 - Cutting from ${START} kg to ${GOAL} kg (milestones ${MILESTONES.join(', ')}). Waist started at ${WAIST_START} in.
-- Nutrition: ~2,500 kcal/day, protein ${PROTEIN_MIN}-${PROTEIN_MAX} g, fat 70-80 g, carbs fill the rest. Indian diet with roti/rice, 3 meals, protein every meal, no cheat days.
+- Nutrition: ~2,500 kcal/day, protein ${PROTEIN_MIN}-${PROTEIN_MAX} g (${PROTEIN_DONE}+ counts as hitting it), fat 70-80 g, carbs fill the rest. Indian diet with roti/rice, 3 meals, protein every meal, no cheat days.
 - Training: Mon Chest+Triceps, Tue Deadlift (3x3-5, strongest lift) + Back + Biceps, Wed Legs (hip thrust instead of RDL), Thu Chest+Shoulders+Triceps, Fri Lower+Core, Sat Functional+Conditioning, Sun active recovery. Working sets at 1-3 reps in reserve. Deload every 6th week. Max ${MAX_REST} full rest days a week.
 - Pace rule: 7-day average loss under 0.3 kg/week for 2-3 weeks → cut 150-200 kcal; over 1 kg/week → add food back.
-- Pain rules: foot/ankle pain-free cardio only; knee sleeves OK but don't push through pain; shoulders controlled pressing, no forced ranges.
+- Pain rules: knee sleeves OK but don't push through pain; shoulders controlled pressing, no forced ranges. The foot/ankle only niggles occasionally (not chronic): don't dwell on it, just suggest lower-impact cardio on a day it flares.
 NOW (today ${iso(today)})
 - 7-day avg weight: ${a ? a.avg.toFixed(1) + ' kg' : 'unknown'}; 4-week pace: ${pr && pr.rate ? pr.rate.toFixed(2) + ' kg/week' : 'unknown'}.
 - Plan week ${wi.n}${wi.deload ? ' (deload week)' : ''}. Streak ${st.cur} good days, best ${st.best}.
@@ -1341,7 +1348,7 @@ ${days.join('\n')}`;
 }
 async function coachNote(date){
   const p = progress(date), pct = Math.round(100*p.done/p.total), v = dayView(date);
-  const missed = [...v.items.filter(it => !isDone(date, it[0])).map(it => it[1]), ...HABITS.filter((_,k) => !isDone(date, `h${k}`)).map(h => h[0])];
+  const missed = [...v.items.filter(it => !skipOf(date, it[0]) && !isDone(date, it[0])).map(it => it[1]), ...HABITS.filter((_,k) => !isDone(date, `h${k}`)).map(h => h[0])];
   const text = await ai([{ role:'user', content: `${aiContext()}\n\nI just closed ${date} (${v.title}) at ${pct}%. Missed: ${missed.join(', ') || 'nothing'}. Write a personal coach note: 1-2 sentences, under 40 words, reacting to today's specific numbers and naming one focus for tomorrow. No greeting, at most one emoji.` }], 300);
   state.ai.close[date] = text; save();
   return text;
@@ -1394,6 +1401,7 @@ function renderAiSettings(){
 
 /* ---------- Exercise tools: demos, swaps, steps, rings ---------- */
 const ICON_IMG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M5 17l5-5 4 4 2-2 3 3"/></svg>';
+const ICON_MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" class="dot"/><circle cx="12" cy="12" r="1.6" class="dot"/><circle cx="18" cy="12" r="1.6" class="dot"/></svg>';
 const ICON_SWAP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h13l-3.5-3.5M19 16H6l3.5 3.5"/></svg>';
 function stepsHtml(steps, collapse){
   const list = `<ol class="steps">${steps.map(([n,d]) => `<li><b>${n}</b>${DEMOS[n] ? `<button class="tool sm" data-demo="${esc(n)}" aria-label="How to do ${esc(n)}">${ICON_IMG}</button>` : ''}<span>${d}</span></li>`).join('')}</ol>`;
@@ -1413,11 +1421,22 @@ function ringsHtml(date, p){
 let swapFor = null;
 function openSwap(id){
   const it = dayView(sel).items.find(x => x[0] === id); if (!it) return;
-  const meta = it[4]; swapFor = id;
-  document.getElementById('swapsub').textContent = `${meta.rx} · your pick is remembered for future weeks`;
-  document.getElementById('swaplist').innerHTML = [meta.n, ...meta.alts].map((n, i) =>
-    `<button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>✓</b>' : ''}</button>`).join('');
+  const meta = it[4], skip = skipOf(sel, id); swapFor = id;
+  document.getElementById('swaptitle').textContent = meta.alts ? 'Swap or skip' : it[1];
+  document.getElementById('swapsub').textContent = meta.alts ? `${meta.rx} · a swap is remembered for future weeks` : meta.rx;
+  const swaps = meta.alts ? [meta.n, ...meta.alts].map((n, i) =>
+    `<button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>✓</b>' : ''}</button>`).join('') : '';
+  const skips = skip
+    ? `<button data-unskip class="on"><span>Skipped today · ${SKIP_LABEL[skip]}</span><b>Undo</b></button>`
+    : Object.entries(SKIP_LABEL).map(([k, l]) => `<button data-skip="${k}"><span>${l}${k === 'equipment' && meta.alts ? ' <small>try a swap first</small>' : ''}</span></button>`).join('');
+  document.getElementById('swaplist').innerHTML = swaps + `<h3 class="sheeth">Skip today</h3><p class="cap sheetnote">Skipped exercises don't count against your day, but they show in your week review.</p>` + skips;
   document.getElementById('swapsheet').hidden = false;
+}
+function setSkip(reason){
+  const key = `${sel}|${swapFor}`;
+  if (reason){ state.skips[key] = reason; delete state.checks[key]; if (dayView(sel).items.find(x => x[0] === swapFor)[1] === 'Cardio') delete state.cardio[sel]; }
+  else delete state.skips[key];
+  swapFor = null; fadeOut(document.getElementById('swapsheet')); save(); render();
 }
 function pickSwap(name){
   const it = dayView(sel).items.find(x => x[0] === swapFor); if (!it) return;
@@ -1652,11 +1671,15 @@ function dayView(date){
   return { mode, day: PLAN[i].day, title: m.title, load: m.load, note: m.note, lift: false,
     planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, it.n, it.rx, it.steps, it]) };
 }
+// Skipped items leave the day's total (they don't hurt the %), but stay visible and are reported.
+const SKIP_LABEL = { pain:'Pain', equipment:'Equipment busy', time:'Short on time' };
+const skipOf = (date, id) => state.skips[`${date}|${id}`];
 function idsFor(date){
-  return [...dayView(date).items.map(it => it[0]), ...HABITS.map((_,k)=>`h${k}`)];
+  return [...dayView(date).items.filter(it => !skipOf(date, it[0])).map(it => it[0]), ...HABITS.map((_,k)=>`h${k}`)];
 }
+const skippedOn = date => dayView(date).items.filter(it => skipOf(date, it[0])).map(it => `${it[1]} (${SKIP_LABEL[skipOf(date, it[0])].toLowerCase()})`);
 function isDone(date,id){
-  if (id === 'h1') return (state.protein[date] || 0) >= PROTEIN_MIN;
+  if (id === 'h1') return (state.protein[date] || 0) >= PROTEIN_DONE;
   if (id === 'h0' && typeof state.weights[date] === 'number') return true;
   return !!state.checks[`${date}|${id}`];
 }
@@ -1700,7 +1723,7 @@ function stats(){
     perfect: closed.filter(x => pctOf(x) === 100).length,
     goodWeek: mondays.some(m => fullWeek(m, isGood)),
     deloadDone: mondays.some(m => weekInfo(m).deload && fullWeek(m, isGood)),
-    proteinRun: bestRun(Object.keys(state.protein), x => state.protein[x] >= PROTEIN_MIN),
+    proteinRun: bestRun(Object.keys(state.protein), x => state.protein[x] >= PROTEIN_DONE),
     minAvg: wdates.length ? Math.min(...wdates.map(avgOn)) : Infinity,
     checkins: Object.keys(state.checkins).length,
     waistDrop: waists.length ? WAIST_START - Math.min(...waists) : 0
@@ -1751,6 +1774,7 @@ function weekReview(ws){
   const loss = w0 != null && w1 != null ? w1 - w0 : null, prevLoss = w1 != null && w2 != null ? w2 - w1 : null;
   const prot = mean(days.map(d => state.protein[d]).filter(v => typeof v === 'number'));
   const cardioMin = days.reduce((a,d) => a + (state.cardio[d] || 0), 0);
+  const skipped = days.flatMap(d => dayView(d).items.filter(it => skipOf(d, it[0])).map(it => skipOf(d, it[0])));
   const lifts = days.filter(d => { const v = dayView(d); if (!v.lift) return false;
     const done = v.items.filter(it => isDone(d, it[0])).length; return done / v.items.length >= 0.8; }).length;
   const tips = [];
@@ -1759,9 +1783,10 @@ function weekReview(ws){
   else if (loss < 0.3 && prevLoss != null && prevLoss < 0.3) tips.push('Under 0.3 kg/week for 2 weeks running. Cut ~150–200 kcal a day.');
   else if (loss < 0.3) tips.push('Slow week. If next week is also under 0.3 kg, cut ~150–200 kcal a day.');
   else tips.push('On pace (0.3–1 kg/week). Change nothing.');
-  if (prot != null && prot < PROTEIN_MIN) tips.push(`Protein averaged ${Math.round(prot)} g. Add a protein source to one meal.`);
+  if (prot != null && prot < PROTEIN_DONE) tips.push(`Protein averaged ${Math.round(prot)} g. Add a protein source to one meal.`);
   if (restCount(ws) > MAX_REST) tips.push(`${restCount(ws)} full rest days. Swap one for cardio only next week.`);
-  return { ws, w0, loss, prot, lifts, cardioMin, good: days.filter(isGood).length, closed: days.filter(isClosed).length,
+  if (skipped.filter(r => r === 'pain').length >= 2) tips.push(`${skipped.filter(r => r === 'pain').length} exercises skipped for pain. If the same spot keeps flaring, get it checked.`);
+  return { ws, w0, loss, prot, lifts, cardioMin, skipped: skipped.length, good: days.filter(isGood).length, closed: days.filter(isClosed).length,
     rest: restCount(ws), cardio: days.filter(d => modeOf(d) === 'cardio').length, tips,
     empty: !days.some(d => isClosed(d) || typeof state.weights[d] === 'number' || typeof state.protein[d] === 'number') };
 }
@@ -1814,12 +1839,12 @@ function render(){
   const locked = isClosed(sel), dis = locked ? 'disabled' : '';
   const row = (id,name,rx,steps,meta = {}) => {
     const mins = name === 'Cardio' && isDone(sel,id) ? state.cardio[sel] : null;
-    const swapped = meta.alts && name !== meta.n;
+    const swapped = meta.alts && name !== meta.n, skip = meta.n ? skipOf(sel, id) : null;
     const tools = (DEMOS[name] ? `<button class="tool" data-demo="${esc(name)}" aria-label="How to do ${esc(name)}">${ICON_IMG}</button>` : '')
-      + (meta.alts && !locked ? `<button class="tool" data-swap="${id}" aria-label="Swap ${esc(name)}">${ICON_SWAP}</button>` : '');
-    return `<div class="item${tools ? ' hastools' : ''}">
-      <label class="row" data-row="${id}"><input type="checkbox" data-id="${id}" ${isDone(sel,id)?'checked':''} ${dis}>
-      <div><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${rx}</span></div></label>
+      + (meta.n && !locked ? `<button class="tool" data-swap="${id}" aria-label="${meta.alts ? 'Swap or skip' : 'Skip'} ${esc(name)}">${meta.alts ? ICON_SWAP : ICON_MORE}</button>` : '');
+    return `<div class="item${tools ? ' hastools' : ''}${skip ? ' skipped' : ''}">
+      <label class="row" data-row="${id}"><input type="checkbox" data-id="${id}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
+      <div><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${rx}</span></div></label>
       ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse) : ''}</div>`;
   };
   const proteinRow = () => {
@@ -1827,7 +1852,7 @@ function render(){
     return `<div class="row prow" data-row="h1"><span class="pmark ${isDone(sel,'h1')?'on':''}" aria-hidden="true"></span>
       <div><label class="name" for="protein">Protein</label>
         <div class="pin"><input id="protein" type="number" inputmode="numeric" min="0" max="600" step="1" value="${typeof g==='number'?g:''}" placeholder="0" ${dis}>
-          <span>g · target ${PROTEIN_MIN}–${PROTEIN_MAX}</span></div>
+          <span>g · target ${PROTEIN_MIN}–${PROTEIN_MAX} · ${PROTEIN_DONE}+ counts</span></div>
         <div class="pbar"><i data-k="pbar" style="width:${Math.min(100, 100*(g||0)/PROTEIN_MIN)}%"></i></div>
         <span class="rx">${pa ? `5-day avg <b>${Math.round(pa.avg)} g</b> (${pa.n} day${pa.n>1?'s':''} logged)` : 'Enter grams eaten today.'}</span></div></div>`;
   };
@@ -1932,7 +1957,7 @@ function renderReview(){
       ${stat(r.prot == null ? '—' : Math.round(r.prot) + ' g', 'avg protein')}
       ${stat(`${r.good}/7`, 'good days')}
     </div>
-    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardioMin} cardio min · ${r.cardio} cardio-only · ${r.rest} rest · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
+    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardioMin} cardio min${r.skipped ? ` · ${r.skipped} skipped` : ''} · ${r.cardio} cardio-only · ${r.rest} rest · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
     <ul class="tips">${r.tips.map(t => `<li>${t}</li>`).join('')}</ul>
     ${state.ai.week[iso(r.ws)] ? `<div class="aibox"><b>✨ Coach insights</b><div>${md(state.ai.week[iso(r.ws)])}</div><button class="linkbtn" data-aiweek>Refresh</button></div>`
       : cfg.aiKey ? '<button class="iconbtn text" data-aiweek style="margin-top:12px">✨ Get AI insights</button>' : ''}
@@ -1991,7 +2016,7 @@ function renderCheckin(){
 /* ---------- Close day + celebration ---------- */
 function showRecap(date, celebrate, newBadges = []){
   const p = progress(date), pct = Math.round(100*p.done/p.total), g = gradeFor(pct), st = stats();
-  const day = dayView(date), sess = day.items.filter(it => isDone(date, it[0])).length;
+  const day = dayView(date), live = day.items.filter(it => !skipOf(date, it[0])), sess = live.filter(it => isDone(date, it[0])).length, nSkip = day.items.length - live.length;
   const hab = HABITS.filter((_,k) => isDone(date, `h${k}`)).length;
   const prot = state.protein[date], wt = state.weights[date];
   const good = pct >= GOOD_PCT;
@@ -2005,7 +2030,7 @@ function showRecap(date, celebrate, newBadges = []){
     <p class="mline">${g.lines[hashDate(date) % g.lines.length]}</p>
     <div class="mstats"><div><b>${pct}%</b><span>done</span></div>${streakLine}
       <div><b>${typeof prot==='number' ? prot + ' g' : '—'}</b><span>protein</span></div></div>
-    <div class="msum">${day.items.length ? `Session ${sess}/${day.items.length} · ` : ''}Daily ${hab}/${HABITS.length}${typeof wt==='number' ? ` · ${wt} kg` : ''}</div>
+    <div class="msum">${live.length ? `Session ${sess}/${live.length}${nSkip ? ` (${nSkip} skipped)` : ''} · ` : ''}Daily ${hab}/${HABITS.length}${typeof wt==='number' ? ` · ${wt} kg` : ''}</div>
     ${!good ? `<div class="msum">Streaks count days at ${GOOD_PCT}%+. Tomorrow starts a new one.</div>` : ''}
     ${newBadges.length ? `<div class="mbadges">${newBadges.map(n => { const b = BADGES.find(x => x.name === n); return `<span>${b.icon} ${b.name}</span>`; }).join('')}<small>New badge${newBadges.length>1?'s':''} unlocked</small></div>` : ''}
     ${state.ai.close[date] ? `<div class="mcoach">${md(state.ai.close[date])}</div>` : celebrate && cfg.aiKey ? '<div class="mcoach" id="mcoach"><span class="dots"><i></i><i></i><i></i></span></div>' : ''}
@@ -2065,6 +2090,8 @@ document.addEventListener('click', e => {
   else if (t.dataset.demo){ e.preventDefault(); openDemo(t.dataset.demo); }
   else if (t.dataset.swap){ e.preventDefault(); openSwap(t.dataset.swap); }
   else if (t.dataset.pick) pickSwap(t.dataset.pick);
+  else if (t.dataset.skip) setSkip(t.dataset.skip);
+  else if (t.hasAttribute('data-unskip')) setSkip(null);
   else if (t.dataset.closesheet) closeSheet(t.dataset.closesheet);
   else if (t.hasAttribute('data-minsother')) logMins(document.getElementById('minsother').value);
   else if (t.hasAttribute('data-minscancel')) closeMins();
@@ -2084,6 +2111,7 @@ document.addEventListener('click', e => {
   }
   else if (t.hasAttribute('data-clear')){
     idsFor(sel).forEach(id => delete state.checks[`${sel}|${id}`]);
+    Object.keys(state.skips).filter(k => k.startsWith(sel + '|')).forEach(k => delete state.skips[k]);
     save(); render();
   }
   else if (t.hasAttribute('data-saveweight')){
@@ -2150,7 +2178,7 @@ document.addEventListener('change', e => {
   if (c.id === 'protein'){
     if (isClosed(sel)) return;
     const v = parseFloat(c.value);
-    if (isNaN(v) || v <= 0) delete state.protein[sel]; else { if (v >= PROTEIN_MIN && !isDone(sel,'h1')) popRow = 'h1'; state.protein[sel] = Math.round(v); }
+    if (isNaN(v) || v <= 0) delete state.protein[sel]; else { if (v >= PROTEIN_DONE && !isDone(sel,'h1')) popRow = 'h1'; state.protein[sel] = Math.round(v); }
     save(); render(); return;
   }
   if (!c.dataset || !c.dataset.id || isClosed(sel)) return;
