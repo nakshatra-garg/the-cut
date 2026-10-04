@@ -403,6 +403,19 @@ details.stepsbox .steps{padding-left:0}
 .minsgrid .t-superb{background:var(--accent); color:var(--accent-ink)}
 #minsother{font-family:var(--rounded); font-size:18px}
 .btn.cancel{background:var(--fill); color:var(--accent); width:100%}
+.toast{position:fixed; left:50%; top:calc(10px + env(safe-area-inset-top,0px)); transform:translateX(-50%); z-index:25; width:min(92vw,420px);
+  background:var(--material); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px);
+  border:.5px solid var(--line); border-radius:18px; padding:12px 16px; box-shadow:0 8px 28px rgba(0,0,0,.16); display:grid; gap:2px}
+.toast[hidden]{display:none}
+.toast b{font-weight:600; font-size:15px}
+.toast small{font-size:13px; color:var(--mute)}
+@media (prefers-reduced-motion: no-preference){ .toastin{animation:drop .35s cubic-bezier(.2,1.2,.4,1)} .toast.closing{animation:fadeout .18s ease-in forwards} }
+@keyframes drop{from{transform:translate(-50%,-24px); opacity:0}}
+.togglerow{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 0 12px; font-size:16px}
+.switch{appearance:none; -webkit-appearance:none; width:51px; height:31px; border-radius:16px; background:var(--fill); position:relative; cursor:pointer; flex:none; transition:background-color .2s}
+.switch::after{content:""; position:absolute; top:2px; left:2px; width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.2); transition:transform .2s}
+.switch:checked{background:var(--ring1)}
+.switch:checked::after{transform:translateX(20px)}
 .confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:30}
 
 /* ================= Apple (iOS / macOS) look ================= */
@@ -585,6 +598,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
     </div>
     <div id="ai-on" hidden>
       <p>Key saved on this device.</p>
+      <label class="togglerow"><span>Cheer me on as I tick exercises</span><input type="checkbox" id="cheertoggle" class="switch"></label>
       <label for="aimodel" class="cap">Model (free)</label>
       <select id="aimodel" class="aisel"></select>
       <p class="cap" style="margin-top:8px">If this model is busy, the app falls back to another free one. Free models may log prompts, so the app sends only your numbers, never check-in notes.</p>
@@ -694,6 +708,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your private GitHub repo when connected (encrypted if you set a passphrase).</p>
   </div>
   <div class="modal" id="modal" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <div class="sheet" id="swapsheet" hidden>
     <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="swaptitle">
       <h2 id="swaptitle">Swap exercise</h2>
@@ -1349,7 +1364,8 @@ ${days.join('\n')}`;
 async function coachNote(date){
   const p = progress(date), pct = Math.round(100*p.done/p.total), v = dayView(date);
   const missed = [...v.items.filter(it => !skipOf(date, it[0]) && !isDone(date, it[0])).map(it => it[1]), ...HABITS.filter((_,k) => !isDone(date, `h${k}`)).map(h => h[0])];
-  const text = await ai([{ role:'user', content: `${aiContext()}\n\nI just closed ${date} (${v.title}) at ${pct}%. Missed: ${missed.join(', ') || 'nothing'}. Write a personal coach note: 1-2 sentences, under 40 words, reacting to today's specific numbers and naming one focus for tomorrow. No greeting, at most one emoji.` }], 300);
+  const done = v.items.filter(it => !skipOf(date, it[0]) && isDone(date, it[0])).map(it => it[1] === 'Cardio' && state.cardio[date] ? `Cardio ${state.cardio[date]} min` : it[1]);
+  const text = await ai([{ role:'user', content: `${aiContext()}\n\nI just closed ${date} (${v.title}) at ${pct}%. Done: ${done.join(', ') || 'nothing'}. Missed: ${missed.join(', ') || 'nothing'}. Skipped: ${skippedOn(date).join(', ') || 'nothing'}.\n\nWrite my end-of-day recap, under 70 words:\n1. One warm, specific line of appreciation (name a real highlight).\n2. "- " bullets (2-3) summarising what I did today with numbers.\n3. A final line starting "**Tomorrow:**" with one focus.\nNo greeting, at most one emoji.` }], 400);
   state.ai.close[date] = text; save();
   return text;
 }
@@ -1395,8 +1411,42 @@ async function loadFreeModels(){
   sel.innerHTML = list.map(m => `<option value="${esc(m)}" ${m === cur ? 'selected' : ''}>${esc(m.replace(':free',''))}</option>`).join('');
 }
 function renderAiSettings(){
+  document.getElementById('cheertoggle').checked = cfg.cheers !== false;
   document.getElementById('ai-off').hidden = !!cfg.aiKey;
   document.getElementById('ai-on').hidden = !cfg.aiKey;
+}
+
+/* ---------- Cheers: a short AI line each time you tick an exercise (local fallback offline) ---------- */
+const CHEERS_LOCAL = ['Done. Next one 💪', 'That one’s banked.', 'Clean work. Keep the rhythm.', 'One step closer to 105.', 'Ticked. Breathe, then go again.', 'Strong set of sets.', 'Momentum is building 🔥', 'Exactly how a cut is won.'];
+let cheerTimer = null, recentCheers = [];
+function toast(text, sub){
+  const t = document.getElementById('toast');
+  t.innerHTML = `<b>${md(text).replace(/^<p>|<\/p>$/g, '')}</b>${sub ? `<small>${esc(sub)}</small>` : ''}`;
+  t.hidden = false; replay(t, 'toastin');
+  clearTimeout(cheerTimer); cheerTimer = setTimeout(() => fadeOut(t), 4200);
+}
+async function cheer(id){
+  if (cfg.cheers === false) return;
+  const v = dayView(sel), it = v.items.find(x => x[0] === id); if (!it) return;
+  const live = v.items.filter(x => !skipOf(sel, x[0])), done = live.filter(x => isDone(sel, x[0])).length;
+  const after = live.slice(live.findIndex(x => x[0] === id) + 1);
+  const next = after.find(x => !isDone(sel, x[0])) || live.find(x => !isDone(sel, x[0]));   // the exercise after this one first
+  const sub = done === live.length ? 'Session complete 🎉' : `${done}/${live.length} done${next ? ` · next: ${next[1]}` : ''}`;
+  const mins = it[1] === 'Cardio' ? state.cardio[sel] : null;
+  if (!cfg.aiKey || !navigator.onLine){ toast(CHEERS_LOCAL[Math.floor(Math.random() * CHEERS_LOCAL.length)], sub); return; }
+  toast('…', sub);
+  try {
+    const line = await ai([{ role:'user', content: `I'm mid-workout on ${v.title} day and just finished: ${it[1]} (${fmtRx(it[2])})${mins ? `, ${mins} minutes` : ''}. ${done}/${live.length} exercises done${next ? `, next is ${next[1]}` : ', session complete'}. Write ONE short line (max 14 words) that is fun, playful or motivating, specific to that exercise or what's next. At most one emoji. No quotes. Don't repeat these: ${recentCheers.join(' | ') || 'none'}.` }], 60);
+    const clean = line.split('\n')[0].replace(/^["'“]|["'”]$/g, '').trim();
+    recentCheers = [clean, ...recentCheers].slice(0, 4);
+    toast(clean, sub);
+  } catch(e){ toast(CHEERS_LOCAL[Math.floor(Math.random() * CHEERS_LOCAL.length)], sub); }
+}
+
+/* ---------- Prescriptions: "4 × 5–8" reads as "4 sets × 5–8 reps" ---------- */
+function fmtRx(rx){
+  return String(rx).replace(/^(\d+(?:–\d+)?) × (\d+(?:–\d+)?)(\s*(?:m|sec|s|min)\b)?/, (_, sets, n, unit) =>
+    `${sets} ${sets === '1' ? 'set' : 'sets'} × ${n}${unit || ' reps'}`);
 }
 
 /* ---------- Exercise tools: demos, swaps, steps, rings ---------- */
@@ -1404,7 +1454,7 @@ const ICON_IMG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" 
 const ICON_MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" class="dot"/><circle cx="12" cy="12" r="1.6" class="dot"/><circle cx="18" cy="12" r="1.6" class="dot"/></svg>';
 const ICON_SWAP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h13l-3.5-3.5M19 16H6l3.5 3.5"/></svg>';
 function stepsHtml(steps, collapse){
-  const list = `<ol class="steps">${steps.map(([n,d]) => `<li><b>${n}</b>${DEMOS[n] ? `<button class="tool sm" data-demo="${esc(n)}" aria-label="How to do ${esc(n)}">${ICON_IMG}</button>` : ''}<span>${d}</span></li>`).join('')}</ol>`;
+  const list = `<ol class="steps">${steps.map(([n,d]) => `<li><b>${n}</b>${DEMOS[n] ? `<button class="tool sm" data-demo="${esc(n)}" aria-label="How to do ${esc(n)}">${ICON_IMG}</button>` : ''}<span>${fmtRx(d)}</span></li>`).join('')}</ol>`;
   return collapse ? `<details class="stepsbox"><summary>Show routine · ${steps.length} steps</summary>${list}</details>` : list;
 }
 function ringsHtml(date, p){
@@ -1473,7 +1523,7 @@ function logMins(m){
   m = Math.round(Number(m));
   if (!minsFor || !(m > 0 && m <= 300)) return;
   state.checks[`${sel}|${minsFor}`] = true; state.cardio[sel] = m; popRow = minsFor;
-  minsFor = null; fadeOut(document.getElementById('minsheet')); save(); render();
+  const id = minsFor; minsFor = null; fadeOut(document.getElementById('minsheet')); save(); render(); cheer(id);
 }
 const closeMins = () => { minsFor = null; fadeOut(document.getElementById('minsheet')); };
 
@@ -1844,7 +1894,7 @@ function render(){
       + (meta.n && !locked ? `<button class="tool" data-swap="${id}" aria-label="${meta.alts ? 'Swap or skip' : 'Skip'} ${esc(name)}">${meta.alts ? ICON_SWAP : ICON_MORE}</button>` : '');
     return `<div class="item${tools ? ' hastools' : ''}${skip ? ' skipped' : ''}">
       <label class="row" data-row="${id}"><input type="checkbox" data-id="${id}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
-      <div><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${rx}</span></div></label>
+      <div><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span></div></label>
       ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse) : ''}</div>`;
   };
   const proteinRow = () => {
@@ -2164,6 +2214,7 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   const c = e.target;
   if (c.id === 'aimodel'){ cfg.aiModel = c.value; saveCfg(); return; }
+  if (c.id === 'cheertoggle'){ cfg.cheers = c.checked; saveCfg(); return; }
   if (c.id === 'importfile'){ if (c.files[0]) importBackup(c.files[0]); c.value = ''; return; }
   if (c.id === 'startdate'){
     if (c.value){ state.start = iso(mon(fromIso(c.value))); save(); weekStart = mon(today); sel = iso(today); render(); }
@@ -2191,6 +2242,7 @@ document.addEventListener('change', e => {
   if (c.checked) popRow = c.dataset.id;
   if (c.checked) state.checks[k] = true; else delete state.checks[k];
   save(); render();
+  if (c.checked && item) cheer(c.dataset.id);   // exercises only, not daily habits
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'wt') document.querySelector('[data-saveweight]').click();
