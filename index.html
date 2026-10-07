@@ -354,6 +354,17 @@ details.stepsbox .steps{padding-left:0}
 .ringstats b{color:var(--ink); font-family:var(--rounded); font-weight:700; font-size:16px}
 .ringstats i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:1px}
 .swaplist{display:grid; gap:6px}
+.swapopt{display:flex; gap:6px}
+.swapopt button{flex:1}
+.swapopt .videolink{flex:1}
+.yt{flex:none; width:48px; min-height:48px; border-radius:12px; background:var(--fill); color:var(--red); display:grid; place-items:center; text-decoration:none; font-size:16px}
+.strip{overflow:hidden}
+.strip.in-r, .strip.in-l{animation:none}
+@media (prefers-reduced-motion: no-preference){
+  .strip.in-r .pill{animation:inR .28s cubic-bezier(.2,.8,.2,1)}
+  .strip.in-l .pill{animation:inL .28s cubic-bezier(.2,.8,.2,1)}
+}
+html, body{overflow-x:hidden}
 .sheeth{font-size:13px; font-weight:400; text-transform:uppercase; letter-spacing:.02em; color:var(--mute); margin:10px 0 0}
 .sheetnote{margin:-2px 0 2px; font-size:13px}
 .item.skipped .row{opacity:.55}
@@ -1323,22 +1334,36 @@ function md(src){
   return html;
 }
 
+// Free "thinking" models spend tokens reasoning before they answer, so a tight max_tokens can leave
+// the reply empty. Give a generous budget (prompts keep replies short) and fall through to the next
+// free model when one returns nothing or hits its limit.
 async function ai(messages, max_tokens = 600){
   if (!cfg.aiKey) throw new Error('Add your OpenRouter key under AI coach first.');
   const first = cfg.aiModel || AI_PREF[0];
   const models = [first, ...AI_PREF.filter(m => m !== first && (!freeModels || freeModels.includes(m)))].slice(0, 3);
-  const r = await fetch('https://openrouter.ai/api/v1/chat/completions', { method:'POST',
-    headers: { Authorization:`Bearer ${cfg.aiKey}`, 'Content-Type':'application/json', 'HTTP-Referer': location.origin + location.pathname, 'X-Title':'The Cut' },
-    body: JSON.stringify({ models, messages: [{ role:'system', content: AI_SYSTEM }, ...messages], max_tokens, temperature: 0.7,
-      reasoning: { effort:'low', exclude: true } }) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(r.status === 401 ? 'OpenRouter rejected the key.'
-    : r.status === 429 ? 'Free limit reached for now. Try again later or pick another model.'
-    : r.status === 402 ? 'That model needs credits. Pick one ending in :free.'
-    : (j.error && j.error.message) || `OpenRouter error ${r.status}`);
-  const text = ((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-  if (!text) throw new Error('Empty reply from the model. Try again or switch model.');
-  return text;
+  let lastErr = null;
+  for (const model of models){
+    let r, j;
+    try {
+      r = await fetch('https://openrouter.ai/api/v1/chat/completions', { method:'POST',
+        headers: { Authorization:`Bearer ${cfg.aiKey}`, 'Content-Type':'application/json', 'HTTP-Referer': location.origin + location.pathname, 'X-Title':'The Cut' },
+        body: JSON.stringify({ model, messages: [{ role:'system', content: AI_SYSTEM }, ...messages], max_tokens: Math.max(max_tokens, 1500),
+          temperature: 0.7, reasoning: { effort:'low', exclude: true } }) });
+      j = await r.json().catch(() => ({}));
+    } catch(e){ lastErr = new Error('No connection to OpenRouter.'); break; }
+    if (r.status === 401) throw new Error('OpenRouter rejected the key.');
+    if (!r.ok){
+      lastErr = new Error(r.status === 429 ? 'Free limit reached for now. Try again later.'
+        : r.status === 402 ? 'That model needs credits. Pick one ending in :free.'
+        : (j.error && j.error.message) || `OpenRouter error ${r.status}`);
+      continue;   // try the next free model
+    }
+    const msg = (j.choices && j.choices[0] && j.choices[0].message) || {};
+    const text = (msg.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    if (text) return text;
+    lastErr = new Error('The AI models returned empty replies. Try again in a minute.');
+  }
+  throw lastErr || new Error('No AI model answered.');
 }
 // Numbers only: no check-in notes leave the device.
 function aiContext(){
@@ -1475,12 +1500,14 @@ function openSwap(id){
   document.getElementById('swaptitle').textContent = meta.alts ? 'Swap or skip' : it[1];
   document.getElementById('swapsub').textContent = meta.alts ? `${meta.rx} · a swap is remembered for future weeks` : meta.rx;
   const swaps = meta.alts ? [meta.n, ...meta.alts].map((n, i) =>
-    `<button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>✓</b>' : ''}</button>`).join('') : '';
+    `<div class="swapopt"><button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>✓</b>' : ''}</button>${ytBtn(n)}</div>`).join('')
+    : ['Cardio','Warm-up','Mobility','Optional core'].includes(it[1]) ? ''
+    : `<div class="swapopt"><a class="btn cancel videolink" href="${ytLink(it[1])}" target="_blank" rel="noopener">▶︎ Watch how: ${esc(it[1])}</a></div>`;
   const skips = skip
     ? `<button data-unskip class="on"><span>Skipped today · ${SKIP_LABEL[skip]}</span><b>Undo</b></button>`
     : Object.entries(SKIP_LABEL).map(([k, l]) => `<button data-skip="${k}"><span>${l}${k === 'equipment' && meta.alts ? ' <small>try a swap first</small>' : ''}</span></button>`).join('');
   document.getElementById('swaplist').innerHTML = swaps + `<h3 class="sheeth">Skip today</h3><p class="cap sheetnote">Skipped exercises don't count against your day, but they show in your week review.</p>` + skips;
-  document.getElementById('swapsheet').hidden = false;
+  showSheet(document.getElementById('swapsheet'));
 }
 function setSkip(reason){
   const key = `${sel}|${swapFor}`;
@@ -1498,9 +1525,11 @@ function openDemo(name){
   document.getElementById('demotitle').textContent = name;
   document.getElementById('demofig').innerHTML = demoSvg(d);
   document.getElementById('democues').innerHTML = d.cues.map(c => `<li>${c}</li>`).join('');
-  document.getElementById('demovideo').href = `https://www.youtube.com/results?search_query=${encodeURIComponent(name.replace(/\(.*?\)/g, '') + ' exercise how to')}`;
-  document.getElementById('demosheet').hidden = false;
+  document.getElementById('demovideo').href = ytLink(name);
+  showSheet(document.getElementById('demosheet'));
 }
+const ytLink = name => `https://www.youtube.com/results?search_query=${encodeURIComponent(name.replace(/\(.*?\)/g, '').trim() + ' exercise how to')}`;
+const ytBtn = name => `<a class="yt" href="${ytLink(name)}" target="_blank" rel="noopener" aria-label="Watch how to do ${esc(name)} on YouTube">▶︎</a>`;
 const closeSheet = id => { const el = document.getElementById(id); if (!el.hidden) fadeOut(el); };
 
 /* ---------- Cardio minutes picker ---------- */
@@ -1517,7 +1546,7 @@ function openMins(id){
   document.getElementById('minsgrid').innerHTML = opts.map(m =>
     `<button class="t-${minsTier(m)}" data-mins="${m}">${m}</button>`).join('');
   document.getElementById('minsother').value = '';
-  document.getElementById('minsheet').hidden = false;
+  showSheet(document.getElementById('minsheet'));
 }
 function logMins(m){
   m = Math.round(Number(m));
@@ -1548,8 +1577,11 @@ let popRow = null, lastSel = null, lastWeek = null;
 function fadeOut(el, after){
   if (calm() || el.hidden){ el.hidden = true; if (after) after(); return; }
   el.classList.add('closing');
-  setTimeout(() => { el.hidden = true; el.classList.remove('closing'); if (after) after(); }, 180);
+  clearTimeout(el._fadeT);
+  el._fadeT = setTimeout(() => { el.hidden = true; el.classList.remove('closing'); if (after) after(); }, 180);
 }
+// Reopening during a close animation must cancel the pending hide.
+function showSheet(el){ clearTimeout(el._fadeT); el.classList.remove('closing'); el.hidden = false; }
 const hideModal = () => fadeOut(document.getElementById('modal'));
 
 /* ---------- Tabs + coach sheet ---------- */
@@ -1560,7 +1592,7 @@ function showTab(name){
   window.scrollTo(0, 0);
 }
 function openCoach(){
-  document.getElementById('coachsheet').hidden = false;
+  showSheet(document.getElementById('coachsheet'));
   document.body.classList.add('sheet-open');
   renderChat();
 }

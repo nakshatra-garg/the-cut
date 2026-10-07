@@ -1,5 +1,5 @@
 // Bump VERSION whenever you change index.html so phones pick up the new shell.
-const VERSION = 'thecut-v14';
+const VERSION = 'thecut-v16';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
