@@ -1832,6 +1832,7 @@ function openSwap(id){
   document.getElementById('swapsub').textContent = meta.alts ? `${meta.rx} · a swap is remembered for future weeks` : meta.rx;
   const swaps = meta.alts ? [meta.n, ...meta.alts].map((n, i) =>
     `<div class="swapopt"><button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>✓</b>' : ''}</button>${ytBtn(n)}</div>`).join('')
+    : it[1] === 'Cardio' ? ''   // cardio is a machine of your choice, not a technique to learn
     : `<div class="swapopt"><a class="btn cancel videolink" href="${ytLink(it[1])}" target="_blank" rel="noopener">▶︎ Watch how: ${esc(it[1])}</a></div>`;
   const skips = skip
     ? `<button data-unskip class="on"><span>Skipped today · ${SKIP_LABEL[skip]}</span><b>Undo</b></button>`
