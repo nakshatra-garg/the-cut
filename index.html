@@ -354,6 +354,57 @@ details.stepsbox .steps{padding-left:0}
 .ringstats b{color:var(--ink); font-family:var(--rounded); font-weight:700; font-size:16px}
 .ringstats i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:1px}
 .swaplist{display:grid; gap:6px}
+.rowbody{all:unset; display:block; cursor:pointer; min-width:0; -webkit-tap-highlight-color:transparent}
+.rowbody:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+.logline{display:block; font-size:13px; color:var(--accent); font-weight:500; margin-top:1px; font-family:var(--rounded)}
+.movebtn{display:inline-block; margin-top:6px; font-size:14px}
+.exsheet{height:min(92dvh, 820px); overflow-y:auto; gap:10px; padding-bottom:0}
+.exphoto{position:relative; aspect-ratio:3/2; border-radius:14px; overflow:hidden; background:#fff}
+.exphoto img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+@media (prefers-reduced-motion: no-preference){ .exphoto img.b{animation:flip 3.2s ease-in-out infinite} }
+@media (prefers-reduced-motion: reduce){ .exphoto img.b{opacity:0} }
+@keyframes flip{0%,40%{opacity:0} 50%,90%{opacity:1} 100%{opacity:0}}
+.exgif{border-radius:14px; overflow:hidden; background:#fff; aspect-ratio:1; max-height:44dvh; display:grid; place-items:center}
+.exgif img{width:100%; height:100%; object-fit:contain}
+.exchips{display:flex; flex-wrap:wrap; gap:6px}
+.exchips .chip{text-transform:capitalize}
+.exrx{margin:0; font-size:17px; font-weight:600}
+.sets{display:grid; gap:6px}
+.sethead, .setrow{display:grid; grid-template-columns:28px 1fr 1fr 40px; gap:8px; align-items:center}
+.sethead span{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--mute); text-align:center}
+.setno{width:26px; height:26px; border-radius:50%; background:var(--fill); display:grid; place-items:center; font-size:13px; font-weight:600; font-family:var(--rounded)}
+.stepper{display:flex; align-items:center; background:var(--fill); border-radius:10px; height:44px}
+.stepper button{width:34px; height:44px; border:0; background:none; color:var(--accent); font-size:20px; cursor:pointer; flex:none}
+.stepper input::placeholder{color:var(--mute); font-weight:500; font-size:14px}
+.stepper input{width:100%; min-width:0; border:0; background:none; text-align:center; font-family:var(--rounded); font-size:18px; font-weight:600; color:var(--ink); padding:0}
+.setchk{width:40px; height:40px; border-radius:50%; border:1.5px solid #C7C7CC; background:none; color:transparent; font-size:16px; cursor:pointer; transition:background-color .2s, color .2s, border-color .2s}
+.setrow.done .setchk{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.setrow.done .setno{background:var(--accent); color:var(--accent-ink)}
+.setbtns{display:flex; justify-content:space-between}
+details.exhow{margin:0; padding:0 12px; background:var(--bg); border-radius:12px}
+details.exhow summary{font-size:15px; padding:10px 0}
+details.exhow ol{margin:0 0 10px; padding-left:20px; font-size:14px; display:grid; gap:6px}
+.exactions{display:flex; gap:8px}
+.exactions > *{flex:1}
+.exfoot{position:sticky; bottom:0; padding:10px 0 calc(12px + env(safe-area-inset-bottom,0px)); background:linear-gradient(transparent, var(--card) 30%)}
+.exfoot .btn{width:100%}
+.resttimer{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(84px + env(safe-area-inset-bottom,0px)); z-index:26; display:flex; align-items:center; gap:10px;
+  padding:8px 8px 8px 16px; border-radius:999px; background:var(--ink); color:var(--bg); box-shadow:0 8px 24px rgba(0,0,0,.25); font-size:15px}
+.resttimer[hidden]{display:none}
+.resttimer b{font-family:var(--rounded); font-size:20px; min-width:46px}
+.resttimer button{border:0; border-radius:999px; padding:6px 12px; background:rgba(128,128,128,.35); color:inherit; font:inherit; cursor:pointer}
+.heatwrap{overflow-x:auto; margin-top:10px}
+.heatmonths{display:grid; grid-template-columns:repeat(26, 1fr); gap:3px; font-size:10px; color:var(--mute); margin-bottom:4px; white-space:nowrap}
+.heatgrid{display:grid; grid-template-rows:repeat(7, 1fr); grid-auto-flow:column; grid-auto-columns:1fr; gap:3px}
+.hc{display:block; aspect-ratio:1; border-radius:3px; border:0; padding:0; background:var(--fill); cursor:pointer}
+.hc.future{background:transparent}
+.hc.l1{background:color-mix(in srgb, var(--ring1) 25%, var(--fill))}
+.hc.l2{background:color-mix(in srgb, var(--ring1) 50%, var(--fill))}
+.hc.l3{background:color-mix(in srgb, var(--ring1) 78%, var(--fill))}
+.hc.l4{background:var(--ring1)}
+.hc.today{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.heatlegend{display:flex; align-items:center; gap:4px; justify-content:flex-end; margin-top:8px}
+.heatlegend .hc{width:11px; cursor:default}
 .swapopt{display:flex; gap:6px}
 .swapopt button{flex:1}
 .swapopt .videolink{flex:1}
@@ -588,6 +639,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   </div>
 
   <div class="view" data-view="goals" hidden>
+  <section class="card" id="heat"></section>
   <section class="card" id="badges"></section>
   <section class="card" id="checkin"></section>
   </div>
@@ -720,6 +772,21 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   </div>
   <div class="modal" id="modal" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="sheet" id="exsheet" hidden>
+    <div class="sheetcard exsheet" role="dialog" aria-modal="true" aria-labelledby="extitle">
+      <div class="sheethead"><h2 id="extitle"></h2><button class="iconbtn" data-closeex aria-label="Close">✕</button></div>
+      <div id="exbody"></div>
+    </div>
+  </div>
+  <div class="sheet" id="movesheet" hidden>
+    <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="movetitle">
+      <h2 id="movetitle">Do another day’s workout</h2>
+      <p class="cap">Missed a session? Run it today. Your weekly plan doesn’t change.</p>
+      <div class="swaplist" id="movelist"></div>
+      <button class="btn cancel" data-closesheet="movesheet">Cancel</button>
+    </div>
+  </div>
+  <div class="resttimer" id="resttimer" hidden role="timer" aria-live="off"><span>Rest</span><b>1:30</b><button data-reststop>Skip</button></div>
   <div class="sheet" id="swapsheet" hidden>
     <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="swaptitle">
       <h2 id="swaptitle">Swap exercise</h2>
@@ -783,6 +850,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   <button data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg>Settings</button>
 </nav>
 
+<script src="ex/info.js"></script>
 <script>
 /* ---------- Plan data: edit here ---------- */
 const START = 127.4, GOAL = 105, MILESTONES = [120, 115, 110, 105];
@@ -1089,7 +1157,7 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
-  for (const k of ['closed','protein','checkins','ai','cardio','swaps','skips']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['closed','protein','checkins','ai','cardio','swaps','skips','logs','moves']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
   for (const k of ['close','week']) if (!s.ai[k] || typeof s.ai[k] !== 'object') s.ai[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
@@ -1389,7 +1457,9 @@ ${days.join('\n')}`;
 async function coachNote(date){
   const p = progress(date), pct = Math.round(100*p.done/p.total), v = dayView(date);
   const missed = [...v.items.filter(it => !skipOf(date, it[0]) && !isDone(date, it[0])).map(it => it[1]), ...HABITS.filter((_,k) => !isDone(date, `h${k}`)).map(h => h[0])];
-  const done = v.items.filter(it => !skipOf(date, it[0]) && isDone(date, it[0])).map(it => it[1] === 'Cardio' && state.cardio[date] ? `Cardio ${state.cardio[date]} min` : it[1]);
+  const done = v.items.filter(it => !skipOf(date, it[0]) && isDone(date, it[0])).map(it => {
+    if (it[1] === 'Cardio' && state.cardio[date]) return `Cardio ${state.cardio[date]} min`;
+    const lg = state.logs[`${date}|${it[0]}`]; return lg ? `${it[1]} ${fmtSets(lg.sets, rxUnit(it[2]))}` : it[1]; });
   const text = await ai([{ role:'user', content: `${aiContext()}\n\nI just closed ${date} (${v.title}) at ${pct}%. Done: ${done.join(', ') || 'nothing'}. Missed: ${missed.join(', ') || 'nothing'}. Skipped: ${skippedOn(date).join(', ') || 'nothing'}.\n\nWrite my end-of-day recap, under 70 words:\n1. One warm, specific line of appreciation (name a real highlight).\n2. "- " bullets (2-3) summarising what I did today with numbers.\n3. A final line starting "**Tomorrow:**" with one focus.\nNo greeting, at most one emoji.` }], 400);
   state.ai.close[date] = text; save();
   return text;
@@ -1468,6 +1538,121 @@ async function cheer(id){
   } catch(e){ toast(CHEERS_LOCAL[Math.floor(Math.random() * CHEERS_LOCAL.length)], sub); }
 }
 
+/* ---------- Exercise sheet: photos, how-to, set log, rest timer, PRs ---------- */
+const GIF_BASE = 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/';
+const rxUnit = rx => { const m = String(rx).match(/×\s*[\d–]+\s*(m|sec|s|min)\b/); return m ? (m[1] === 's' ? 'sec' : m[1]) : 'reps'; };
+const planSets = rx => { const m = String(rx).match(/^(\d+)(?:–(\d+))?\s*×\s*(\d+)/); return { n: m ? Number(m[2] || m[1]) : 3, reps: m ? Number(m[3]) : '' }; };
+const e1rm = (w, r) => (r > 0 && r <= 12 && w > 0) ? w * (1 + r / 30) : 0;     // Epley; not trusted above 12 reps
+const LOGLESS = ['Warm-up', 'Mobility', 'Optional core', 'Cardio'];
+function fmtSets(sets, unit = 'reps'){
+  const ds = (sets || []).filter(x => x.r !== '' && x.r != null && Number(x.r) > 0);
+  if (!ds.length) return '';
+  const u = unit === 'reps' ? '' : ' ' + unit, same = ds.every(x => x.w == ds[0].w && x.r == ds[0].r);
+  return same ? `${ds.length} × ${ds[0].r}${u}${ds[0].w ? ` @ ${ds[0].w} kg` : ''}` : ds.map(x => `${x.w ? x.w + '×' : ''}${x.r}${u}`).join(', ');
+}
+function lastLog(name, before){
+  let best = null;
+  for (const [k, v] of Object.entries(state.logs)){ const d = k.split('|')[0];
+    if (v.name === name && d < before && fmtSets(v.sets) && (!best || d > best.d)) best = { d, ...v }; }
+  return best;
+}
+function bestSet(name, excludeKey){
+  let b = { e: 0 };
+  for (const [k, v] of Object.entries(state.logs)) if (v.name === name && k !== excludeKey)
+    for (const x of v.sets){ const e = e1rm(Number(x.w), Number(x.r)); if (e > b.e) b = { e, w: x.w, r: x.r }; }
+  return b;
+}
+let exFor = null, exDraft = [], exUnit = 'reps', wakeLock = null, restTimer = null;
+async function keepAwake(on){
+  try {
+    if (on && 'wakeLock' in navigator && !wakeLock){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    if (!on && wakeLock){ await wakeLock.release(); wakeLock = null; }
+  } catch(e) {}
+}
+function openEx(id){
+  const v = dayView(sel), it = v.items.find(x => x[0] === id); if (!it) return;
+  const [, name, rx0, steps, meta] = it;
+  if (name === 'Cardio'){ if (!isClosed(sel) && !skipOf(sel, id)) openMins(id); return; }
+  const dl = weekInfo(mon(fromIso(sel))).deload && v.lift, rx = dl ? deloadRx(rx0) : rx0, key = `${sel}|${id}`;
+  const locked = isClosed(sel), loggable = !LOGLESS.includes(name), info = EX_INFO[name];
+  exFor = id; exUnit = rxUnit(rx);
+  const saved = state.logs[key], last = lastLog(name, sel), plan = planSets(rx), best = bestSet(name, key);
+  exDraft = saved ? saved.sets.map(x => ({ ...x }))
+    : Array.from({ length: plan.n }, (_, k) => { const ls = last && (last.sets[k] || last.sets[last.sets.length - 1]); return { w: ls ? ls.w : '', r: ls ? ls.r : plan.reps, done: false }; });
+  // Animated GIF from the dataset host first; bundled public-domain photos (or a drawing) if it can't load, e.g. offline.
+  const gif = EX_GIF[name];
+  const still = info
+    ? `<div class="exphoto" role="img" aria-label="${esc(name)}, start and end position"><img src="ex/${info.id}/0.jpg" alt=""><img src="ex/${info.id}/1.jpg" alt="" class="b"></div>`
+    : DEMOS[name] ? `<div class="demofig">${demoSvg(DEMOS[name])}</div>` : '';
+  const media = gif
+    ? `<div class="exgif" role="img" aria-label="${esc(name)} demo"><img src="${GIF_BASE}${gif.g}" alt="" onerror="this.parentElement.outerHTML = this.parentElement.dataset.fallback || ''"></div>`.replace('<div class="exgif"', `<div class="exgif" data-fallback="${esc(still)}"`)
+    : still;
+  const how = (info && info.how) || (gif && gif.how) || null;
+  document.getElementById('extitle').textContent = name;
+  document.getElementById('exbody').innerHTML = `${media}
+    <div class="exchips">${(info ? info.muscles : []).map(m => `<span class="chip">${esc(m)}</span>`).join('')}
+      ${best.e ? `<span class="chip">Best ${best.w} kg × ${best.r} · e1RM ${Math.round(best.e)}</span>` : ''}</div>
+    <p class="exrx">${fmtRx(rx)}${dl ? ' · deload week' : ''}</p>
+    ${last && loggable ? `<p class="cap">Last time (${fmt(fromIso(last.d))}): ${fmtSets(last.sets, exUnit)}</p>` : ''}
+    ${loggable ? `<div class="sets" id="exsets"></div>
+      <div class="setbtns"><button class="linkbtn" data-addset ${locked ? 'disabled' : ''}>+ Add set</button><button class="linkbtn" data-delset ${locked ? 'disabled' : ''}>− Remove set</button></div>` : ''}
+    ${steps ? stepsHtml(steps, false) : ''}
+    ${how ? `<details class="exhow"><summary>How to do it</summary><ol>${how.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>` : ''}
+    <div class="exactions"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener">▶︎ Watch</a>
+      ${meta.n && !locked ? `<button class="btn cancel" data-swap="${id}">${meta.alts ? 'Swap or skip' : 'Skip'}</button>` : ''}</div>
+    <div class="exfoot"><button class="btn" data-exdone ${locked ? 'disabled' : ''}>${locked ? 'Day closed' : isDone(sel, id) ? 'Save ✓' : 'Done ✓'}</button></div>`;
+  if (loggable) renderSets();
+  showSheet(document.getElementById('exsheet'));
+  keepAwake(true);
+}
+function renderSets(){
+  const el = document.getElementById('exsets'); if (!el) return;
+  const locked = isClosed(sel), ul = exUnit === 'reps' ? 'Reps' : exUnit === 'm' ? 'Metres' : exUnit === 'sec' ? 'Seconds' : 'Min';
+  el.innerHTML = `<div class="sethead"><span>Set</span><span>Weight (kg)</span><span>${ul}</span><span></span></div>` + exDraft.map((x, k) => `
+    <div class="setrow${x.done ? ' done' : ''}">
+      <span class="setno">${k + 1}</span>
+      <div class="stepper"><button data-step="${k}:w:-1" ${locked ? 'disabled' : ''} aria-label="Less weight">−</button><input data-k="${k}" data-f="w" inputmode="decimal" value="${x.w}" placeholder="kg" ${locked ? 'disabled' : ''}><button data-step="${k}:w:1" ${locked ? 'disabled' : ''} aria-label="More weight">+</button></div>
+      <div class="stepper"><button data-step="${k}:r:-1" ${locked ? 'disabled' : ''} aria-label="Fewer">−</button><input data-k="${k}" data-f="r" inputmode="numeric" value="${x.r}" placeholder="0" ${locked ? 'disabled' : ''}><button data-step="${k}:r:1" ${locked ? 'disabled' : ''} aria-label="More">+</button></div>
+      <button class="setchk" data-setdone="${k}" aria-label="Set ${k + 1} done" ${locked ? 'disabled' : ''}>✓</button></div>`).join('');
+}
+function stepSet(spec){
+  const [k, f, dir] = spec.split(':'), x = exDraft[Number(k)];
+  const inc = f === 'w' ? 2.5 : exUnit === 'm' ? 10 : exUnit === 'sec' ? 5 : 1;
+  const v = Math.max(0, (Number(x[f]) || 0) + inc * Number(dir));
+  x[f] = f === 'w' ? Math.round(v * 10) / 10 : Math.round(v);
+  const inp = document.querySelector(`#exsets input[data-k="${k}"][data-f="${f}"]`); if (inp) inp.value = x[f];
+}
+function startRest(){
+  const v = dayView(sel), idx = v.items.findIndex(x => x[0] === exFor);
+  let left = idx === 1 && v.lift ? 150 : 90;              // the day's main lift gets a longer rest
+  const el = document.getElementById('resttimer'); clearInterval(restTimer);
+  const tick = () => {
+    el.querySelector('b').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+    if (left-- <= 0){ clearInterval(restTimer); el.hidden = true; if (navigator.vibrate) navigator.vibrate(200); toast('Rest done. Next set 💪'); }
+  };
+  showSheet(el); tick(); restTimer = setInterval(tick, 1000);
+}
+function stopRest(){ clearInterval(restTimer); document.getElementById('resttimer').hidden = true; }
+function exDone(){
+  const v = dayView(sel), it = v.items.find(x => x[0] === exFor); if (!it) return;
+  const id = exFor, key = `${sel}|${id}`, name = it[1];
+  let pr = null;
+  if (!LOGLESS.includes(name)){
+    const sets = exDraft.filter(x => (x.r !== '' && Number(x.r) > 0) || (x.w !== '' && Number(x.w) > 0)).map(x => ({ w: x.w === '' ? '' : Number(x.w), r: x.r === '' ? '' : Number(x.r), done: !!x.done }));
+    if (sets.length){
+      const before = bestSet(name, key), now = sets.reduce((b, x) => { const e = e1rm(x.w, x.r); return e > b.e ? { e, w: x.w, r: x.r } : b; }, { e: 0 });
+      if (before.e && now.e > before.e + 0.01) pr = now;
+      state.logs[key] = { name, sets };
+    } else delete state.logs[key];
+  }
+  delete state.skips[key];
+  state.checks[key] = true; popRow = id;
+  closeEx(); save(); render();
+  if (pr){ toast(`🏆 New PR: ${name}`, `${pr.w} kg × ${pr.r} · est. 1RM ${Math.round(pr.e)} kg`); confetti(70); }
+  else cheer(id);
+}
+function closeEx(){ exFor = null; stopRest(); keepAwake(false); closeSheet('exsheet'); }
+
 /* ---------- Prescriptions: "4 × 5–8" reads as "4 sets × 5–8 reps" ---------- */
 function fmtRx(rx){
   return String(rx).replace(/^(\d+(?:–\d+)?) × (\d+(?:–\d+)?)(\s*(?:m|sec|s|min)\b)?/, (_, sets, n, unit) =>
@@ -1492,6 +1677,16 @@ function ringsHtml(date, p){
       <div><i style="background:var(--ring1)"></i><b>${p.done}/${p.total}</b> done</div>
       <div><i style="background:var(--ring2)"></i><b>${g}</b>/${PROTEIN_MIN} g protein</div>
       <div><i style="background:var(--ring3)"></i><b>${cm}</b>/${ct} min cardio</div></div></div>`;
+}
+function openMove(){
+  const own = dow(fromIso(sel)), cur = Number.isInteger(state.moves[sel]) ? state.moves[sel] : own;
+  document.getElementById('movelist').innerHTML = PLAN.map((pl, k) =>
+    `<div class="swapopt"><button data-move="${k}" class="${k === cur ? 'on' : ''}"><span>${pl.day} · ${pl.title}${k === own ? ' <small>today’s plan</small>' : ''}</span>${k === cur ? '<b>✓</b>' : ''}</button></div>`).join('');
+  showSheet(document.getElementById('movesheet'));
+}
+function pickMove(k){
+  if (k === dow(fromIso(sel))) delete state.moves[sel]; else state.moves[sel] = k;
+  closeSheet('movesheet'); save(); render();
 }
 let swapFor = null;
 function openSwap(id){
@@ -1745,9 +1940,9 @@ function chartHtml(){
 // A swap is remembered per plan slot and applies every week until you pick "Plan" again.
 const swapName = (id, it) => { const sw = state.swaps[id]; return sw && it.alts && it.alts.includes(sw) ? sw : it.n; };
 function dayView(date){
-  const i = dow(fromIso(date)), mode = modeOf(date);
+  const own = dow(fromIso(date)), mv = state.moves[date], i = Number.isInteger(mv) ? mv : own, mode = modeOf(date);
   // Items become [id, name (after any swap), prescription, steps, meta].
-  if (mode === 'plan') return { mode, ...PLAN[i], items: PLAN[i].items.map((it,k) => { const id = `${i}-${k}`; return [id, swapName(id, it), it.rx, it.steps, it]; }) };
+  if (mode === 'plan') return { mode, ...PLAN[i], movedFrom: i !== own ? PLAN[i].day : null, items: PLAN[i].items.map((it,k) => { const id = `${i}-${k}`; return [id, swapName(id, it), it.rx, it.steps, it]; }) };
   const m = MODES[mode];
   return { mode, day: PLAN[i].day, title: m.title, load: m.load, note: m.note, lift: false,
     planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, it.n, it.rx, it.steps, it]) };
@@ -1798,7 +1993,13 @@ function stats(){
   const mondays = closed.filter(x => dow(fromIso(x)) === 0).map(fromIso);
   const wdates = Object.keys(state.weights).filter(x => typeof state.weights[x] === 'number');
   const waists = Object.values(state.checkins).map(c => c.waist).filter(w => typeof w === 'number');
+  // Weekly streak: a week counts with 5+ good days; the current week counts once it gets there.
+  const goodIn = ws => [...Array(7)].filter((_,k) => isGood(iso(addDays(ws,k)))).length;
+  let wk = 0, ws = mon(today);
+  if (goodIn(ws) < 5) ws = addDays(ws, -7);
+  while (goodIn(ws) >= 5){ wk++; ws = addDays(ws, -7); }
   return {
+    weekCur: wk, weekNow: goodIn(mon(today)),
     cur, best: bestRun([...closed], isGood),
     good: closed.filter(isGood).length, closed: closed.length,
     perfect: closed.filter(x => pctOf(x) === 100).length,
@@ -1921,11 +2122,13 @@ function render(){
   const row = (id,name,rx,steps,meta = {}) => {
     const mins = name === 'Cardio' && isDone(sel,id) ? state.cardio[sel] : null;
     const swapped = meta.alts && name !== meta.n, skip = meta.n ? skipOf(sel, id) : null;
-    const tools = (DEMOS[name] ? `<button class="tool" data-demo="${esc(name)}" aria-label="How to do ${esc(name)}">${ICON_IMG}</button>` : '')
+    const tools = (DEMOS[name] && !EX_INFO[name] && !EX_GIF[name] ? `<button class="tool" data-demo="${esc(name)}" aria-label="How to do ${esc(name)}">${ICON_IMG}</button>` : '')
       + (meta.n && !locked ? `<button class="tool" data-swap="${id}" aria-label="${meta.alts ? 'Swap or skip' : 'Skip'} ${esc(name)}">${meta.alts ? ICON_SWAP : ICON_MORE}</button>` : '');
+    const lg = state.logs[`${sel}|${id}`], logLine = lg && fmtSets(lg.sets, rxUnit(rx));
+    const tag = meta.n ? 'div' : 'label', bodyTag = meta.n ? `button class="rowbody" data-openex="${id}" aria-label="Open ${esc(name)}"` : 'div';
     return `<div class="item${tools ? ' hastools' : ''}${skip ? ' skipped' : ''}">
-      <label class="row" data-row="${id}"><input type="checkbox" data-id="${id}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
-      <div><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span></div></label>
+      <${tag} class="row" data-row="${id}"><input type="checkbox" data-id="${id}" aria-label="Done: ${esc(name)}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
+      <${bodyTag}><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
       ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse) : ''}</div>`;
   };
   const proteinRow = () => {
@@ -1956,7 +2159,8 @@ function render(){
       <span><button class="linkbtn" data-recap>Recap</button> · <button class="linkbtn" data-reopen>Reopen</button></span></div>` : ''}
     <div class="seg modeseg" role="group" aria-label="Day type">${modeSeg}</div>
     <h2 class="daytitle">${day.title}</h2>
-    <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${day.planned ? ` · planned: ${day.planned}` : ''}</div>
+    <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${day.planned ? ` · planned: ${day.planned}` : ''}${day.movedFrom ? ` · ${day.movedFrom}'s workout` : ''}</div>
+    ${day.mode === 'plan' && !locked ? `<button class="linkbtn movebtn" data-openmove>↻ ${day.movedFrom ? 'Change' : 'Do another day’s workout'}</button>` : ''}
     ${dl ? '<div class="banner"><b>Deload week</b>Sets are trimmed below. Keep your usual weights and stop 3–4 reps short of failure.</div>' : ''}
     ${ringsHtml(sel, p)}
     <div class="note">${day.note}</div>
@@ -2045,14 +2249,32 @@ function renderReview(){
     <p class="syncerr" id="aiweekmsg"></p>`;
 }
 
+function renderHeat(){
+  const weeks = 26, start = addDays(mon(today), -7 * (weeks - 1)), t = iso(today);
+  let cells = '', months = '';
+  for (let w = 0; w < weeks; w++){
+    const ws = addDays(start, w * 7);
+    months += `<span>${ws.getDate() <= 7 ? ws.toLocaleDateString(undefined, { month:'short' }) : ''}</span>`;
+    for (let d = 0; d < 7; d++){
+      const day = iso(addDays(ws, d));
+      if (day > t){ cells += '<i class="hc future"></i>'; continue; }
+      const p = progress(day), pct = p.done / p.total, lv = isClosed(day) ? (pct >= 1 ? 4 : pct >= GOOD_PCT / 100 ? 3 : pct >= .5 ? 2 : 1) : (p.done ? 1 : 0);
+      cells += `<button class="hc l${lv}${day === t ? ' today' : ''}" data-jump="${day}" aria-label="${day}: ${Math.round(pct * 100)}%${isClosed(day) ? ', closed' : ''}"></button>`;
+    }
+  }
+  document.getElementById('heat').innerHTML = `<h2 class="sect">Last 6 months</h2>
+    <div class="heatwrap"><div class="heatmonths">${months}</div><div class="heatgrid">${cells}</div></div>
+    <div class="heatlegend"><span class="cap">Less</span><i class="hc l0"></i><i class="hc l1"></i><i class="hc l2"></i><i class="hc l3"></i><i class="hc l4"></i><span class="cap">Perfect</span></div>`;
+}
 function renderBadges(){
+  renderHeat();
   const st = stats(), got = earned(st);
   document.getElementById('badges').innerHTML = `
     <h2 class="sect">Streaks &amp; badges</h2>
     <div class="avg">
       <div><div class="big">🔥 ${st.cur}</div><div class="cap">current streak</div></div>
       <div><div class="big">${st.best}</div><div class="cap">best streak</div></div>
-      <div><div class="big">${st.good}</div><div class="cap">good days</div></div>
+      <div><div class="big">🗓️ ${st.weekCur}</div><div class="cap">week streak · ${st.weekNow}/5 this week</div></div>
     </div>
     <div class="cap" style="margin-top:8px">A good day is a closed day at ${GOOD_PCT}% or more. ${got.size} of ${BADGES.length} badges earned.</div>
     <div class="badges">${BADGES.map(b => `<div class="badge ${got.has(b.name)?'got':''}" title="${b.name}"><span class="be">${b.icon}</span><span class="bn">${b.name}</span></div>`).join('')}</div>`;
@@ -2152,6 +2374,17 @@ function confetti(n){
 /* ---------- Events ---------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.jump){ sel = t.dataset.jump; weekStart = mon(fromIso(sel)); showTab('today'); render(); return; }
+  if (t.dataset.openex){ openEx(t.dataset.openex); return; }
+  if (t.dataset.step){ stepSet(t.dataset.step); return; }
+  if (t.dataset.setdone){ const x = exDraft[Number(t.dataset.setdone)]; x.done = !x.done; t.closest('.setrow').classList.toggle('done', x.done); if (x.done) startRest(); return; }
+  if (t.hasAttribute('data-addset')){ const l = exDraft[exDraft.length - 1] || { w:'', r:'' }; exDraft.push({ w: l.w, r: l.r, done:false }); renderSets(); return; }
+  if (t.hasAttribute('data-delset')){ if (exDraft.length > 1){ exDraft.pop(); renderSets(); } return; }
+  if (t.hasAttribute('data-exdone')){ exDone(); return; }
+  if (t.hasAttribute('data-closeex')){ closeEx(); return; }
+  if (t.hasAttribute('data-reststop')){ stopRest(); return; }
+  if (t.hasAttribute('data-openmove')){ openMove(); return; }
+  if (t.dataset.move !== undefined){ pickMove(Number(t.dataset.move)); return; }
   if (t.dataset.tab){
     closeCoach(); showTab(t.dataset.tab);
     if (t.dataset.open){ const d = document.getElementById(t.dataset.open); d.open = true; d.scrollIntoView({ block:'start' }); }
@@ -2169,7 +2402,7 @@ document.addEventListener('click', e => {
   else if (t.hasAttribute('data-opencoach')) openCoach();
   else if (t.dataset.mins) logMins(t.dataset.mins);
   else if (t.dataset.demo){ e.preventDefault(); openDemo(t.dataset.demo); }
-  else if (t.dataset.swap){ e.preventDefault(); openSwap(t.dataset.swap); }
+  else if (t.dataset.swap){ e.preventDefault(); if (exFor) closeEx(); openSwap(t.dataset.swap); }
   else if (t.dataset.pick) pickSwap(t.dataset.pick);
   else if (t.dataset.skip) setSkip(t.dataset.skip);
   else if (t.hasAttribute('data-unskip')) setSkip(null);
@@ -2244,6 +2477,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const c = e.target;
+  if (c.dataset && c.dataset.f && c.dataset.k !== undefined && exDraft[Number(c.dataset.k)]){ exDraft[Number(c.dataset.k)][c.dataset.f] = c.value === '' ? '' : Number(c.value); return; }
   if (c.id === 'aimodel'){ cfg.aiModel = c.value; saveCfg(); return; }
   if (c.id === 'cheertoggle'){ cfg.cheers = c.checked; saveCfg(); return; }
   if (c.id === 'importfile'){ if (c.files[0]) importBackup(c.files[0]); c.value = ''; return; }
@@ -2282,7 +2516,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chatin'){ e.preventDefault(); sendChat(e.target.value); }
   if (e.key === 'Enter' && e.target.id === 'unlockpass') unlock();
   if (e.key === 'Enter' && e.target.id === 'minsother'){ e.preventDefault(); logMins(e.target.value); }
-  if (e.key === 'Escape'){ hideModal(); closeCoach(); if (!document.getElementById('minsheet').hidden) closeMins(); closeSheet('swapsheet'); closeSheet('demosheet'); }
+  if (e.key === 'Escape'){ hideModal(); closeCoach(); if (!document.getElementById('minsheet').hidden) closeMins(); closeSheet('swapsheet'); closeSheet('demosheet'); closeSheet('movesheet'); if (exFor) closeEx(); }
   // Mac shortcuts: 1–4 tabs, ←/→ day, C coach (ignored while typing)
   if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const tabs = ['today','progress','goals','more'];
@@ -2300,7 +2534,9 @@ window.addEventListener('offline', renderSync);
 document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
 document.getElementById('coachsheet').addEventListener('click', e => { if (e.target.id === 'coachsheet') closeCoach(); });
 document.getElementById('minsheet').addEventListener('click', e => { if (e.target.id === 'minsheet') closeMins(); });
-['swapsheet','demosheet'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
+document.getElementById('exsheet').addEventListener('click', e => { if (e.target.id === 'exsheet') closeEx(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && exFor) keepAwake(true); });
+['swapsheet','demosheet','movesheet'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
 
 render();
 renderSync();
