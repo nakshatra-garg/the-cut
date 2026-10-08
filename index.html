@@ -366,6 +366,15 @@ details.stepsbox .steps{padding-left:0}
 @keyframes flip{0%,40%{opacity:0} 50%,90%{opacity:1} 100%{opacity:0}}
 .exgif{border-radius:14px; overflow:hidden; background:#fff; aspect-ratio:1; max-height:44dvh; display:grid; place-items:center}
 .exgif img{width:100%; height:100%; object-fit:contain}
+#weight .avg{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:12px}
+#weight .avg .big{font-size:26px}
+#weight .cap{font-size:13px; color:var(--mute)}
+.wlatest{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-top:14px}
+.wlatest .big{font-size:44px; line-height:1}
+.wlatest .unit{font-size:18px; color:var(--mute); font-weight:600}
+.wdelta{font-family:var(--rounded); font-weight:700; font-size:17px}
+.wdelta.down{color:var(--accent)} .wdelta.up{color:var(--orange)}
+.wwhen{flex-basis:100%; margin-top:2px}
 .exchips{display:flex; flex-wrap:wrap; gap:6px}
 .exchips .chip{text-transform:capitalize}
 .exrx{margin:0; font-size:17px; font-weight:600}
@@ -1868,7 +1877,16 @@ function importBackup(file){
 const pad = n => String(n).padStart(2,'0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const fromIso = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
-const today = new Date(); today.setHours(0,0,0,0);
+// let, not const: iOS keeps home-screen apps suspended for days, so "today" is re-checked on resume.
+let today = new Date(); today.setHours(0,0,0,0);
+function refreshToday(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  if (now.getTime() === today.getTime()) return false;
+  const wasToday = sel === iso(today);
+  today = now;
+  if (wasToday){ sel = iso(today); weekStart = mon(today); }   // you were looking at "today": follow it to the new day
+  render(); return true;
+}
 const dow = d => (d.getDay()+6)%7; // Mon = 0
 const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
 const mon = d => addDays(d, -dow(d));
@@ -2179,16 +2197,23 @@ function render(){
   // weight card
   const cur = state.weights[sel];
   const a = sevenDayAvg();
-  let avgHtml = '<div class="cap" style="margin-top:14px">Log a weigh-in to see your 7-day average.</div>';
+  const wDates = Object.keys(state.weights).filter(d => typeof state.weights[d] === 'number' && d <= iso(today)).sort();
+  const lastD = wDates[wDates.length - 1], prevD = wDates[wDates.length - 2];
+  let avgHtml = '<div class="cap" style="margin-top:14px">Log a weigh-in to see your progress.</div>';
   let barPct = 0, chips = '';
-  if (a){
-    const lost = START - a.avg;
-    const togo = a.avg - GOAL;
-    barPct = Math.max(0, Math.min(100, 100*lost/(START-GOAL)));
-    avgHtml = `<div class="avg">
-      <div><div class="big">${a.avg.toFixed(1)}</div><div class="cap">${a.n ? `7-day avg (${a.n} entries)` : 'last weigh-in'}</div></div>
-      <div><div class="big">${lost>=0?'−':'+'}${Math.abs(lost).toFixed(1)}</div><div class="cap">kg from start</div></div>
-      <div><div class="big">${Math.max(0,togo).toFixed(1)}</div><div class="cap">kg to ${GOAL}</div></div></div>`;
+  if (a && lastD){
+    const latest = state.weights[lastD], lost = START - latest, togo = latest - GOAL;
+    const delta = prevD ? latest - state.weights[prevD] : null;
+    const when = lastD === iso(today) ? 'Today' : lastD === iso(addDays(today, -1)) ? 'Yesterday' : fmt(fromIso(lastD));
+    barPct = Math.max(0, Math.min(100, 100 * (START - a.avg) / (START - GOAL)));
+    avgHtml = `<div class="wlatest"><span class="big">${latest.toFixed(1)}</span><span class="unit">kg</span>
+        ${delta != null && Math.abs(delta) >= 0.05 ? `<span class="wdelta ${delta < 0 ? 'down' : 'up'}">${delta < 0 ? '↓' : '↑'} ${Math.abs(delta).toFixed(1)}</span>` : ''}
+        <span class="cap wwhen">${when}${prevD ? ` · vs ${fmt(fromIso(prevD))}` : ''}</span></div>
+      <div class="avg">
+      <div><div class="big">${lost >= 0 ? '−' : '+'}${Math.abs(lost).toFixed(1)}</div><div class="cap">kg from start (${START})</div></div>
+      <div><div class="big">${a.avg.toFixed(1)}</div><div class="cap">7-day avg${a.n ? ` · ${a.n} weigh-in${a.n > 1 ? 's' : ''}` : ''}</div></div>
+      <div><div class="big">${Math.max(0, togo).toFixed(1)}</div><div class="cap">kg to ${GOAL}</div></div></div>
+      <div class="cap" style="margin-top:6px">The bar and milestones follow your 7-day average, which smooths out daily water swings.</div>`;
     chips = MILESTONES.map(m => `<span class="chip ${a.avg<=m?'hit':''}">${m}</span>`).join('');
   } else {
     chips = MILESTONES.map(m => `<span class="chip">${m}</span>`).join('');
@@ -2528,7 +2553,9 @@ document.addEventListener('keydown', e => {
   else if (e.key.toLowerCase() === 'c'){ document.getElementById('coachsheet').hidden ? openCoach() : closeCoach(); }
 });
 // Pull fresh data whenever the app comes back to the foreground or the connection returns.
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ refreshToday(); syncNow(); } });
+window.addEventListener('focus', refreshToday);
+setInterval(refreshToday, 60000);   // also catches midnight while the app is open
 window.addEventListener('online', syncNow);
 window.addEventListener('offline', renderSync);
 document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
