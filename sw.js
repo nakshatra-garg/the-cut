@@ -1,6 +1,6 @@
 // Bump VERSION whenever you change index.html so phones pick up the new shell.
-const VERSION = 'thecut-v21';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './ex/info.js'];
+const VERSION = 'thecut-v22';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './ex/info.js', './ex/body.js'];
 
 self.addEventListener('install', e => {
   // cache:'reload' skips the browser's HTTP cache (GitHub Pages sends max-age=600), so a new

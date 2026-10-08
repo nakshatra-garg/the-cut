@@ -17,3 +17,6 @@ Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or
 substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+Body diagram outlines in `body.js` are from MuscleMap by Melih Colpan
+(https://github.com/melihcolpan/MuscleMap), MIT License — full notice at the top of body.js.
