@@ -1099,6 +1099,70 @@ const PLAN = [
 ];
 
 
+/* ---------- Exercise families: every lift can swap to the rest of its movement pattern ---------- */
+const FAMILIES = [
+  ['Barbell bench press','Dumbbell bench press','Machine chest press','Smith machine bench press','Dumbbell flat press','Hammer Strength press','Neutral-grip dumbbell press','Weighted push-ups'],
+  ['Incline dumbbell press','Incline machine press','Incline Smith press','Low-incline barbell press','Neutral-grip dumbbell press'],
+  ['Cable fly','Pec deck','Dumbbell fly','Low-to-high cable fly'],
+  ['Cable triceps pushdown','Rope pushdown','Bar pushdown','Reverse-grip pushdown','Single-arm pushdown (optional)','Dip machine','Close-grip push-up'],
+  ['Overhead cable extension','Overhead extension','Cable overhead extension','Overhead dumbbell extension','EZ-bar skull crusher','Cable kickback'],
+  ['Deadlift (conventional)','Trap-bar deadlift','Sumo deadlift','Rack pull (below knee)'],
+  ['Lat pulldown','Wide-grip pulldown','Close-grip pulldown','Machine pulldown','Assisted pull-up'],
+  ['One-arm dumbbell row','Seated cable row','T-bar row','Machine row','Single-arm cable row','Wide-grip cable row'],
+  ['Straight-arm pulldown','Rope straight-arm pulldown','Dumbbell pullover','Machine pullover','Lying cable pullover'],
+  ['EZ-bar curl','Barbell curl','Cable curl','Dumbbell curl','Preacher curl','Incline DB curl','Bayesian cable curl'],
+  ['Hammer curl','Rope hammer curl','Cross-body hammer curl','Hammer preacher curl','Reverse-grip EZ curl'],
+  ['Squat','Hack squat','Smith machine squat','Safety-bar squat','Leg press','Goblet box squat','Hack squat / controlled squat variation'],
+  ['Single-leg leg press','Goblet box squat','Step-up (low box)','Reverse lunge','Supported split squat'],
+  ['Hip thrust','Barbell glute bridge','Glute drive machine','Cable pull-through'],
+  ['Romanian deadlift','Dumbbell RDL','Cable pull-through','45° back extension','Good morning'],
+  ['Leg curl','Seated leg curl','Lying leg curl','Nordic curl (assisted)'],
+  ['Leg extension','Single-leg extension','Reverse sled drag','Spanish squat','Sissy squat (assisted)'],
+  ['Calf raise','Seated calf raise','Leg-press calf raise','Smith machine calf raise'],
+  ['Machine/DB shoulder press','Seated dumbbell press','Machine shoulder press','Smith shoulder press','Landmine press'],
+  ['Cable lateral raise','Dumbbell lateral raise','Machine lateral raise','Lean-away lateral raise','Cable Y-raise'],
+  ['Rear-delt fly','Face pull','Reverse pec deck','Cable rear-delt row'],
+  ['Cable crunch','Machine crunch','Reverse crunch','Hanging/knee raises',"Captain's chair knee raise",'Dead bug'],
+  ['Pallof press','Dead bug','Side plank (knees down)','Bird dog','Cable wood chop'],
+  ['Deadlift (conventional)','Paused deadlift','Deficit deadlift'],
+  ['Farmer walk','Trap-bar carry','Suitcase carry (one hand)','Front-rack kettlebell carry'],
+  ['Kettlebell swing','Cable pull-through','Dumbbell RDL (fast up)','Kettlebell deadlift'],
+  ['Cable wood chop','Landmine rotation','Half-kneeling cable lift','Fast cable chop','Pallof press'],
+  ['Medicine-ball slams','Wall ball throws','Fast cable chop','Rotational med-ball throw'],
+  ['Battle ropes','Rowing erg 30 s hard','Bike sprint 20 s','Medicine-ball slams'],
+  ['Torque SkiErg, Level 10','Rowing erg 3 × 250 m','Assault bike 3 × 45 s','Sled push 3 × 20 m','Stair climber 3 × 1 min']
+];
+
+/* ---------- Week A / Week B: main lifts stay put (so strength is comparable); accessories alternate ---------- */
+const WEEK_B = {
+  Mon: { 'Incline dumbbell press':'Low-incline barbell press', 'Machine chest press':'Dumbbell flat press', 'Cable fly':'Pec deck',
+         'Cable triceps pushdown':'Rope pushdown', 'Overhead cable extension':'EZ-bar skull crusher', 'Single-arm pushdown (optional)':'Cable kickback' },
+  Tue: { 'Lat pulldown':'Close-grip pulldown', 'One-arm dumbbell row':'T-bar row', 'Seated cable row':'Wide-grip cable row',
+         'Straight-arm pulldown':'Dumbbell pullover', 'EZ-bar curl':'Barbell curl', 'Incline DB curl':'Preacher curl', 'Hammer curl':'Rope hammer curl' },
+  Wed: { 'Leg press':'Hack squat', 'Hip thrust':'Barbell glute bridge', 'Leg curl':'Seated leg curl', 'Leg extension':'Single-leg extension', 'Calf raise':'Seated calf raise' },
+  Thu: { 'Incline machine press':'Incline Smith press', 'Dumbbell flat press':'Machine chest press', 'Cable fly':'Low-to-high cable fly',
+         'Machine/DB shoulder press':'Seated dumbbell press', 'Cable lateral raise':'Dumbbell lateral raise', 'Rear-delt fly':'Face pull',
+         'Rope pushdown':'Bar pushdown', 'Overhead extension':'Cable overhead extension' },
+  Fri: { 'Hack squat / controlled squat variation':'Leg press', 'Romanian deadlift':'Dumbbell RDL', 'Single-leg leg press':'Goblet box squat',
+         'Leg curl':'Seated leg curl', 'Leg extension':'Single-leg extension', 'Calf raise':'Seated calf raise', 'Cable crunch':'Reverse crunch', 'Pallof press':'Dead bug' }
+};
+// Calves twice a week: add to Wednesday with a stable key so later items keep their ids (and your past ticks).
+PLAN[2].items.splice(PLAN[2].items.findIndex(it => it.n === 'Cardio'), 0, I('Calf raise', '2 × 10–15', { key:'calf' }));
+PLAN[2].note += ' Calves get a second weekly session here.';
+function withFamily(it){
+  const fam = FAMILIES.filter(f => f.includes(it.n)).flat();
+  const alts = [...new Set([...(it.alts || []), ...fam])].filter(n => n !== it.n);
+  return alts.length ? { ...it, alts: alts.slice(0, 7) } : it;
+}
+PLAN.forEach(day => {
+  day.items = day.items.map(it => {
+    const out = withFamily(it), bName = WEEK_B[day.day] && WEEK_B[day.day][it.n];
+    if (bName) out.b = withFamily(I(bName, it.rx, { key: it.key }));
+    return out;
+  });
+});
+const isWeekB = date => { const n = weekInfo(mon(fromIso(date))).n; return n >= 1 && n % 2 === 0; };
+
 const HABITS = [
   ['Weighed in','After bathroom, before food or drink'],
   ['Protein','175–190 g'],  // h1: entered in grams, done at PROTEIN_MIN
@@ -1477,7 +1541,7 @@ function aiContext(){
   return `PLAN
 - Cutting from ${START} kg to ${GOAL} kg (milestones ${MILESTONES.join(', ')}). Waist started at ${WAIST_START} in.
 - Nutrition: ~2,500 kcal/day, protein ${PROTEIN_MIN}-${PROTEIN_MAX} g (${PROTEIN_DONE}+ counts as hitting it), fat 70-80 g, carbs fill the rest. Indian diet with roti/rice, 3 meals, protein every meal, no cheat days.
-- Training: Mon Chest+Triceps, Tue Deadlift (3x3-5, strongest lift) + Back + Biceps, Wed Legs (hip thrust instead of RDL), Thu Chest+Shoulders+Triceps, Fri Lower+Core, Sat Functional+Conditioning, Sun active recovery. Working sets at 1-3 reps in reserve. Deload every 6th week. Max ${MAX_REST} full rest days a week.
+- Training: Mon Chest+Triceps, Tue Deadlift (3x3-5, strongest lift) + Back + Biceps, Wed Legs (hip thrust instead of RDL), Thu Chest+Shoulders+Triceps, Fri Lower+Core, Sat Functional+Conditioning, Sun active recovery. Main lifts fixed every week; accessories alternate Week A / Week B; calves Wed + Fri. Working sets at 1-3 reps in reserve. Deload every 6th week. Max ${MAX_REST} full rest days a week.
 - Pace rule: 7-day average loss under 0.3 kg/week for 2-3 weeks → cut 150-200 kcal; over 1 kg/week → add food back.
 - Pain rules: knee sleeves OK but don't push through pain; shoulders controlled pressing, no forced ranges. The foot/ankle only niggles occasionally (not chronic): don't dwell on it, just suggest lower-impact cardio on a day it flares.
 NOW (today ${iso(today)})
@@ -2010,7 +2074,16 @@ const swapName = (id, it) => { const sw = state.swaps[id]; return sw && it.alts 
 function dayView(date){
   const own = dow(fromIso(date)), mv = state.moves[date], i = Number.isInteger(mv) ? mv : own, mode = modeOf(date);
   // Items become [id, name (after any swap), prescription, steps, meta].
-  if (mode === 'plan') return { mode, ...PLAN[i], movedFrom: i !== own ? PLAN[i].day : null, items: PLAN[i].items.map((it,k) => { const id = `${i}-${k}`; return [id, swapName(id, it), it.rx, it.steps, it]; }) };
+  if (mode === 'plan'){
+    // Ids: keyed items use their key; others count only unkeyed items, so inserting a keyed item never shifts old ids.
+    // Week-B variants get a "b" suffix so their ticks, swaps and logs stay separate from Week A.
+    const B = isWeekB(date); let n = 0;
+    const items = PLAN[i].items.map(it0 => {
+      const base = it0.key ? `${i}-${it0.key}` : `${i}-${n++}`, it = B && it0.b ? it0.b : it0, id = it === it0 ? base : base + 'b';
+      return [id, swapName(id, it), it.rx, it.steps, it];
+    });
+    return { mode, ...PLAN[i], weekB: B, movedFrom: i !== own ? PLAN[i].day : null, items };
+  }
   const m = MODES[mode];
   return { mode, day: PLAN[i].day, title: m.title, load: m.load, note: m.note, lift: false,
     planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, it.n, it.rx, it.steps, it]) };
@@ -2167,8 +2240,8 @@ function render(){
   const wm = document.getElementById('weekmeta');
   wm.className = 'weekmeta' + (wi.deload ? ' deload' : '');
   if (wi.n < 1) wm.textContent = `Plan starts ${fmt(fromIso(state.start))}`;
-  else if (wi.deload) wm.textContent = `Week ${wi.n} · Deload week`;
-  else { const k = 6 - (wi.n % 6); wm.textContent = `Week ${wi.n} · ${k === 1 ? 'deload next week' : `deload in ${k} weeks`}`; }
+  else if (wi.deload) wm.textContent = `Week ${wi.n} · ${wi.n % 2 ? 'A' : 'B'} week · Deload`;
+  else { const k = 6 - (wi.n % 6); wm.textContent = `Week ${wi.n} · ${wi.n % 2 ? 'A' : 'B'} week · ${k === 1 ? 'deload next week' : `deload in ${k} weeks`}`; }
   document.getElementById('setup').innerHTML = `<h3>Plan start</h3><p>Week 1 begins on this Monday. Every 6th week is a deload.</p><input type="date" id="startdate" value="${state.start}">`;
   document.getElementById('weeklabel').textContent = `${fmt(weekStart)} – ${fmt(addDays(weekStart,6))}`;
   let strip = '';
@@ -2305,25 +2378,26 @@ function projHtml(){
 
 /* ---------- Muscle balance: weekly sets per muscle (primary = 1 set, helpers = ½) ---------- */
 const MUSCLE_RULES = [
-  [/sumo|trap-bar|rack pull|deadlift \(/i, { glutes:1, lowerBack:1, hamstrings:.5, quads:.5, back:.5, traps:.5, forearms:.5 }],
+  [/sumo|trap-bar deadlift|rack pull|deadlift \(|paused deadlift|deficit deadlift|kettlebell deadlift/i, { glutes:1, lowerBack:1, hamstrings:.5, quads:.5, back:.5, traps:.5, forearms:.5 }],
   [/romanian|rdl|back extension|pull-through|good morning/i, { hamstrings:1, glutes:1, lowerBack:.5 }],
   [/swing/i, { glutes:1, hamstrings:1, lowerBack:.5 }],
   [/hip thrust|glute bridge|glute drive/i, { glutes:1, hamstrings:.5 }],
-  [/leg curl/i, { hamstrings:1 }], [/leg extension|single-leg extension|sled drag/i, { quads:1 }],
+  [/leg curl|nordic/i, { hamstrings:1 }], [/leg extension|single-leg extension|sled drag/i, { quads:1 }],
   [/calf/i, { calves:1 }],
-  [/squat|leg press|step-up/i, { quads:1, glutes:.5, adductors:.5 }],
-  [/shoulder press|landmine press|military/i, { shoulders:1, triceps:.5 }],
-  [/lateral raise/i, { shoulders:1 }], [/rear-delt|face pull|reverse pec/i, { shoulders:1, back:.5 }],
-  [/bench|chest press|incline.*press|flat press|fly|pec deck|push-up|hammer strength/i, { chest:1, triceps:.5, shoulders:.5 }],
+  [/squat|leg press|step-up|lunge/i, { quads:1, glutes:.5, adductors:.5 }],
+  [/shoulder press|landmine press|military|seated dumbbell press/i, { shoulders:1, triceps:.5 }],
+  [/lateral raise|y-raise/i, { shoulders:1 }], [/sled push|stair/i, { quads:1, glutes:.5, calves:.3 }], [/rear-delt|face pull|reverse pec/i, { shoulders:1, back:.5 }],
+  [/bench|chest press|incline.*press|flat press|neutral-grip dumbbell press|fly|pec deck|push-up|hammer strength/i, { chest:1, triceps:.5, shoulders:.5 }],
   [/pushdown|extension|skull|kickback|dip/i, { triceps:1 }],
   [/hammer curl|cross-body/i, { biceps:1, forearms:1 }], [/curl/i, { biceps:1, forearms:.5 }],
   [/pulldown|pull-up|pullover|straight-arm/i, { back:1, biceps:.5 }],
   [/row/i, { back:1, biceps:.5, shoulders:.3 }],
-  [/farmer|carry/i, { forearms:1, traps:1, abs:.5 }],
+  [/farmer|carry|trap-bar carry/i, { forearms:1, traps:1, abs:.5 }],
   [/pallof|wood chop|cable chop|cable lift|rotation|side plank/i, { abs:1 }],
   [/crunch|knee raise|leg raise|dead bug|bird dog|plank/i, { abs:1 }],
   [/slam/i, { abs:.5, shoulders:.5, back:.5 }], [/battle rope/i, { shoulders:1, abs:.3 }],
-  [/skierg|rowing erg/i, { back:.5, triceps:.3, abs:.3 }]
+  [/skierg|rowing erg/i, { back:.5, triceps:.3, abs:.3 }],
+  [/bike/i, { quads:.5, glutes:.3 }], [/throw/i, { abs:.5, shoulders:.5 }]
 ];
 const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', triceps:'Triceps', biceps:'Biceps', forearms:'Forearms', back:'Lats & upper back', traps:'Traps', lowerBack:'Lower back', abs:'Core', glutes:'Glutes', quads:'Quads', hamstrings:'Hamstrings', calves:'Calves', adductors:'Adductors' };
 const MUSCLE_PARTS = { chest:['chest'], shoulders:['deltoids','rearDeltoid','rotatorCuff'], triceps:['triceps'], biceps:['biceps'], forearms:['forearm'], back:['upperBack','rhomboids'],
@@ -2680,6 +2754,21 @@ window.addEventListener('offline', renderSync);
 document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
 document.getElementById('coachsheet').addEventListener('click', e => { if (e.target.id === 'coachsheet') closeCoach(); });
 document.getElementById('minsheet').addEventListener('click', e => { if (e.target.id === 'minsheet') closeMins(); });
+(() => {
+  const card = document.getElementById('day'); let x0 = null, y0 = 0, t0 = 0;
+  card.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1 || e.target.closest('input, textarea, select, .seg')) { x0 = null; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
+  }, { passive: true });
+  card.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    // a deliberate horizontal flick: far enough, mostly sideways, not a slow drag
+    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6 || Date.now() - t0 > 700) return;
+    const d = addDays(fromIso(sel), dx < 0 ? 1 : -1);
+    sel = iso(d); weekStart = mon(d); render();
+  }, { passive: true });
+})();
 document.getElementById('exsheet').addEventListener('click', e => { if (e.target.id === 'exsheet') closeEx(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && exFor) keepAwake(true); });
 ['swapsheet','demosheet','movesheet'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
