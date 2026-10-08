@@ -768,7 +768,7 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
       <li>Weight trend down, waist down (47 in at the start), strength mostly held, recovery manageable, no worsening pain</li>
     </ul>
   </details>
-  <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br>Saved on this device. Synced to your private GitHub repo when connected (encrypted if you set a passphrase).</p>
+  <p class="tag">Train hard enough to keep muscle. Recover well enough to keep training.<br><span id="appver"></span><br>Saved on this device. Synced to your private GitHub repo when connected (encrypted if you set a passphrase).</p>
   </div>
   <div class="modal" id="modal" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -2544,7 +2544,20 @@ renderChat();
 renderAiSettings();
 document.getElementById('aibox').addEventListener('toggle', e => { if (e.target.open && !freeModels) loadFreeModels(); });
 syncNow();
-if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
+// Updates: check for a new version on launch and whenever the app comes back to the foreground;
+// when the new version takes over, reload once so you're on it straight away (not next launch).
+if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  });
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded || exFor || !document.getElementById('coachsheet').hidden) return;   // never yank you out mid-set or mid-chat
+    reloaded = true; location.reload();
+  });
+  caches.keys().then(k => { const v = k.find(x => x.startsWith('thecut-')); if (v) document.getElementById('appver').textContent = `App version ${v.replace('thecut-', '')}`; }).catch(() => {});
+}
 </script>
 </body>
 </html>

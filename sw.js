@@ -1,9 +1,11 @@
 // Bump VERSION whenever you change index.html so phones pick up the new shell.
-const VERSION = 'thecut-v19';
+const VERSION = 'thecut-v20';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './ex/info.js'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache:'reload' skips the browser's HTTP cache (GitHub Pages sends max-age=600), so a new
+  // version never installs a stale copy of the app.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -25,7 +27,7 @@ self.addEventListener('fetch', e => {
       const cache = await caches.open(VERSION);
       try {
         const res = await Promise.race([
-          fetch(req),
+          fetch(req, { cache: 'no-cache' }),   // revalidate with the server instead of trusting a 10-min-old copy
           new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
         ]);
         if (res.ok) cache.put('./index.html', res.clone());
