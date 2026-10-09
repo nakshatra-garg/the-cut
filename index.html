@@ -354,6 +354,15 @@ details.stepsbox .steps{padding-left:0}
 .ringstats b{color:var(--ink); font-family:var(--rounded); font-weight:700; font-size:16px}
 .ringstats i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:1px}
 .swaplist{display:grid; gap:6px}
+.modekind{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.modekind:empty{display:none}
+.modekind button{display:grid; gap:2px; text-align:left; padding:12px; border:0; border-radius:12px; background:var(--fill); color:var(--ink); cursor:pointer; font:inherit}
+.modekind button small{font-size:12px; color:var(--mute)}
+.modekind button.on{background:var(--soft); box-shadow:inset 0 0 0 2px var(--accent)}
+.modekind button.on b{color:var(--accent)}
+.whygrid{display:flex; flex-wrap:wrap; gap:8px}
+.whygrid button{border:0; border-radius:999px; padding:10px 14px; background:var(--fill); color:var(--ink); font:inherit; font-size:15px; cursor:pointer}
+.whygrid button.on{background:var(--accent); color:var(--accent-ink)}
 button, a, input, label, summary, .rowbody{touch-action:manipulation}
 .section{margin-top:16px}
 .sechead{all:unset; box-sizing:border-box; display:flex; align-items:center; gap:8px; width:100%; padding:6px 0; cursor:pointer;
@@ -823,6 +832,15 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
       <div id="exbody"></div>
     </div>
   </div>
+  <div class="sheet" id="modesheet" hidden>
+    <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="modetitle">
+      <h2 id="modetitle"></h2>
+      <div class="modekind" id="modekind"></div>
+      <h3 class="sheeth">Why?</h3>
+      <div class="whygrid" id="modewhy"></div>
+      <button class="btn cancel" data-closesheet="modesheet">Cancel</button>
+    </div>
+  </div>
   <div class="sheet" id="movesheet" hidden>
     <div class="sheetcard actionsheet" role="dialog" aria-modal="true" aria-labelledby="movetitle">
       <h2 id="movetitle">Do another day’s workout</h2>
@@ -1194,10 +1212,23 @@ const MODES = {
       I('Mobility','~12 min circuit, pain-free range only', { steps: MOBILITY }),
       I('Optional core','2–3 easy sets', { steps: CORE_EASY })
     ]},
+  walk:   { label:'Walk only', tag:'Walk', title:'Walk Only', load:'Easy',
+    note:'No gym today. A steady walk keeps the habit alive; mobility at home is a bonus, not a must.',
+    items:[
+      I('Cardio','20–45 min walk, outdoors or treadmill'),
+      I('Mobility','~12 min at home', { steps: MOBILITY, optional: true })
+    ]},
   rest:   { label:'Rest day', tag:'Rest', title:'Rest Day', load:'Off',
     note:'Full rest. Eat to plan, hit protein, sleep well. A light pain-free walk is fine.',
+    items:[] },
+  sick:   { label:'Sick day', tag:'Sick', title:'Sick Day', load:'Recover',
+    note:'Rest and recover: fluids, sleep, and protein if you can manage it. Your streak is paused, not broken. Ease back in at ~80% when you feel better.',
     items:[] }
 };
+// Segment buttons on the day card (Walk only lives inside "Cardio").
+const MODE_SEG = [['plan','Planned'], ['cardio','Cardio'], ['rest','Rest'], ['sick','Sick']];
+const DAY_WHY = { ill:'Feeling ill', tired:'Low energy / tired', nogym:'Gym closed / no gym', travel:'Travelling', busy:'Busy day', pain:'Pain / injury', planned:'Planned' };
+const isSick = d => modeOf(d) === 'sick';
 const PROTEIN_MIN = 175, PROTEIN_MAX = 190, PROTEIN_DONE = Math.ceil(PROTEIN_MIN * 0.9),   // 158 g counts as done
  WAIST_START = 47, GOOD_PCT = 80;
 const PAIN = ['None','Mild','Moderate','Bad'];
@@ -1267,7 +1298,7 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
-  for (const k of ['closed','protein','checkins','ai','cardio','swaps','skips','logs','moves']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['closed','protein','checkins','ai','cardio','swaps','skips','logs','moves','modeWhy']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
   for (const k of ['close','week']) if (!s.ai[k] || typeof s.ai[k] !== 'object') s.ai[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
@@ -1549,7 +1580,7 @@ function aiContext(){
   const ciDates = Object.keys(state.checkins).sort(), ci = ciDates.length ? state.checkins[ciDates[ciDates.length-1]] : null;
   const days = [...Array(7)].map((_,k) => iso(addDays(today, k - 6))).map(d => {
     const v = dayView(d);
-    return `${d} ${PLAN[dow(fromIso(d))].day}: ${v.title}, ${pctOf(d)}% done${isClosed(d) ? ' (closed)' : ''}, protein ${state.protein[d] ?? '?'} g, cardio ${state.cardio[d] ?? '?'} min, weight ${state.weights[d] ?? '?'} kg${skippedOn(d).length ? `, skipped: ${skippedOn(d).join(', ')}` : ''}`;
+    return `${d} ${PLAN[dow(fromIso(d))].day}: ${v.title}${state.modeWhy[d] && v.mode !== 'plan' ? ` (${DAY_WHY[state.modeWhy[d]]})` : ''}, ${pctOf(d)}% done${isClosed(d) ? ' (closed)' : ''}, protein ${state.protein[d] ?? '?'} g, cardio ${state.cardio[d] ?? '?'} min, weight ${state.weights[d] ?? '?'} kg${skippedOn(d).length ? `, skipped: ${skippedOn(d).join(', ')}` : ''}`;
   });
   return `PLAN
 - Cutting from ${START} kg to ${GOAL} kg (milestones ${MILESTONES.join(', ')}). Waist started at ${WAIST_START} in.
@@ -1570,7 +1601,7 @@ async function coachNote(date){
   const done = v.items.filter(it => !skipOf(date, it[0]) && isDone(date, it[0])).map(it => {
     if (it[1] === 'Cardio' && state.cardio[date]) return `Cardio ${state.cardio[date]} min`;
     const lg = state.logs[`${date}|${it[0]}`]; return lg ? `${it[1]} ${fmtSets(lg.sets, rxUnit(it[2]))}` : it[1]; });
-  const text = await ai([{ role:'user', content: `${aiContext()}\n\nI just closed ${date} (${v.title}) at ${pct}%. Done: ${done.join(', ') || 'nothing'}. Missed: ${missed.join(', ') || 'nothing'}. Skipped: ${skippedOn(date).join(', ') || 'nothing'}.\n\nWrite my end-of-day recap, under 70 words:\n1. One warm, specific line of appreciation (name a real highlight).\n2. "- " bullets (2-3) summarising what I did today with numbers.\n3. A final line starting "**Tomorrow:**" with one focus.\nNo greeting, at most one emoji.` }], 400);
+  const text = await ai([{ role:'user', content: `${aiContext()}\n\nI just closed ${date} (${v.title}) at ${pct}%. Done: ${done.join(', ') || 'nothing'}. Missed: ${missed.join(', ') || 'nothing'}. Skipped: ${skippedOn(date).join(', ') || 'nothing'}.\n\n${isSick(date) ? 'I was sick today: be gentle, praise any habits I kept, no training pressure. ' : ''}Write my end-of-day recap, under 70 words:\n1. One warm, specific line of appreciation (name a real highlight).\n2. "- " bullets (2-3) summarising what I did today with numbers.\n3. A final line starting "**Tomorrow:**" with one focus.\nNo greeting, at most one emoji.` }], 400);
   state.ai.close[date] = text; save();
   return text;
 }
@@ -1813,6 +1844,19 @@ function ringsHtml(date, p){
       <div><i style="background:var(--ring1)"></i><b>${p.done}/${p.total}</b> done</div>
       <div><i style="background:var(--ring2)"></i><b>${g}</b>/${PROTEIN_MIN} g protein</div>
       <div><i style="background:var(--ring3)"></i><b>${cm}</b>/${ct} min cardio</div></div></div>`;
+}
+let modeKind = 'cardio';
+function openModeSheet(m){
+  const cur = modeOf(sel);
+  modeKind = m === 'cardio' ? (cur === 'walk' ? 'walk' : 'cardio') : m;
+  document.getElementById('modetitle').textContent = m === 'cardio' ? 'Cardio only today' : 'Rest day';
+  document.getElementById('modekind').innerHTML = m === 'cardio'
+    ? `<button data-kind="cardio" class="${modeKind === 'cardio' ? 'on' : ''}"><b>Gym cardio</b><small>Cardio + mobility + core</small></button>
+       <button data-kind="walk" class="${modeKind === 'walk' ? 'on' : ''}"><b>Walk only</b><small>No gym · mobility optional</small></button>` : '';
+  const why = state.modeWhy[sel];
+  document.getElementById('modewhy').innerHTML = Object.entries(DAY_WHY).filter(([k]) => k !== 'ill' || m !== 'sick')
+    .map(([k, l]) => `<button data-why="${k}" class="${why === k && (cur === modeKind || (m === 'rest' && cur === 'rest')) ? 'on' : ''}">${l}</button>`).join('');
+  showSheet(document.getElementById('modesheet'));
 }
 function openMove(){
   const own = dow(fromIso(sel)), cur = Number.isInteger(state.moves[sel]) ? state.moves[sel] : own;
@@ -2160,10 +2204,10 @@ function dayView(date){
     planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, it.n, it.rx, it.steps, it]) };
 }
 // Skipped items leave the day's total (they don't hurt the %), but stay visible and are reported.
-const SKIP_LABEL = { pain:'Pain', equipment:'Equipment busy', time:'Short on time' };
+const SKIP_LABEL = { pain:'Pain', equipment:'Equipment busy', time:'Short on time', nogym:'Not at gym', ill:'Feeling ill', tired:'Low energy / tired', meh:'Didn’t feel like it' };
 const skipOf = (date, id) => state.skips[`${date}|${id}`];
 function idsFor(date){
-  return [...dayView(date).items.filter(it => !skipOf(date, it[0])).map(it => it[0]), ...HABITS.map((_,k)=>`h${k}`)];
+  return [...dayView(date).items.filter(it => !skipOf(date, it[0]) && !(it[4].optional && !isDone(date, it[0]))).map(it => it[0]), ...HABITS.map((_,k)=>`h${k}`)];
 }
 const skippedOn = date => dayView(date).items.filter(it => skipOf(date, it[0])).map(it => `${it[1]} (${SKIP_LABEL[skipOf(date, it[0])].toLowerCase()})`);
 function isDone(date,id){
@@ -2201,18 +2245,23 @@ function stats(){
   const closed = Object.keys(state.closed);
   let cur = 0, d = today;
   if (!isGood(iso(d))) d = addDays(d, -1);   // today still open: streak runs through yesterday
-  while (isGood(iso(d))){ cur++; d = addDays(d, -1); }
+  // sick days are see-through: they neither add to nor break the streak
+  for (let guard = 0; guard < 4000 && (isGood(iso(d)) || isSick(iso(d))); guard++){ if (isGood(iso(d))) cur++; d = addDays(d, -1); }
+  let best = 0, run = 0; const firstDay = [...closed, ...Object.keys(state.modes)].sort()[0];
+  if (firstDay) for (let x = fromIso(firstDay); x <= today; x = addDays(x, 1)){ const xd = iso(x); if (isGood(xd)){ run++; best = Math.max(best, run); } else if (!isSick(xd)) run = 0; }
   const mondays = closed.filter(x => dow(fromIso(x)) === 0).map(fromIso);
   const wdates = Object.keys(state.weights).filter(x => typeof state.weights[x] === 'number');
   const waists = Object.values(state.checkins).map(c => c.waist).filter(w => typeof w === 'number');
   // Weekly streak: a week counts with 5+ good days; the current week counts once it gets there.
   const goodIn = ws => [...Array(7)].filter((_,k) => isGood(iso(addDays(ws,k)))).length;
+  const sickIn = ws => [...Array(7)].filter((_,k) => isSick(iso(addDays(ws,k)))).length;
+  const weekOk = ws => goodIn(ws) >= Math.max(1, 5 - sickIn(ws));   // sick days lower the bar for that week
   let wk = 0, ws = mon(today);
-  if (goodIn(ws) < 5) ws = addDays(ws, -7);
-  while (goodIn(ws) >= 5){ wk++; ws = addDays(ws, -7); }
+  if (!weekOk(ws)) ws = addDays(ws, -7);
+  for (let guard = 0; guard < 520 && weekOk(ws); guard++){ wk++; ws = addDays(ws, -7); }
   return {
     weekCur: wk, weekNow: goodIn(mon(today)),
-    cur, best: bestRun([...closed], isGood),
+    cur, best: Math.max(best, cur),
     good: closed.filter(isGood).length, closed: closed.length,
     perfect: closed.filter(x => pctOf(x) === 100).length,
     goodWeek: mondays.some(m => fullWeek(m, isGood)),
@@ -2279,9 +2328,11 @@ function weekReview(ws){
   else tips.push('On pace (0.3–1 kg/week). Change nothing.');
   if (prot != null && prot < PROTEIN_DONE) tips.push(`Protein averaged ${Math.round(prot)} g. Add a protein source to one meal.`);
   if (restCount(ws) > MAX_REST) tips.push(`${restCount(ws)} full rest days. Swap one for cardio only next week.`);
+  if (days.filter(isSick).length >= 2) tips.push('A couple of sick days. Ease back in: first session at ~80% of your usual weights.');
+  if (skipped.filter(r => r === 'meh').length >= 3) tips.push(`${skipped.filter(r => r === 'meh').length} skips for “didn’t feel like it”. On low days, do the first two exercises and call it a win.`);
   if (skipped.filter(r => r === 'pain').length >= 2) tips.push(`${skipped.filter(r => r === 'pain').length} exercises skipped for pain. If the same spot keeps flaring, get it checked.`);
   return { ws, w0, loss, prot, lifts, cardioMin, skipped: skipped.length, good: days.filter(isGood).length, closed: days.filter(isClosed).length,
-    rest: restCount(ws), cardio: days.filter(d => modeOf(d) === 'cardio').length, tips,
+    rest: restCount(ws), cardio: days.filter(d => modeOf(d) === 'cardio').length, walk: days.filter(d => modeOf(d) === 'walk').length, sick: days.filter(isSick).length, tips,
     empty: !days.some(d => isClosed(d) || typeof state.weights[d] === 'number' || typeof state.protein[d] === 'number') };
 }
 
@@ -2341,7 +2392,7 @@ function render(){
     const tag = meta.n ? 'div' : 'label', bodyTag = meta.n ? `button class="rowbody" data-openex="${id}" aria-label="Open ${esc(name)}"` : 'div';
     return `<div class="item${tools ? ' hastools' : ''}${skip ? ' skipped' : ''}">
       <${tag} class="row" data-row="${id}"><input type="checkbox" data-id="${id}" aria-label="Done: ${esc(name)}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
-      <${bodyTag}><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">🎯 ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
+      <${bodyTag}><span class="name">${name}${meta.optional ? '<span class="swaptag">optional</span>' : ''}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">🎯 ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
       ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse, id) : ''}</div>`;
   };
   const proteinRow = () => {
@@ -2361,8 +2412,9 @@ function render(){
           <span>kg · morning, before food</span></div>
         <span class="rx">${av ? `7-day avg <b>${av.toFixed(1)} kg</b>` : 'Log it to start your 7-day average.'}</span></div></div>`;
   };
-  const modeSeg = Object.entries(MODES).map(([k,m]) =>
-    `<button class="${day.mode===k?'on':''}" data-mode="${k}" aria-pressed="${day.mode===k}" ${dis}>${m.label}</button>`).join('');
+  const segOn = day.mode === 'walk' ? 'cardio' : day.mode;
+  const modeSeg = MODE_SEG.map(([k,l]) =>
+    `<button class="${segOn===k?'on':''}" data-mode="${k}" aria-pressed="${segOn===k}" ${dis}>${l}</button>`).join('');
   const pctNow = Math.round(100*p.done/p.total), gr = gradeFor(pctNow);
   const future = sel > iso(today);
   document.getElementById('qotd').textContent = `“${quoteFor(iso(today))}”`;
@@ -2372,7 +2424,7 @@ function render(){
       <span><button class="linkbtn" data-recap>Recap</button> · <button class="linkbtn" data-reopen>Reopen</button></span></div>` : ''}
     <div class="seg modeseg" role="group" aria-label="Day type">${modeSeg}</div>
     <h2 class="daytitle">${day.title}</h2>
-    <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${day.planned ? ` · planned: ${day.planned}` : ''}${day.movedFrom ? ` · ${day.movedFrom}'s workout` : ''}</div>
+    <div class="meta">${fromIso(sel).toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})} · ${day.load}${state.modeWhy[sel] && day.mode !== 'plan' ? ` · ${DAY_WHY[state.modeWhy[sel]] || ''}` : ''}${day.planned ? ` · planned: ${day.planned}` : ''}${day.movedFrom ? ` · ${day.movedFrom}'s workout` : ''}</div>
     ${day.mode === 'plan' && !locked ? `<button class="linkbtn movebtn" data-openmove>↻ ${day.movedFrom ? 'Change' : 'Do another day’s workout'}</button>` : ''}
     ${dl ? '<div class="banner"><b>Deload week</b>Sets are trimmed below. Keep your usual weights and stop 3–4 reps short of failure.</div>' : ''}
     ${ringsHtml(sel, p)}
@@ -2381,9 +2433,9 @@ function render(){
     ${(() => {
       const r = ([id,name,rx,steps,meta]) => row(id, name, dl ? deloadRx(rx) : rx, steps, meta);
       const gym = day.items.filter(it => it[1] !== 'Cardio'), cardio = day.items.filter(it => it[1] === 'Cardio');
-      const cnt = list => { const live = list.filter(it => !skipOf(sel, it[0])); return `${live.filter(it => isDone(sel, it[0])).length}/${live.length}`; };
+      const cnt = list => { const live = list.filter(it => !skipOf(sel, it[0]) && !(it[4].optional && !isDone(sel, it[0]))); return live.length ? `${live.filter(it => isDone(sel, it[0])).length}/${live.length}` : 'optional'; };
       const habDone = HABITS.filter((_,k) => isDone(sel, `h${k}`)).length;
-      return (gym.length ? section('session', 'Session', cnt(gym), gym.map(r).join('')
+      return (gym.length ? section('session', gym.every(it => it[4].optional) ? 'Bonus' : 'Session', cnt(gym), gym.map(r).join('')
           + (day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : '')) : '')
         + (cardio.length ? section('cardio', 'Cardio', cnt(cardio), cardio.map(r).join('')) : '')
         + section('daily', 'Daily', `${habDone}/${HABITS.length}`, HABITS.map((h,k)=> k === 0 ? weightRow() : k === 1 ? proteinRow() : row(`h${k}`, h[0], h[1])).join(''));
@@ -2496,7 +2548,7 @@ function renderReview(){
       ${stat(r.prot == null ? '—' : Math.round(r.prot) + ' g', 'avg protein')}
       ${stat(`${r.good}/7`, 'good days')}
     </div>
-    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardioMin} cardio min${r.skipped ? ` · ${r.skipped} skipped` : ''} · ${r.cardio} cardio-only · ${r.rest} rest · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
+    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardioMin} cardio min${r.skipped ? ` · ${r.skipped} skipped` : ''} · ${r.cardio} cardio-only${r.walk ? ` · ${r.walk} walk` : ''} · ${r.rest} rest${r.sick ? ` · ${r.sick} sick` : ''} · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
     <ul class="tips">${r.tips.map(t => `<li>${t}</li>`).join('')}</ul>
     ${state.ai.week[iso(r.ws)] ? `<div class="aibox"><b>✨ Coach insights</b><div>${md(state.ai.week[iso(r.ws)])}</div><button class="linkbtn" data-aiweek>Refresh</button></div>`
       : cfg.aiKey ? '<button class="iconbtn text" data-aiweek style="margin-top:12px">✨ Get AI insights</button>' : ''}
@@ -2671,11 +2723,17 @@ document.addEventListener('click', e => {
   else if (t.hasAttribute('data-minscancel')) closeMins();
   else if (t.hasAttribute('data-closecoach')) closeCoach();
   else if (t.dataset.mode){
-    if (t.dataset.mode === 'rest' && modeOf(sel) !== 'rest' && restCount(mon(fromIso(sel))) >= MAX_REST
-        && !confirm(`This would be rest day #${restCount(mon(fromIso(sel))) + 1} this week. The plan works best with ${MAX_REST} at most. Mark it as rest anyway?`)) return;
-    if (t.dataset.mode === 'plan') delete state.modes[sel]; else state.modes[sel] = t.dataset.mode;
-    save(); render();
+    const m = t.dataset.mode;
+    if (m === 'plan'){ delete state.modes[sel]; delete state.modeWhy[sel]; save(); render(); }
+    else if (m === 'sick'){ state.modes[sel] = 'sick'; state.modeWhy[sel] = 'ill'; save(); render(); }
+    else {
+      if (m === 'rest' && modeOf(sel) !== 'rest' && restCount(mon(fromIso(sel))) >= MAX_REST
+          && !confirm(`This would be rest day #${restCount(mon(fromIso(sel))) + 1} this week. The plan works best with ${MAX_REST} at most. Mark it as rest anyway?`)) return;
+      openModeSheet(m);
+    }
   }
+  else if (t.dataset.kind){ modeKind = t.dataset.kind; document.querySelectorAll('#modekind button').forEach(b => b.classList.toggle('on', b.dataset.kind === modeKind)); }
+  else if (t.dataset.why){ state.modes[sel] = modeKind; state.modeWhy[sel] = t.dataset.why; closeSheet('modesheet'); save(); render(); }
   else if (t.dataset.date){ sel = t.dataset.date; render(); }
   else if (t.dataset.nav){
     const n = Number(t.dataset.nav), k = dow(fromIso(sel));
@@ -2776,7 +2834,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chatin'){ e.preventDefault(); sendChat(e.target.value); }
   if (e.key === 'Enter' && e.target.id === 'unlockpass') unlock();
   if (e.key === 'Enter' && e.target.id === 'minsother'){ e.preventDefault(); logMins(e.target.value); }
-  if (e.key === 'Escape'){ hideModal(); closeCoach(); if (!document.getElementById('minsheet').hidden) closeMins(); closeSheet('swapsheet'); closeSheet('demosheet'); closeSheet('movesheet'); if (exFor) closeEx(); }
+  if (e.key === 'Escape'){ hideModal(); closeCoach(); if (!document.getElementById('minsheet').hidden) closeMins(); closeSheet('swapsheet'); closeSheet('demosheet'); closeSheet('movesheet'); closeSheet('modesheet'); if (exFor) closeEx(); }
   // Mac shortcuts: 1–4 tabs, ←/→ day, C coach (ignored while typing)
   if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const tabs = ['today','progress','goals','more'];
@@ -2817,7 +2875,7 @@ document.addEventListener('toggle', e => {
 }, true);
 document.getElementById('exsheet').addEventListener('click', e => { if (e.target.id === 'exsheet') closeEx(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && exFor) keepAwake(true); });
-['swapsheet','demosheet','movesheet'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
+['swapsheet','demosheet','movesheet','modesheet'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
 
 render();
 renderSync();
