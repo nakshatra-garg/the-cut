@@ -330,7 +330,7 @@ label.iconbtn{display:inline-flex; align-items:center}
 .steps li{counter-increment:st; display:grid; grid-template-columns:22px 1fr auto; column-gap:8px; align-items:center; padding:5px 0; font-size:15px}
 .steps li::before{content:counter(st); grid-row:span 2; align-self:start; margin-top:1px; width:20px; height:20px; border-radius:50%; background:var(--fill); color:var(--mute); font-size:12px; font-weight:600; display:grid; place-items:center; font-family:var(--rounded)}
 .steps li b{font-weight:500; grid-column:2}
-.steps li .tool{grid-column:3; grid-row:1 / span 2}
+.steps li .steptools{grid-column:3; grid-row:1 / span 2; display:flex; gap:6px}
 .steps li span{grid-column:2; font-size:13px; color:var(--mute)}
 .item{position:relative; border-bottom:.5px solid var(--line)}
 .item .row{border-bottom:0}
@@ -1125,7 +1125,9 @@ const PLAN = [
     items:[
       I('Cardio','45 min easy treadmill target · 30 is solid'),
       I('Mobility','~12 min circuit, pain-free range only', { steps: MOBILITY }),
-      I('Optional core','2–3 very easy sets', { steps: CORE_EASY })
+      I('Pallof press','2 × 10 per side', { key:'core1', core:true, optional:true }),
+      I('Dead bug','2 × 6 per side', { key:'core2', core:true, optional:true }),
+      I('Side plank (knees down)','2 × 20 sec per side', { key:'core3', core:true, optional:true })
     ]}
 ];
 
@@ -1153,8 +1155,11 @@ const FAMILIES = [
   ['Machine/DB shoulder press','Seated dumbbell press','Machine shoulder press','Smith shoulder press','Landmine press'],
   ['Cable lateral raise','Dumbbell lateral raise','Machine lateral raise','Lean-away lateral raise','Cable Y-raise'],
   ['Rear-delt fly','Face pull','Reverse pec deck','Cable rear-delt row'],
-  ['Cable crunch','Machine crunch','Reverse crunch','Hanging/knee raises',"Captain's chair knee raise",'Dead bug'],
-  ['Pallof press','Dead bug','Side plank (knees down)','Bird dog','Cable wood chop'],
+  ['Cable crunch','Machine crunch','Decline crunch','Reverse crunch','Dead bug','Glute bridge march','Plank'],
+  ['Hanging/knee raises',"Captain's chair knee raise",'Reverse crunch','Decline crunch','Dead bug','Plank'],
+  ['Pallof press','Cable wood chop','Suitcase carry (one hand)','Plank shoulder taps','Bird dog','Side plank (knees down)','Dead bug'],
+  ['Dead bug','Bird dog','Reverse crunch','Glute bridge march','Plank','Pallof press','Machine crunch'],
+  ['Side plank (knees down)','Plank','Plank shoulder taps','Bird dog','Suitcase carry (one hand)','Pallof press'],
   ['Deadlift (conventional)','Paused deadlift','Deficit deadlift'],
   ['Farmer walk','Trap-bar carry','Suitcase carry (one hand)','Front-rack kettlebell carry'],
   ['Kettlebell swing','Cable pull-through','Dumbbell RDL (fast up)','Kettlebell deadlift'],
@@ -1181,7 +1186,8 @@ const WEEK_B = {
 PLAN[2].items.splice(PLAN[2].items.findIndex(it => it.n === 'Cardio'), 0, I('Calf raise', '2 × 10–15', { key:'calf' }));
 PLAN[2].note += ' Calves get a second weekly session here.';
 function withFamily(it){
-  const fam = FAMILIES.filter(f => f.includes(it.n)).flat();
+  // The exercise's own family (where it's listed first) leads, so the most relevant swaps survive the cap.
+  const fam = FAMILIES.filter(f => f.includes(it.n)).sort((x, y) => (y[0] === it.n) - (x[0] === it.n)).flat();
   const alts = [...new Set([...(it.alts || []), ...fam])].filter(n => n !== it.n);
   return alts.length ? { ...it, alts: alts.slice(0, 7) } : it;
 }
@@ -1192,6 +1198,8 @@ PLAN.forEach(day => {
     return out;
   });
 });
+const CORE_NAMES = new Set(['Cable crunch','Pallof press','Hanging/knee raises','Reverse crunch','Dead bug','Side plank (knees down)']);
+PLAN.forEach(day => day.items.forEach(it => { if (CORE_NAMES.has(it.n)){ it.core = true; if (it.b) it.b.core = true; } }));
 const isWeekB = date => { const n = weekInfo(mon(fromIso(date))).n; return n >= 1 && n % 2 === 0; };
 
 const HABITS = [
@@ -1210,7 +1218,9 @@ const MODES = {
     items:[
       I('Cardio','30–45 min easy/moderate: treadmill, elliptical, bike, or a brisk outdoor walk'),
       I('Mobility','~12 min circuit, pain-free range only', { steps: MOBILITY }),
-      I('Optional core','2–3 easy sets', { steps: CORE_EASY })
+      I('Pallof press','2 × 10 per side', { key:'core1', core:true, optional:true }),
+      I('Dead bug','2 × 6 per side', { key:'core2', core:true, optional:true }),
+      I('Side plank (knees down)','2 × 20 sec per side', { key:'core3', core:true, optional:true })
     ]},
   walk:   { label:'Walk only', tag:'Walk', title:'Walk Only', load:'Easy',
     note:'No gym today. A steady walk keeps the habit alive; mobility at home is a bonus, not a must.',
@@ -1227,6 +1237,8 @@ const MODES = {
 };
 // Segment buttons on the day card (Walk only lives inside "Cardio").
 const MODE_SEG = [['plan','Planned'], ['cardio','Cardio'], ['rest','Rest'], ['sick','Sick']];
+// Core moves on Cardio-only days get the same swap families as the plan.
+Object.values(MODES).forEach(m => (m.items || []).forEach(it => { if (it.core) Object.assign(it, withFamily(it)); }));
 const DAY_WHY = { ill:'Feeling ill', tired:'Low energy / tired', nogym:'Gym closed / no gym', travel:'Travelling', busy:'Busy day', pain:'Pain / injury', planned:'Planned' };
 const isSick = d => modeOf(d) === 'sick';
 const PROTEIN_MIN = 175, PROTEIN_MAX = 190, PROTEIN_DONE = Math.ceil(PROTEIN_MIN * 0.9),   // 158 g counts as done
@@ -1763,7 +1775,7 @@ function openEx(id){
     ${last && loggable ? `<p class="cap">Last time (${fmt(fromIso(last.d))}): ${fmtSets(last.sets, exUnit)}</p>` : ''}
     ${loggable ? `<div class="sets" id="exsets"></div>
       <div class="setbtns"><button class="linkbtn" data-addset ${locked ? 'disabled' : ''}>+ Add set</button><button class="linkbtn" data-delset ${locked ? 'disabled' : ''}>− Remove set</button></div>` : ''}
-    ${steps ? stepsHtml(steps, false) : ''}
+    ${steps ? stepsHtml(steps, false, id) : ''}
     ${how ? `<details class="exhow"><summary>How to do it</summary><ol>${how.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>` : ''}
     <div class="exactions"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener">▶︎ Watch</a>
       ${meta.n && !locked ? `<button class="btn cancel" data-swap="${id}">${meta.alts ? 'Swap or skip' : 'Skip'}</button>` : ''}</div>
@@ -1830,8 +1842,22 @@ function fmtRx(rx){
 const ICON_IMG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M5 17l5-5 4 4 2-2 3 3"/></svg>';
 const ICON_MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" class="dot"/><circle cx="12" cy="12" r="1.6" class="dot"/><circle cx="18" cy="12" r="1.6" class="dot"/></svg>';
 const ICON_SWAP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h13l-3.5-3.5M19 16H6l3.5 3.5"/></svg>';
+// Drill alternatives: [name, dose]. A swap is stored per item + position, e.g. state.swaps["6-1#2"].
+const DRILL_ALTS = {
+  'Cat–cow': [['Thread the needle','6 per side'], ['Quadruped rock-backs','10 reps'], ["Child's pose breathing",'5 slow breaths']],
+  'Open book (side-lying T-spine rotation)': [['Thread the needle','6 per side'], ['Seated thoracic rotation','8 per side'], ['Foam roller T-spine extension','10 reps']],
+  '90/90 hip switches': [['Seated figure-4 stretch','40 s per side'], ['Pigeon stretch (supported)','40 s per side'], ['Butterfly stretch','40 s']],
+  'Half-kneeling hip flexor stretch': [['Couch stretch (supported)','40 s per side'], ['Standing hip flexor stretch','40 s per side'], ['Low lunge with reach','6 per side']],
+  'Knee-to-wall ankle rocks': [['Calf stretch on a step','40 s per side'], ['Ankle circles','10 each way'], ['Banded ankle mobilisation','10 per side']],
+  'Wall slides': [['Band pull-aparts','15 reps'], ['Prone Y-raises','10 reps'], ['Band or stick dislocates','10 slow reps']],
+  'Doorway chest stretch': [['Corner chest stretch','30 s'], ['Behind-back chest opener','30 s'], ['Foam roller chest opener','60 s']],
+  "Child's pose with side reach": [['Lat stretch on a bench','30 s per side'], ['Puppy pose','30 s'], ['Standing side bend','8 per side']]
+};
+const stepAt = (sid, k, step) => { const sw = state.swaps[`${sid}#${k}`], alt = sw && (DRILL_ALTS[step[0]] || []).find(a => a[0] === sw); return alt || step; };
 function stepsHtml(steps, collapse, sid = ''){
-  const list = `<ol class="steps">${steps.map(([n,d]) => `<li><b>${n}</b>${DEMOS[n] ? `<button class="tool sm" data-demo="${esc(n)}" aria-label="How to do ${esc(n)}">${ICON_IMG}</button>` : ''}<span>${fmtRx(d)}</span></li>`).join('')}</ol>`;
+  const locked = isClosed(sel);
+  const list = `<ol class="steps">${steps.map((st, k) => { const [n, d] = stepAt(sid, k, st), canSwap = sid && DRILL_ALTS[st[0]] && !locked;
+    return `<li><b>${n}${n !== st[0] ? '<span class="swaptag">swap</span>' : ''}</b><span class="steptools">${DEMOS[n] ? `<button class="tool sm" data-demo="${esc(n)}" aria-label="How to do ${esc(n)}">${ICON_IMG}</button>` : ''}${canSwap ? `<button class="tool sm" data-stepswap="${sid}#${k}" aria-label="Swap ${esc(n)}">${ICON_SWAP}</button>` : ''}</span><span>${fmtRx(d)}</span></li>`; }).join('')}</ol>`;
   return collapse ? `<details class="stepsbox" data-sid="${sid}" ${openSteps.has(sid) ? 'open' : ''}><summary>Show routine · ${steps.length} steps</summary>${list}</details>` : list;
 }
 function ringsHtml(date, p){
@@ -1889,6 +1915,22 @@ function setSkip(reason){
   if (reason){ state.skips[key] = reason; delete state.checks[key]; if (dayView(sel).items.find(x => x[0] === swapFor)[1] === 'Cardio') delete state.cardio[sel]; }
   else delete state.skips[key];
   swapFor = null; fadeOut(document.getElementById('swapsheet')); save(); render();
+}
+let stepSwapFor = null;
+function openStepSwap(key){
+  const [sid, k] = key.split('#'), it = dayView(sel).items.find(x => x[0] === sid); if (!it) return;
+  const base = it[3][Number(k)], cur = stepAt(sid, Number(k), base)[0]; stepSwapFor = key;
+  document.getElementById('swaptitle').textContent = 'Swap drill';
+  document.getElementById('swapsub').textContent = 'Your pick is remembered for this routine.';
+  document.getElementById('swaplist').innerHTML = [base, ...DRILL_ALTS[base[0]]].map(([n, d], i) =>
+    `<div class="swapopt"><button data-steppick="${esc(n)}" class="${n === cur ? 'on' : ''}"><span>${esc(n)} <small>${esc(d)}${i === 0 ? ' · plan' : ''}</small></span>${n === cur ? '<b>✓</b>' : ''}</button>${ytBtn(n)}</div>`).join('');
+  showSheet(document.getElementById('swapsheet'));
+}
+function pickStepSwap(name){
+  const [sid, k] = stepSwapFor.split('#'), it = dayView(sel).items.find(x => x[0] === sid);
+  if (name === it[3][Number(k)][0]) delete state.swaps[stepSwapFor]; else state.swaps[stepSwapFor] = name;
+  stepSwapFor = null; closeSheet('swapsheet'); save(); render();
+  if (exFor === sid) openEx(sid);   // refresh the open exercise sheet too
 }
 function pickSwap(name){
   const it = dayView(sel).items.find(x => x[0] === swapFor); if (!it) return;
@@ -2201,7 +2243,7 @@ function dayView(date){
   }
   const m = MODES[mode];
   return { mode, day: PLAN[i].day, title: m.title, load: m.load, note: m.note, lift: false,
-    planned: PLAN[i].title, items: m.items.map((it,k) => [`${mode}-${k}`, it.n, it.rx, it.steps, it]) };
+    planned: PLAN[i].title, items: m.items.map((it,k) => { const id = it.key ? `${mode}-${it.key}` : `${mode}-${k}`; return [id, swapName(id, it), it.rx, it.steps, it]; }) };
 }
 // Skipped items leave the day's total (they don't hurt the %), but stay visible and are reported.
 const SKIP_LABEL = { pain:'Pain', equipment:'Equipment busy', time:'Short on time', nogym:'Not at gym', ill:'Feeling ill', tired:'Low energy / tired', meh:'Didn’t feel like it' };
@@ -2392,7 +2434,7 @@ function render(){
     const tag = meta.n ? 'div' : 'label', bodyTag = meta.n ? `button class="rowbody" data-openex="${id}" aria-label="Open ${esc(name)}"` : 'div';
     return `<div class="item${tools ? ' hastools' : ''}${skip ? ' skipped' : ''}">
       <${tag} class="row" data-row="${id}"><input type="checkbox" data-id="${id}" aria-label="Done: ${esc(name)}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
-      <${bodyTag}><span class="name">${name}${meta.optional ? '<span class="swaptag">optional</span>' : ''}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">🎯 ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
+      <${bodyTag}><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">🎯 ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
       ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse, id) : ''}</div>`;
   };
   const proteinRow = () => {
@@ -2432,11 +2474,13 @@ function render(){
     ${day.mode === 'rest' && restCount(mon(fromIso(sel))) > MAX_REST ? `<div class="warn">⚠️ ${restCount(mon(fromIso(sel)))} full rest days this week. The plan allows ${MAX_REST}. Consider <b>Cardio only</b> instead: an easy walk still counts.</div>` : ''}
     ${(() => {
       const r = ([id,name,rx,steps,meta]) => row(id, name, dl ? deloadRx(rx) : rx, steps, meta);
-      const gym = day.items.filter(it => it[1] !== 'Cardio'), cardio = day.items.filter(it => it[1] === 'Cardio');
+      const cardio = day.items.filter(it => it[1] === 'Cardio'), core = day.items.filter(it => it[4].core && it[1] !== 'Cardio');
+      const gym = day.items.filter(it => it[1] !== 'Cardio' && !it[4].core);
       const cnt = list => { const live = list.filter(it => !skipOf(sel, it[0]) && !(it[4].optional && !isDone(sel, it[0]))); return live.length ? `${live.filter(it => isDone(sel, it[0])).length}/${live.length}` : 'optional'; };
       const habDone = HABITS.filter((_,k) => isDone(sel, `h${k}`)).length;
       return (gym.length ? section('session', gym.every(it => it[4].optional) ? 'Bonus' : 'Session', cnt(gym), gym.map(r).join('')
           + (day.lift ? `<div class="prog">${dl ? "Deload: don't add load this week." : 'Top of the rep range with clean form at 1–3 reps in reserve? Add load modestly next time.'}</div>` : '')) : '')
+        + (core.length ? section('core', 'Core', cnt(core), core.map(r).join('')) : '')
         + (cardio.length ? section('cardio', 'Cardio', cnt(cardio), cardio.map(r).join('')) : '')
         + section('daily', 'Daily', `${habDone}/${HABITS.length}`, HABITS.map((h,k)=> k === 0 ? weightRow() : k === 1 ? proteinRow() : row(`h${k}`, h[0], h[1])).join(''));
     })()}
@@ -2483,7 +2527,7 @@ const MUSCLE_RULES = [
   [/row/i, { back:1, biceps:.5, shoulders:.3 }],
   [/farmer|carry|trap-bar carry/i, { forearms:1, traps:1, abs:.5 }],
   [/pallof|wood chop|cable chop|cable lift|rotation|side plank/i, { abs:1 }],
-  [/crunch|knee raise|leg raise|dead bug|bird dog|plank/i, { abs:1 }],
+  [/crunch|knee raise|leg raise|dead bug|bird dog|plank|bridge march/i, { abs:1 }],
   [/slam/i, { abs:.5, shoulders:.5, back:.5 }], [/battle rope/i, { shoulders:1, abs:.3 }],
   [/skierg|rowing erg/i, { back:.5, triceps:.3, abs:.3 }],
   [/bike/i, { quads:.5, glutes:.3 }], [/throw/i, { abs:.5, shoulders:.5 }]
@@ -2716,6 +2760,8 @@ document.addEventListener('click', e => {
   else if (t.dataset.demo){ e.preventDefault(); openDemo(t.dataset.demo); }
   else if (t.dataset.swap){ e.preventDefault(); if (exFor) closeEx(); openSwap(t.dataset.swap); }
   else if (t.dataset.pick) pickSwap(t.dataset.pick);
+  else if (t.dataset.stepswap){ e.preventDefault(); if (exFor){ const keep = exFor; closeEx(); exFor = null; } openStepSwap(t.dataset.stepswap); }
+  else if (t.dataset.steppick) pickStepSwap(t.dataset.steppick);
   else if (t.dataset.skip) setSkip(t.dataset.skip);
   else if (t.hasAttribute('data-unskip')) setSkip(null);
   else if (t.dataset.closesheet) closeSheet(t.dataset.closesheet);
