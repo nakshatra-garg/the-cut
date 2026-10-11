@@ -663,6 +663,81 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
   .tabbar button:not([aria-current]):hover{background:var(--fill)}
   summary:hover{opacity:.75}
 }
+
+/* ================= Phone-first polish: iOS 26 glass, springs, gestures ================= */
+:root{
+  --spring:cubic-bezier(.32,.72,0,1);
+  --glass:rgba(250,250,252,.72); --glass-edge:rgba(255,255,255,.7);
+  --lift:0 12px 36px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --glass:rgba(44,44,48,.66); --glass-edge:rgba(255,255,255,.14); --lift:0 12px 36px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3) }
+}
+html{-webkit-text-size-adjust:100%}
+button, .pill, .tabbar, .sechead, .rowbody, .chip, summary, .seg, .navbar, .toast, .row{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
+.card, details, .strip{border-radius:22px}
+.btn, .iconbtn{border-radius:999px}
+.btn{transition:transform .2s var(--spring), filter .2s, background-color .2s}
+.btn:active{transform:scale(.97); filter:brightness(.92)}
+.top h1{transition:opacity .2s}
+.navon .top h1{opacity:0}
+
+/* Compact title bar that fades in once the large title scrolls away */
+.navbar{position:fixed; top:0; left:0; right:0; z-index:9; height:calc(48px + env(safe-area-inset-top,0px)); padding:env(safe-area-inset-top,0px) 16px 0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.15;
+  background:var(--material); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:.5px solid var(--line); opacity:0; pointer-events:none; transition:opacity .2s}
+.navbar.on{opacity:1; pointer-events:auto; cursor:pointer}
+.navbar b{font-size:17px; font-weight:600}
+.navbar small{font-size:12px; color:var(--mute); font-family:var(--rounded); font-weight:600}
+.navbar small:empty{display:none}
+
+/* List rows highlight on press, like UITableView (delayed so a scroll doesn't flash them) */
+.row{position:relative; isolation:isolate}
+.row::before{content:""; position:absolute; inset:0 -16px; z-index:-1; background:var(--fill); opacity:0; pointer-events:none; transition:opacity .35s}
+.row:active::before{opacity:1; transition:opacity .08s .07s}
+.row.prow::before, .locked .row::before{display:none}
+
+/* Sheets slide up from the bottom edge on a spring and can be dragged down */
+.sheet{background:rgba(0,0,0,calc(.4 * var(--dim, 1)))}
+.sheetcard, .exsheet, .actionsheet, .chatlog{overscroll-behavior:contain}
+@media (prefers-reduced-motion: no-preference){
+  .sheet{animation:fade .3s ease-out}
+  .sheetcard{animation:sheetup .5s var(--spring) both}
+  .sheet.closing{animation:fadeout .26s ease-in forwards}
+  .sheet.closing .sheetcard{animation:sheetdown .26s cubic-bezier(.4,0,1,1) forwards}
+  .mcard{animation:pop .5s var(--spring)}
+}
+@keyframes sheetup{from{transform:translateY(100%)}}
+@keyframes sheetdown{to{transform:translateY(100%)}}
+.sheetcard{border-radius:32px 32px 0 0}
+#day{touch-action:pan-y; will-change:auto}
+
+@media (max-width:899px){
+  body{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+  /* Floating glass tab bar with a sliding selection capsule */
+  .tabbar{left:16px; right:16px; max-width:440px; margin:0 auto; bottom:max(12px, calc(env(safe-area-inset-bottom,0px) - 12px));
+    padding:5px; border:0; border-radius:999px; background:var(--glass);
+    -webkit-backdrop-filter:blur(24px) saturate(190%); backdrop-filter:blur(24px) saturate(190%);
+    box-shadow:var(--lift), inset 0 0 0 .5px var(--glass-edge); isolation:isolate;
+    transition:transform .4s var(--spring), opacity .25s}
+  .tabbar button{position:relative; z-index:1; height:54px; padding:0; justify-content:center; border-radius:999px}
+  .tabbar button:active{transform:scale(.9)}
+  .tabind{position:absolute; z-index:0; top:5px; bottom:5px; left:5px; width:calc((100% - 10px) / 4); border-radius:999px;
+    background:var(--fill); transform:translateX(calc(var(--i, 0) * 100%)); transition:transform .5s var(--spring)}
+  .coachpill{right:20px; height:46px; padding:0 18px; border:0; background:var(--glass); box-shadow:var(--lift), inset 0 0 0 .5px var(--glass-edge);
+    bottom:calc(max(12px, calc(env(safe-area-inset-bottom,0px) - 12px)) + 76px); transition:transform .4s var(--spring), opacity .25s}
+  .resttimer{bottom:calc(max(12px, calc(env(safe-area-inset-bottom,0px) - 12px)) + 136px)}
+  /* Get out of the way of the keyboard */
+  .typing .tabbar, .typing .coachpill{transform:translateY(160%); opacity:0; pointer-events:none}
+  /* Short action sheets float above the home indicator, like iOS 26 */
+  .actionsheet{width:auto; margin:0 8px max(8px, calc(env(safe-area-inset-bottom,0px) - 20px)); border-radius:34px;
+    padding-bottom:16px; max-height:calc(88dvh - env(safe-area-inset-bottom,0px))}
+}
+@media (min-width:900px){ .tabind{display:none} .navbar{left:220px} }
+.toast{cursor:pointer; touch-action:none}
+.asks .chip{background:var(--fill); color:var(--accent); font-weight:500; padding:7px 13px}
+#chatin{resize:none; border-radius:23px; padding:12px 16px}
 </style>
 </head>
 <body>
@@ -906,7 +981,9 @@ details h3{font-size:13px; font-weight:400; text-transform:uppercase; letter-spa
    </div>
   </div>
 
+<header class="navbar" id="navbar" aria-hidden="true"><b id="navtitle"></b><small id="navsub"></small></header>
 <nav class="tabbar" aria-label="Sections">
+  <i class="tabind" aria-hidden="true"></i>
   <button data-tab="today" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Today</button>
   <button data-tab="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M5 8l5 4 4-3 5 6"/></svg>Progress</button>
   <button data-tab="goals"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7"/></svg>Goals</button>
@@ -1670,7 +1747,7 @@ let cheerTimer = null, recentCheers = [];
 function toast(text, sub){
   const t = document.getElementById('toast');
   t.innerHTML = `<b>${md(text).replace(/^<p>|<\/p>$/g, '')}</b>${sub ? `<small>${esc(sub)}</small>` : ''}`;
-  t.hidden = false; replay(t, 'toastin');
+  t.style.transition = t.style.transform = t.style.opacity = ''; t.hidden = false; replay(t, 'toastin');
   clearTimeout(cheerTimer); cheerTimer = setTimeout(() => fadeOut(t), 4200);
 }
 async function cheer(id){
@@ -1968,7 +2045,7 @@ function openMins(id){
 function logMins(m){
   m = Math.round(Number(m));
   if (!minsFor || !(m > 0 && m <= 300)) return;
-  state.checks[`${sel}|${minsFor}`] = true; state.cardio[sel] = m; popRow = minsFor;
+  state.checks[`${sel}|${minsFor}`] = true; state.cardio[sel] = m; popRow = minsFor; haptic();
   const id = minsFor; minsFor = null; fadeOut(document.getElementById('minsheet')); save(); render(); cheer(id);
 }
 const closeMins = () => { minsFor = null; fadeOut(document.getElementById('minsheet')); };
@@ -1990,15 +2067,40 @@ function animateBars(prev){
   els.forEach(el => { el.style.transition = ''; el.style.width = el.dataset.to; });
   rings.forEach(el => { el.style.transition = ''; el.style.strokeDashoffset = el.dataset.to; });
 }
-let popRow = null, lastSel = null, lastWeek = null;
+let popRow = null, lastSel = null, lastWeek = null, swipedDay = false;
+// While any sheet is up the page behind it doesn't scroll and the floating buttons step aside.
+const syncSheetOpen = () => document.body.classList.toggle('sheet-open', !!document.querySelector('.sheet:not([hidden])'));
 function fadeOut(el, after){
-  if (calm() || el.hidden){ el.hidden = true; if (after) after(); return; }
+  const done = () => { el.hidden = true; el.classList.remove('closing'); resetDrag(el); syncSheetOpen(); if (after) after(); };
+  // a sheet you dragged away has already slid off screen, so don't animate it again
+  if (calm() || el.hidden || el._dragClosed){ el._dragClosed = false; clearTimeout(el._fadeT); done(); return; }
   el.classList.add('closing');
   clearTimeout(el._fadeT);
-  el._fadeT = setTimeout(() => { el.hidden = true; el.classList.remove('closing'); if (after) after(); }, 180);
+  el._fadeT = setTimeout(done, el.classList.contains('sheet') ? 250 : 180);
+}
+function resetDrag(el){
+  const c = el.querySelector && el.querySelector('.sheetcard');
+  if (c){ c.style.transform = ''; c.style.transition = ''; }
+  el.style.removeProperty('--dim'); el.style.transition = '';
 }
 // Reopening during a close animation must cancel the pending hide.
-function showSheet(el){ clearTimeout(el._fadeT); el.classList.remove('closing'); el.hidden = false; }
+function showSheet(el){ clearTimeout(el._fadeT); el._dragClosed = false; el.classList.remove('closing'); resetDrag(el); el.hidden = false; syncSheetOpen(); }
+
+/* ---------- Haptics: Android vibrates; iOS 18+ gives a light tap through its native switch control ---------- */
+const haptic = (() => {
+  let lbl = null;
+  return strong => {
+    try {
+      if (navigator.vibrate){ navigator.vibrate(strong ? [10, 70, 16] : 8); return; }
+      if (!/iP(hone|ad|od)/.test(navigator.userAgent) && !(navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent))) return;
+      if (!lbl){
+        lbl = document.createElement('label'); lbl.setAttribute('aria-hidden', 'true'); lbl.style.display = 'none';
+        const sw = document.createElement('input'); sw.type = 'checkbox'; sw.setAttribute('switch', ''); lbl.append(sw); document.head.append(lbl);
+      }
+      lbl.click(); if (strong) setTimeout(() => lbl.click(), 110);
+    } catch(e) {}
+  };
+})();
 const hideModal = () => fadeOut(document.getElementById('modal'));
 
 let secondaryDirty = true;
@@ -2058,13 +2160,43 @@ function renderSecondary(){
 }
 
 /* ---------- Tabs + coach sheet ---------- */
-function showTab(name){
+const TABS = ['today', 'progress', 'goals', 'more'];
+const TAB_TITLE = { today:'The Cut', progress:'Progress', goals:'Goals', more:'Settings' };
+const tabScroll = {};   // each tab keeps its own scroll position, like a native tab bar
+function showTab(name, fromBar){
+  const cur = activeTab();
+  // tapping the tab you're already on scrolls it back to the top
+  if (cur === name){ if (fromBar) window.scrollTo({ top:0, behavior: calm() ? 'auto' : 'smooth' }); return; }
+  tabScroll[cur] = window.scrollY;
   if (name !== 'today' && secondaryDirty){ renderSecondary(); secondaryDirty = false; }
   document.querySelectorAll('.view').forEach(v => { const show = v.dataset.view === name; if (show && v.hidden) replay(v, 'enter'); v.hidden = !show; });
   document.querySelectorAll('.tabbar button').forEach(b => b.toggleAttribute('aria-current', b.dataset.tab === name));
+  document.querySelector('.tabbar').style.setProperty('--i', TABS.indexOf(name));
+  document.querySelector('.top h1').textContent = TAB_TITLE[name];
   if (name === 'more' && document.getElementById('aibox').open && !freeModels) loadFreeModels();
-  window.scrollTo(0, 0);
+  window.scrollTo(0, fromBar ? (tabScroll[name] || 0) : 0);
+  setNav();
 }
+// The small title bar shows what the large title said, plus the day's progress on Today.
+let navTitle = { today: ['', ''] };
+function setNav(){
+  const tab = activeTab(), [t, s] = tab === 'today' ? navTitle.today : [TAB_TITLE[tab], ''];
+  document.getElementById('navtitle').textContent = t;
+  document.getElementById('navsub').textContent = s;
+}
+let navOn = false, navRaf = 0;
+window.addEventListener('scroll', () => {
+  if (navRaf) return;
+  navRaf = requestAnimationFrame(() => {
+    navRaf = 0; const on = window.scrollY > 44;
+    if (on !== navOn){ navOn = on; document.getElementById('navbar').classList.toggle('on', on); document.body.classList.toggle('navon', on); }
+  });
+}, { passive:true });
+document.getElementById('navbar').addEventListener('click', () => window.scrollTo({ top:0, behavior: calm() ? 'auto' : 'smooth' }));
+// Hide the floating tab bar while the keyboard is up so it never covers the field you're typing in.
+const typingField = el => el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|file|range)$/.test(el.type)));
+document.addEventListener('focusin', e => { if (typingField(e.target)) document.body.classList.add('typing'); });
+document.addEventListener('focusout', () => setTimeout(() => { if (!typingField(document.activeElement)) document.body.classList.remove('typing'); }, 60));
 function openCoach(){
   showSheet(document.getElementById('coachsheet'));
   document.body.classList.add('sheet-open');
@@ -2073,7 +2205,7 @@ function openCoach(){
 function closeCoach(){
   const sh = document.getElementById('coachsheet');
   if (sh.hidden) return;
-  fadeOut(sh, () => document.body.classList.remove('sheet-open'));
+  fadeOut(sh);
 }
 
 /* ---------- Evening reminder (push sent by .github/workflows/reminder.yml) ---------- */
@@ -2495,7 +2627,10 @@ function render(){
 
   animateBars(bars);
   if (lastWeek && lastWeek !== iso(weekStart)) replay(document.getElementById('strip'), iso(weekStart) > lastWeek ? 'in-r' : 'in-l');
-  else if (lastSel && lastSel !== sel) replay(document.getElementById('day'), sel > lastSel ? 'in-r' : 'in-l');
+  else if (lastSel && lastSel !== sel && !swipedDay) replay(document.getElementById('day'), sel > lastSel ? 'in-r' : 'in-l');
+  swipedDay = false;
+  navTitle.today = [day.title, `${fromIso(sel).toLocaleDateString(undefined,{ weekday:'short', day:'numeric', month:'short' })} · ${p.done}/${p.total} done`];
+  setNav();
   if (popRow){ replay(document.querySelector(`[data-row="${popRow}"]`), 'pop'); popRow = null; }
   lastSel = sel; lastWeek = iso(weekStart);
 }
@@ -2699,7 +2834,7 @@ function showRecap(date, celebrate, newBadges = []){
 }
 function closeDay(){
   const before = earned(stats());
-  state.closed[sel] = Date.now(); save(); render();
+  state.closed[sel] = Date.now(); save(); render(); haptic(true);
   const fresh = [...earned(stats())].filter(n => !before.has(n));
   showRecap(sel, true, fresh);
 }
@@ -2733,7 +2868,7 @@ document.addEventListener('click', e => {
   if (t.dataset.jump){ sel = t.dataset.jump; weekStart = mon(fromIso(sel)); showTab('today'); render(); return; }
   if (t.dataset.openex){ openEx(t.dataset.openex); return; }
   if (t.dataset.step){ stepSet(t.dataset.step); return; }
-  if (t.dataset.setdone){ const x = exDraft[Number(t.dataset.setdone)]; x.done = !x.done; t.closest('.setrow').classList.toggle('done', x.done); if (x.done) startRest(); return; }
+  if (t.dataset.setdone){ const x = exDraft[Number(t.dataset.setdone)]; x.done = !x.done; t.closest('.setrow').classList.toggle('done', x.done); if (x.done){ haptic(); startRest(); } return; }
   if (t.hasAttribute('data-addset')){ const l = exDraft[exDraft.length - 1] || { w:'', r:'' }; exDraft.push({ w: l.w, r: l.r, done:false }); renderSets(); return; }
   if (t.hasAttribute('data-delset')){ if (exDraft.length > 1){ exDraft.pop(); renderSets(); } return; }
   if (t.hasAttribute('data-exdone')){ exDone(); return; }
@@ -2742,7 +2877,7 @@ document.addEventListener('click', e => {
   if (t.hasAttribute('data-openmove')){ openMove(); return; }
   if (t.dataset.move !== undefined){ pickMove(Number(t.dataset.move)); return; }
   if (t.dataset.tab){
-    closeCoach(); showTab(t.dataset.tab);
+    closeCoach(); showTab(t.dataset.tab, !!t.closest('.tabbar'));
     if (t.dataset.open){ const d = document.getElementById(t.dataset.open); d.open = true; d.scrollIntoView({ block:'start' }); }
   }
   else if (t.dataset.range !== undefined){ range = Number(t.dataset.range); render(); }
@@ -2868,7 +3003,7 @@ document.addEventListener('change', e => {
     if (c.checked){ c.checked = false; openMins(c.dataset.id); return; }   // ask for minutes first
     delete state.cardio[sel];
   }
-  if (c.checked) popRow = c.dataset.id;
+  if (c.checked){ popRow = c.dataset.id; haptic(); }
   if (c.checked) state.checks[k] = true; else delete state.checks[k];
   save(); render();
   if (c.checked && item) cheer(c.dataset.id);   // exercises only, not daily habits
@@ -2900,20 +3035,118 @@ window.addEventListener('offline', renderSync);
 document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
 document.getElementById('coachsheet').addEventListener('click', e => { if (e.target.id === 'coachsheet') closeCoach(); });
 document.getElementById('minsheet').addEventListener('click', e => { if (e.target.id === 'minsheet') closeMins(); });
+/* ---------- Gestures ---------- */
+// Day card follows your finger; let go past a third of the way (or flick) to move a day.
 (() => {
-  const card = document.getElementById('day'); let x0 = null, y0 = 0, t0 = 0;
+  const card = document.getElementById('day');
+  let x0 = null, y0 = 0, lock = null, dx = 0, lastX = 0, lastT = 0, v = 0;
+  const settle = () => { card.style.transition = 'transform .45s var(--spring), opacity .3s'; card.style.transform = ''; card.style.opacity = ''; };
+  const go = dir => { const d = addDays(fromIso(sel), dir); sel = iso(d); weekStart = mon(d); };
   card.addEventListener('touchstart', e => {
     if (e.touches.length !== 1 || e.target.closest('input, textarea, select, .seg')) { x0 = null; return; }
-    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
-  }, { passive: true });
-  card.addEventListener('touchend', e => {
+    x0 = lastX = e.touches[0].clientX; y0 = e.touches[0].clientY; lastT = performance.now(); lock = null; dx = 0; v = 0;
+  }, { passive:true });
+  card.addEventListener('touchmove', e => {
+    if (x0 === null) return;
+    const x = e.touches[0].clientX, y = e.touches[0].clientY;
+    if (!lock){
+      const ax = Math.abs(x - x0), ay = Math.abs(y - y0);
+      if (ax < 10 && ay < 10) return;
+      lock = ax > ay * 1.2 ? 'x' : 'y';
+      if (lock === 'y'){ x0 = null; return; }      // it's a scroll, leave it alone
+      x0 = x;
+    }
+    e.preventDefault();
+    const now = performance.now(); v = 0.7 * v + 0.3 * (x - lastX) / Math.max(1, now - lastT); lastX = x; lastT = now;
+    dx = x - x0;
+    card.style.transition = 'none';
+    card.style.transform = `translateX(${dx}px) rotate(${dx / 90}deg)`;
+    card.style.opacity = String(1 - Math.min(.4, Math.abs(dx) / 800));
+  }, { passive:false });
+  const end = () => {
+    if (x0 === null || lock !== 'x'){ x0 = null; return; }
+    x0 = null;
+    const w = card.offsetWidth, commit = Math.abs(dx) > w / 3 || (Math.abs(v) > 0.4 && Math.abs(dx) > 30 && Math.sign(v) === Math.sign(dx));
+    if (!commit){ settle(); return; }
+    const dir = dx < 0 ? 1 : -1;
+    haptic();
+    if (calm()){ go(dir); render(); settle(); return; }
+    card.style.transition = 'transform .2s cubic-bezier(.4,0,1,1), opacity .2s';
+    card.style.transform = `translateX(${-dir * w}px) rotate(${-dir * 4}deg)`; card.style.opacity = '0';
+    setTimeout(() => {
+      go(dir); swipedDay = true; render();
+      card.style.transition = 'none'; card.style.transform = `translateX(${dir * w * 0.4}px)`; card.style.opacity = '0';
+      void card.offsetWidth; settle();
+    }, 190);
+  };
+  card.addEventListener('touchend', end);
+  card.addEventListener('touchcancel', () => { if (x0 !== null && lock === 'x') settle(); x0 = null; });
+})();
+// Flick the week strip sideways to change week.
+(() => {
+  const strip = document.getElementById('strip'); let x0 = null, y0 = 0, t0 = 0;
+  strip.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); }, { passive:true });
+  strip.addEventListener('touchend', e => {
     if (x0 === null) return;
     const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
-    // a deliberate horizontal flick: far enough, mostly sideways, not a slow drag
-    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6 || Date.now() - t0 > 700) return;
-    const d = addDays(fromIso(sel), dx < 0 ? 1 : -1);
-    sel = iso(d); weekStart = mon(d); render();
-  }, { passive: true });
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.6 || Date.now() - t0 > 600) return;
+    haptic(); document.querySelector(`[data-nav="${dx < 0 ? 1 : -1}"]`).click();
+  }, { passive:true });
+})();
+// Every sheet can be dragged down to dismiss, starting anywhere once its content is scrolled to the top.
+const SHEET_CLOSE = { coachsheet: () => closeCoach(), exsheet: () => closeEx(), minsheet: () => closeMins() };
+document.querySelectorAll('.sheet').forEach(sh => {
+  const card = sh.querySelector('.sheetcard');
+  let y0 = null, x0 = 0, dy = 0, lastY = 0, lastT = 0, v = 0, dragging = false;
+  const scrolled = el => { for (; el && el !== sh; el = el.parentElement) if (el.scrollTop > 0) return true; return false; };
+  card.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1 || e.target.closest('input, textarea, select, .stepper') || matchMedia('(min-width:900px)').matches) { y0 = null; return; }
+    y0 = lastY = e.touches[0].clientY; x0 = e.touches[0].clientX; lastT = performance.now(); dy = 0; v = 0; dragging = false;
+    if (scrolled(e.target)) y0 = null;       // content is scrolled: this touch scrolls it
+  }, { passive:true });
+  card.addEventListener('touchmove', e => {
+    if (y0 === null) return;
+    const y = e.touches[0].clientY;
+    if (!dragging){
+      const d = y - y0, ax = Math.abs(e.touches[0].clientX - x0);
+      if (Math.abs(d) < 8 && ax < 8) return;
+      if (d <= 0 || ax > d){ y0 = null; return; }
+      dragging = true; y0 = y;
+    }
+    e.preventDefault();
+    const now = performance.now(); v = 0.7 * v + 0.3 * (y - lastY) / Math.max(1, now - lastT); lastY = y; lastT = now;
+    dy = Math.max(0, y - y0);
+    card.style.transition = 'none'; card.style.transform = `translateY(${dy}px)`;
+    sh.style.transition = 'none'; sh.style.setProperty('--dim', String(1 - Math.min(1, dy / card.offsetHeight)));
+  }, { passive:false });
+  const end = () => {
+    if (!dragging){ y0 = null; return; }
+    dragging = false; y0 = null;
+    if (dy > card.offsetHeight * 0.28 || (v > 0.5 && dy > 30)){
+      haptic();
+      card.style.transition = 'transform .24s cubic-bezier(.2,.7,.3,1)'; card.style.transform = 'translateY(100%)';
+      sh.style.transition = 'background-color .24s'; sh.style.setProperty('--dim', '0');
+      setTimeout(() => { sh._dragClosed = true; (SHEET_CLOSE[sh.id] || (() => closeSheet(sh.id)))(); }, 230);
+    } else {
+      card.style.transition = 'transform .5s var(--spring)'; card.style.transform = '';
+      sh.style.transition = 'background-color .3s'; sh.style.removeProperty('--dim');
+    }
+  };
+  card.addEventListener('touchend', end);
+  card.addEventListener('touchcancel', end);
+});
+// Toasts: tap or flick up to dismiss.
+(() => {
+  const t = document.getElementById('toast'); let y0 = null;
+  const away = () => { clearTimeout(cheerTimer); t.style.transition = 'transform .2s ease-in, opacity .2s'; t.style.transform = 'translate(-50%, -140%)'; t.style.opacity = '0';
+    setTimeout(() => { t.hidden = true; t.style.transition = t.style.transform = t.style.opacity = ''; }, 200); };
+  t.addEventListener('click', away);
+  t.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; t.style.transition = 'none'; }, { passive:true });
+  t.addEventListener('touchmove', e => { if (y0 === null) return; const d = Math.min(0, e.touches[0].clientY - y0); t.style.transform = `translate(-50%, ${d}px)`; }, { passive:true });
+  t.addEventListener('touchend', e => {
+    if (y0 === null) return; const d = e.changedTouches[0].clientY - y0; y0 = null;
+    if (d < -24) away(); else { t.style.transition = 'transform .4s var(--spring)'; t.style.transform = ''; }
+  });
 })();
 document.addEventListener('toggle', e => {
   const d = e.target; if (!d.matches || !d.matches('details.stepsbox') || !d.dataset.sid) return;
