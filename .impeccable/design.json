@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-11T00:00:00Z",
+  "title": "Design System: The Cut",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "Fitness Green", "canonical": "#1D7333", "darkValue": "#30D158", "tonalRamp": ["oklch(25% 0.08 145)", "oklch(35% 0.1 145)", "oklch(45.5% 0.12 145)", "oklch(55% 0.15 145)", "oklch(65% 0.17 145)", "oklch(75% 0.15 145)", "oklch(85% 0.09 145)", "oklch(95% 0.03 145)"] },
+      "accent-ink": { "role": "primary", "displayName": "Accent Ink", "canonical": "#FFFFFF", "darkValue": "#00230C" },
+      "soft": { "role": "primary", "displayName": "Mint Wash", "canonical": "#E6F4EA", "darkValue": "#1B3022" },
+      "orange": { "role": "secondary", "displayName": "System Orange (fill only)", "canonical": "#FF9500", "darkValue": "#FF9F0A", "tonalRamp": ["oklch(25% 0.06 60)", "oklch(35% 0.09 60)", "oklch(45% 0.12 55)", "oklch(55% 0.15 55)", "oklch(65% 0.17 60)", "oklch(76% 0.17 65)", "oklch(86% 0.1 70)", "oklch(95% 0.04 75)"] },
+      "orange-text": { "role": "secondary", "displayName": "Burnt Orange Text", "canonical": "#B84A00", "darkValue": "#FF9F0A", "note": "4.5:1 text partner of orange" },
+      "red": { "role": "secondary", "displayName": "System Red (fill only)", "canonical": "#FF3B30", "darkValue": "#FF453A", "tonalRamp": ["oklch(25% 0.08 28)", "oklch(35% 0.12 28)", "oklch(45% 0.16 28)", "oklch(55% 0.2 28)", "oklch(63% 0.23 28)", "oklch(74% 0.16 25)", "oklch(85% 0.08 22)", "oklch(95% 0.03 20)"] },
+      "red-text": { "role": "secondary", "displayName": "Deep Red Text", "canonical": "#D70015", "darkValue": "#FF6961", "note": "4.5:1 text partner of red" },
+      "ring1": { "role": "tertiary", "displayName": "Move Green", "canonical": "#28CD41", "darkValue": "#30D158" },
+      "ring2": { "role": "tertiary", "displayName": "Ring Blue", "canonical": "#0A84FF", "darkValue": "#0A84FF" },
+      "ring3": { "role": "tertiary", "displayName": "Ring Orange", "canonical": "#FF9500", "darkValue": "#FF9F0A" },
+      "bg": { "role": "neutral", "displayName": "Grouped Background", "canonical": "#F2F2F7", "darkValue": "#000000", "tonalRamp": ["#1C1C1E", "#2C2C2E", "#3A3A3C", "#636366", "#8E8E93", "#C7C7CC", "#E5E5EA", "#F2F2F7"] },
+      "card": { "role": "neutral", "displayName": "Card", "canonical": "#FFFFFF", "darkValue": "#1C1C1E" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#000000", "darkValue": "#FFFFFF" },
+      "mute": { "role": "neutral", "displayName": "Secondary Label", "canonical": "#666670", "darkValue": "#8E8E93" },
+      "line": { "role": "neutral", "displayName": "Separator", "canonical": "#D8D8DC", "darkValue": "#38383A" },
+      "fill": { "role": "neutral", "displayName": "Tertiary Fill", "canonical": "rgba(118,118,128,.12)", "darkValue": "rgba(118,118,128,.24)" },
+      "tick": { "role": "neutral", "displayName": "Tick Outline", "canonical": "#8E8E93", "darkValue": "#7C7C80", "note": "3:1 non-text outline" },
+      "grabber": { "role": "neutral", "displayName": "Grabber", "canonical": "#C7C7CC", "darkValue": "#48484A" },
+      "material": { "role": "neutral", "displayName": "Bar Material", "canonical": "rgba(249,249,249,.8)", "darkValue": "rgba(28,28,30,.78)" },
+      "glass": { "role": "neutral", "displayName": "Liquid Glass", "canonical": "rgba(250,250,252,.72)", "darkValue": "rgba(44,44,48,.66)" },
+      "glass-edge": { "role": "neutral", "displayName": "Glass Edge", "canonical": "rgba(255,255,255,.7)", "darkValue": "rgba(255,255,255,.14)" }
+    },
+    "typographyMeta": {
+      "large-title": { "displayName": "Large Title", "purpose": "Page title; fades as the compact nav bar appears." },
+      "title1": { "displayName": "Title 1", "purpose": "Day title, modal heading." },
+      "title2": { "displayName": "Title 2", "purpose": "Section and sheet headings." },
+      "title3": { "displayName": "Title 3", "purpose": "Chart headings, numeric inputs." },
+      "body": { "displayName": "Body", "purpose": "Rows, buttons, settings rows. Root is 17px or -apple-system-body on iOS." },
+      "subhead": { "displayName": "Subhead", "purpose": "Meta, notes, toasts." },
+      "footnote": { "displayName": "Footnote", "purpose": "Captions and row meta." },
+      "section-header": { "displayName": "Grouped-list Header", "purpose": "Uppercase mute header above a group, iOS table style." },
+      "caption": { "displayName": "Caption", "purpose": "KPI captions, tags, chip text." },
+      "numeral": { "displayName": "Rounded Numeral", "purpose": "All data figures; tabular." }
+    },
+    "shadows": [
+      { "name": "lift", "value": "0 12px 36px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06)", "purpose": "Floating glass tab bar and coach pill (dark: .55/.3)." },
+      { "name": "toast", "value": "0 8px 28px rgba(0,0,0,.16)", "purpose": "Toast banner." },
+      { "name": "rest-timer", "value": "0 8px 24px rgba(0,0,0,.25)", "purpose": "Inverted rest timer capsule." },
+      { "name": "segment-thumb", "value": "0 3px 8px rgba(0,0,0,.12), 0 1px 1px rgba(0,0,0,.04)", "purpose": "Selected segment." },
+      { "name": "glass-edge", "value": "inset 0 0 0 .5px var(--glass-edge)", "purpose": "Specular rim on glass chrome." }
+    ],
+    "motion": [
+      { "name": "spring", "value": "cubic-bezier(.32,.72,0,1)", "purpose": "Sheets (.5s up), tab indicator (.5s), tab bar hide (.4s), button press (.2s), tap cards." },
+      { "name": "ease-out-soft", "value": "cubic-bezier(.2,.8,.2,1)", "purpose": "View rise (.34s, 40ms stagger), week slide (.28s), bar widths (.5s), rings (.7s), section collapse (.3s)." },
+      { "name": "overshoot", "value": "cubic-bezier(.3,1.6,.5,1)", "purpose": "Tick pop (.38s) and tab icon bump (.3s)." },
+      { "name": "sheet-close", "value": "cubic-bezier(.4,0,1,1) .26s", "purpose": "Sheet dismiss." },
+      { "name": "press", "value": "scale(.96) / .92 tab / .97 primary", "purpose": "Active feedback." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion + calm()", "purpose": "All CSS animation gated; JS skips tweens, smooth scroll, close animations." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "max-width: 899px", "purpose": "Floating glass tab bar, Start disc, inset action sheets, drag-to-dismiss." },
+      { "name": "mac", "value": "min-width: 900px", "purpose": "220px sidebar, 680px column, centred sheets." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Filled accent capsule for the main action on a surface.",
+      "html": "<button class=\"ds-btn\">Start workout</button>",
+      "css": ".ds-btn{height:50px;padding:0 20px;border:0;border-radius:999px;background:var(--accent,#1D7333);color:var(--accent-ink,#fff);font:600 17px -apple-system,BlinkMacSystemFont,system-ui,sans-serif;cursor:pointer;transition:transform .2s cubic-bezier(.32,.72,0,1),filter .2s}.ds-btn:hover{filter:brightness(1.07)}.ds-btn:active{transform:scale(.97);filter:brightness(.92)}.ds-btn:focus-visible{outline:2px solid var(--accent,#1D7333);outline-offset:2px}"
+    },
+    {
+      "name": "Tinted Button",
+      "kind": "button",
+      "refersTo": "button-tinted",
+      "description": "Grey fill, accent label; cancel and secondary actions.",
+      "html": "<button class=\"ds-btn-tint\">Cancel</button>",
+      "css": ".ds-btn-tint{height:50px;padding:0 20px;border:0;border-radius:999px;background:rgba(118,118,128,.12);color:var(--accent,#1D7333);font:600 17px -apple-system,BlinkMacSystemFont,system-ui,sans-serif;cursor:pointer;transition:transform .2s cubic-bezier(.32,.72,0,1)}.ds-btn-tint:active{transform:scale(.97)}.ds-btn-tint:focus-visible{outline:2px solid var(--accent,#1D7333);outline-offset:2px}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "nav",
+      "refersTo": "segmented",
+      "description": "iOS segmented control with a raised thumb.",
+      "html": "<div class=\"ds-seg\"><button class=\"on\">4W</button><button>3M</button><button>All</button></div>",
+      "css": ".ds-seg{display:inline-flex;background:rgba(118,118,128,.12);border-radius:9px;padding:2px}.ds-seg button{border:0;background:none;border-radius:7px;padding:6px 10px;font:500 13px -apple-system,system-ui,sans-serif;color:#000;cursor:pointer}.ds-seg button.on{background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04)}.ds-seg button:focus-visible{outline:2px solid #1D7333;outline-offset:2px}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Capsule filter or tag; accent when on.",
+      "html": "<span class=\"ds-chip\">Quads</span> <span class=\"ds-chip on\">Hit</span>",
+      "css": ".ds-chip{display:inline-block;border-radius:999px;padding:5px 12px;background:rgba(118,118,128,.12);color:#000;font:400 13px -apple-system,system-ui,sans-serif}.ds-chip.on{background:#1D7333;color:#fff;font-weight:600}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Borderless fill field; numbers in SF Rounded.",
+      "html": "<input class=\"ds-input\" inputmode=\"decimal\" placeholder=\"kg\">",
+      "css": ".ds-input{height:48px;width:140px;padding:0 12px;border:0;border-radius:12px;background:rgba(118,118,128,.12);color:#000;font:600 22px ui-rounded,'SF Pro Rounded',-apple-system,system-ui,sans-serif;caret-color:#1D7333;font-variant-numeric:tabular-nums}.ds-input:focus-visible{outline:2px solid #1D7333;outline-offset:2px}"
+    },
+    {
+      "name": "Card with Reminders Rows",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "22px grouped card holding rows with round ticks and hairline separators.",
+      "html": "<div class=\"ds-card\"><label class=\"ds-row\"><span class=\"ds-tick on\"></span><span><b>Squat</b><small>3 × 8</small></span></label><label class=\"ds-row\"><span class=\"ds-tick\"></span><span><b>Protein 180 g</b><small>Daily habit</small></span></label></div>",
+      "css": ".ds-card{background:#fff;border-radius:22px;padding:4px 16px;font-family:-apple-system,system-ui,sans-serif}.ds-row{display:grid;grid-template-columns:24px 1fr;gap:12px;padding:11px 0;border-bottom:.5px solid #D8D8DC;cursor:pointer}.ds-row:last-child{border-bottom:0}.ds-row b{display:block;font-weight:400;font-size:17px}.ds-row small{display:block;font-size:14px;color:#666670}.ds-tick{width:24px;height:24px;border-radius:50%;border:1.5px solid #8E8E93;display:grid;place-items:center}.ds-tick.on{background:#1D7333;border-color:#1D7333}.ds-tick.on::after{content:'';width:5px;height:10px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:translateY(-1px) rotate(45deg)}"
+    },
+    {
+      "name": "KPI Tile",
+      "kind": "card",
+      "refersTo": "kpi-tile",
+      "description": "Grouped-background tile with a rounded numeral and caption.",
+      "html": "<div class=\"ds-kpi\"><span class=\"ds-big\">-4.2</span><span class=\"ds-cap\">kg in 4 weeks</span></div>",
+      "css": ".ds-kpi{display:grid;gap:2px;background:#F2F2F7;border-radius:16px;padding:12px;width:150px}.ds-big{font:700 28px/1.1 ui-rounded,'SF Pro Rounded',-apple-system,system-ui,sans-serif;color:#1D7333;font-variant-numeric:tabular-nums}.ds-cap{font:400 12px -apple-system,system-ui,sans-serif;color:#666670}"
+    },
+    {
+      "name": "Floating Tab Bar",
+      "kind": "nav",
+      "refersTo": "tabbar",
+      "description": "Phone glass capsule with sliding indicator and centre Start disc.",
+      "html": "<nav class=\"ds-tabbar\"><i class=\"ds-ind\"></i><button aria-current=\"page\"><svg viewBox=\"0 0 24 24\"><path d=\"M4 11l8-6.5 8 6.5\"/><path d=\"M6 9.5V19a1 1 0 0 0 1 1h3.5v-5h3v5H17a1 1 0 0 0 1-1V9.5\"/></svg>Home</button><button><svg viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"15\" rx=\"3\"/><path d=\"M4 10h16M8.5 3v4M15.5 3v4\"/></svg>Plan</button><button aria-label=\"Start\"><span class=\"ds-disc\"><span><svg viewBox=\"0 0 24 24\" class=\"fill\"><path d=\"M8 5.5v13l10.5-6.5z\"/></svg></span></span></button><button><svg viewBox=\"0 0 24 24\"><path d=\"M5 20V12M10 20V5M15 20v-9M20 20V8\"/></svg>Stats</button><button><svg viewBox=\"0 0 24 24\"><path d=\"M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11\"/></svg>Exercises</button></nav>",
+      "css": ".ds-tabbar{position:relative;display:grid;grid-template-columns:repeat(5,1fr);max-width:440px;padding:5px;border-radius:999px;background:rgba(250,250,252,.72);-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);box-shadow:0 12px 36px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06),inset 0 0 0 .5px rgba(255,255,255,.7);isolation:isolate;font-family:-apple-system,system-ui,sans-serif}.ds-ind{position:absolute;z-index:0;top:5px;bottom:5px;left:5px;width:calc((100% - 10px)/5);border-radius:999px;background:rgba(118,118,128,.12);transition:transform .5s cubic-bezier(.32,.72,0,1)}.ds-tabbar button{position:relative;z-index:1;height:54px;border:0;background:none;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:10px;font-weight:500;color:#666670;cursor:pointer;transition:transform .12s}.ds-tabbar button:active{transform:scale(.9)}.ds-tabbar button[aria-current]{color:#1D7333;font-weight:600}.ds-tabbar svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.ds-disc{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#1D7333 40%,color-mix(in srgb,#1D7333 22%,transparent) 0)}.ds-disc>span{width:42px;height:42px;border-radius:50%;background:#1D7333;color:#fff;display:grid;place-items:center;box-shadow:0 4px 12px color-mix(in srgb,#1D7333 45%,transparent)}.ds-disc svg.fill{width:20px;height:20px;fill:currentColor;stroke:none;margin-left:1px}.ds-tabbar button:focus-visible{outline:2px solid #1D7333;outline-offset:2px}"
+    },
+    {
+      "name": "Bottom Sheet",
+      "kind": "custom",
+      "refersTo": "sheet",
+      "description": "Card sheet with grabber; springs up, drags down to dismiss.",
+      "html": "<div class=\"ds-sheet\"><h2>Minutes</h2><p>How long did you go?</p><button class=\"ds-cancel\">Cancel</button></div>",
+      "css": ".ds-sheet{position:relative;width:340px;background:#fff;border-radius:32px 32px 0 0;padding:22px 16px 12px;display:flex;flex-direction:column;gap:12px;font-family:-apple-system,system-ui,sans-serif;animation:ds-up .5s cubic-bezier(.32,.72,0,1) both}.ds-sheet::before{content:'';position:absolute;top:6px;left:50%;width:36px;height:5px;margin-left:-18px;border-radius:3px;background:#C7C7CC}.ds-sheet h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em}.ds-sheet p{margin:0;color:#666670;font-size:15px}.ds-cancel{height:50px;border:0;border-radius:999px;background:rgba(118,118,128,.12);color:#1D7333;font:600 17px -apple-system,system-ui,sans-serif}@keyframes ds-up{from{transform:translateY(40px);opacity:0}}@media (prefers-reduced-motion:reduce){.ds-sheet{animation:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A First-Party Apple App",
+    "overview": "The Cut should be indistinguishable from something Apple shipped next to Fitness and Reminders. It borrows iOS 26 wholesale rather than interpreting it: system SF faces, the grouped-list surface model (grey ground, white rounded cards, hairline separators), Reminders round ticks, Activity-style rings, a floating glass tab bar, bottom sheets with a grabber, spring motion and haptics. One green accent carries every interactive and \"done\" state; everything else is system grey.\n\nDensity is phone-native: 16px page margins, 44pt targets, one column capped at 560px. At 900px and up (MacBook Air) the same content gets a 220px sidebar in place of the tab bar, a 680px column and centred sheets. All CSS lives in the single <style> in index.html, appended in layers; later blocks override earlier ones, so read the whole cascade before changing a selector.",
+    "keyCharacteristics": [
+      "System fonts only; numerals in SF Rounded with tabular figures.",
+      "Grouped lists: bg ground, card surfaces at 22px, 0.5px line separators.",
+      "One accent (green); Apple system hues used as fills and status, never as small text.",
+      "Glass (blur + saturate) only on floating chrome: tab bar, coach pill, compact nav bar, toast.",
+      "Spring easing, press-scale feedback, haptic on completion; all of it off under reduced motion.",
+      "Every size in rem (1rem = 17px) so the app follows iOS Text Size."
+    ],
+    "rules": [
+      { "name": "The Fill-Not-Text Rule", "body": "Apple system hues (orange, red, ring*) are fills. Any text or icon glyph in that hue uses orange-text, red-text, accent or mute, which hold 4.5:1 in light mode. Outlines that carry meaning use tick (3:1).", "section": "colors" },
+      { "name": "The One Accent Rule", "body": "Green is the only interactive colour. Status uses orange and red; nothing else gets a hue.", "section": "colors" },
+      { "name": "The Token-Both-Modes Rule", "body": "A new colour is a new custom property in :root and in the dark override block, never a literal in a component.", "section": "colors" },
+      { "name": "The Follow-Text-Size Rule", "body": "All type is rem. html is 17px; on iOS it is font: -apple-system-body, so the whole app tracks Settings > Text Size. Never set a px font size outside SVG.", "section": "typography" },
+      { "name": "The Capped-Chrome Rule", "body": "Fixed chrome caps its growth with min(rem, px): tab bar labels, week pills, nav bar, heatmap months.", "section": "typography" },
+      { "name": "The Rounded-Numbers Rule", "body": "Figures that are data use --rounded, weight 600-700, tabular-nums.", "section": "typography" },
+      { "name": "The Glass-Is-Chrome Rule", "body": "backdrop-filter (blur 20-24px, saturate 180-190%) belongs only to floating chrome: tab bar, coach pill, compact nav bar, toast. Content surfaces are opaque.", "section": "elevation" },
+      { "name": "The Scrim Rule", "body": "Sheets dim the page with rgba(0,0,0,.4 * --dim); dragging the sheet lowers --dim in step.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put new colours in :root and the dark block, and use orange-text/red-text/mute/accent for any coloured text.",
+      "Do size type in rem against the 17px root, and cap fixed chrome with min(rem, px).",
+      "Do give every control a 44pt hit area; extend with a transparent pseudo-element rather than enlarging the drawn shape.",
+      "Do use fill for neutral control backgrounds and soft for positive tints.",
+      "Do use --spring for anything that moves in space, and gate every animation behind prefers-reduced-motion in CSS and calm() in JS.",
+      "Do open new sheets through showSheet() and close through fadeOut() so focus, inert and drag reset stay correct.",
+      "Do draw icons as inline line SVGs (24 viewBox, round caps, currentColor).",
+      "Do bump VERSION in sw.js whenever index.html changes."
+    ],
+    "donts": [
+      "Don't set text in orange, red or ring*; they fail contrast in light mode.",
+      "Don't add shadows to cards or rows; elevation is for floating chrome only.",
+      "Don't add another backdrop-filter surface on phone; four (tab bar, coach pill, nav bar, toast) is already the budget.",
+      "Don't introduce a font beyond the three system stacks or a second accent hue.",
+      "Don't use emoji as icons in new UI."
+    ]
+  }
+}
