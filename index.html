@@ -738,6 +738,14 @@ button, .pill, .tabbar, .sechead, .rowbody, .chip, summary, .seg, .navbar, .toas
 .toast{cursor:pointer; touch-action:none}
 .asks .chip{background:var(--fill); color:var(--accent); font-weight:500; padding:7px 13px}
 #chatin{resize:none; border-radius:23px; padding:12px 16px}
+.remrow{display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:8px; padding:10px 0; border-bottom:.5px solid var(--line)}
+.remrow b{display:block; font-weight:400; font-size:16px; white-space:nowrap}
+.remrow input[type="time"]::-webkit-calendar-picker-indicator{display:none}
+.remrow small{display:block; font-size:13px; color:var(--mute)}
+.remrow input[type="time"]{height:34px; padding:0 8px; width:auto; min-width:0; border:0; border-radius:8px; background:var(--fill); color:var(--ink); font:inherit; font-family:var(--rounded); font-size:15px}
+.remrow input[type="time"]:disabled{opacity:.4}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent)} 100%{box-shadow:0 0 0 14px transparent}}
+.weighping #wt0{animation:ping 1s ease-out 2}
 </style>
 </head>
 <body>
@@ -798,16 +806,17 @@ button, .pill, .tabbar, .sechead, .rowbody, .chip, summary, .seg, .navbar, .toas
     </div>
   </details>
   <details id="remindbox">
-    <summary>Evening reminder</summary>
+    <summary>Reminders</summary>
     <div id="remindbody">
-      <p>A notification at this time if you haven't closed the day yet. Needs sync connected and the app opened from its home-screen icon.</p>
-      <div class="tokrow">
-        <input id="remindtime" type="time" value="21:00" aria-label="Reminder time">
-        <button class="btn" data-remindon>Turn on</button>
-      </div>
+      <p>Notifications on this phone. Needs sync connected and the app opened from its home-screen icon.</p>
+      <div class="remrow"><div><b>Morning weigh-in</b><small>Skipped once today's weight is logged</small></div>
+        <input id="morningtime" type="time" value="06:30" aria-label="Weigh-in reminder time"><input type="checkbox" id="morningtoggle" class="switch" checked aria-label="Morning weigh-in reminder"></div>
+      <div class="remrow"><div><b>Close your day</b><small>Skipped once the day is closed</small></div>
+        <input id="remindtime" type="time" value="21:00" aria-label="Close-day reminder time"><input type="checkbox" id="eveningtoggle" class="switch" checked aria-label="Close-day reminder"></div>
+      <button class="btn" data-remindon style="width:100%; margin-top:12px">Turn on reminders</button>
       <p class="cap" id="remindstatus" style="margin-top:8px"></p>
       <p class="syncerr" id="remindmsg"></p>
-      <div class="btnrow"><button class="iconbtn text" data-remindoff hidden>Turn off</button></div>
+      <div class="btnrow"><button class="iconbtn text" data-remindoff hidden>Turn off all reminders</button></div>
     </div>
   </details>
   <details id="syncbox">
@@ -2208,17 +2217,50 @@ function closeCoach(){
   fadeOut(sh);
 }
 
-/* ---------- Evening reminder (push sent by .github/workflows/reminder.yml) ---------- */
+/* ---------- Reminders: morning weigh-in + evening close-day (pushes sent by .github/workflows/reminder.yml) ---------- */
+// A missing "morning" block means on at 06:30 (same default as remind.mjs).
+const remindPrefs = () => {
+  const r = remind || {};
+  return { morningOn: !r.morning || r.morning.enabled !== false, morningTime: (r.morning && r.morning.time) || '06:30',
+    eveningOn: r.evening !== false, eveningTime: r.time || '21:00' };
+};
 function renderRemind(){
   const el = document.getElementById('remindbody'); if (!el) return;
-  const on = remind && remind.enabled, time = (remind && remind.time) || '21:00';
+  const on = remind && remind.enabled, pr = remindPrefs();
   let status = 'Off.';
-  if (on) status = `On: a nudge at ${time} (${remind.tz}) if the day isn't closed.`;
+  if (on){
+    const list = [pr.morningOn && `weigh-in at ${pr.morningTime}`, pr.eveningOn && `close day at ${pr.eveningTime}`].filter(Boolean);
+    status = list.length ? `On: ${list.join(' · ')} (${remind.tz}). Changes save as you make them.` : 'On, but both reminders are switched off.';
+  }
   else if (remind && remind.expired) status = 'Stopped: this phone’s notification permission expired. Turn it on again.';
   el.querySelector('#remindstatus').textContent = status;
-  const ti = el.querySelector('#remindtime'); if (document.activeElement !== ti) ti.value = time;
-  el.querySelector('[data-remindon]').textContent = on ? 'Update time' : 'Turn on';
+  const set = (id, v, prop) => { const x = el.querySelector('#' + id); if (document.activeElement !== x) x[prop] = v; };
+  set('morningtime', pr.morningTime, 'value'); set('remindtime', pr.eveningTime, 'value');
+  set('morningtoggle', pr.morningOn, 'checked'); set('eveningtoggle', pr.eveningOn, 'checked');
+  el.querySelector('#morningtime').disabled = !el.querySelector('#morningtoggle').checked;
+  el.querySelector('#remindtime').disabled = !el.querySelector('#eveningtoggle').checked;
+  el.querySelector('[data-remindon]').hidden = !!on;
   el.querySelector('[data-remindoff]').hidden = !on;
+}
+// Settings as shown in the form, merged onto push.json so the Action's lastSent markers survive.
+const remindForm = () => ({
+  time: document.getElementById('remindtime').value || '21:00',
+  evening: document.getElementById('eveningtoggle').checked,
+  morning: { enabled: document.getElementById('morningtoggle').checked, time: document.getElementById('morningtime').value || '06:30' }
+});
+let remindSaveT = null;
+function saveRemindPrefs(){
+  renderRemindDisabled();
+  if (!remind || !remind.enabled) return;     // not on yet: "Turn on reminders" saves them
+  clearTimeout(remindSaveT);
+  remindSaveT = setTimeout(async () => {
+    try { remindMsg(''); await writePush({ ...remind, ...remindForm() }); }
+    catch(e){ remindMsg(`Couldn't save: ${e.message}`); }
+  }, 400);
+}
+function renderRemindDisabled(){
+  document.getElementById('morningtime').disabled = !document.getElementById('morningtoggle').checked;
+  document.getElementById('remindtime').disabled = !document.getElementById('eveningtoggle').checked;
 }
 const remindMsg = t => { document.getElementById('remindmsg').textContent = t; };
 function b64uToBytes(s){
@@ -2242,17 +2284,17 @@ async function remindOn(){
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription()
       || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(VAPID_PUBLIC) });
-    const time = document.getElementById('remindtime').value || '21:00';
-    await writePush({ enabled: true, subscription: sub.toJSON(), time,
-      tz: Intl.DateTimeFormat().resolvedOptions().timeZone, lastSent: null });
-    reg.showNotification('Reminders on', { body: `You'll get a nudge at ${time} if the day isn't closed.`, icon: 'icon-192.png' });
+    const f = remindForm();
+    await writePush({ ...f, enabled: true, subscription: sub.toJSON(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone, lastSent: null, lastMorning: null });
+    const list = [f.morning.enabled && `weigh-in at ${f.morning.time}`, f.evening && `close day at ${f.time}`].filter(Boolean);
+    reg.showNotification('Reminders on', { body: list.length ? `You'll get: ${list.join(', ')}.` : 'Both reminders are switched off for now.', icon: 'icon-192.png', tag: 'reminders-on' });
   } catch(e){ remindMsg(`Couldn't turn on reminders: ${e.message}`); }
 }
 async function remindOff(){
   try {
     const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
     if (sub) await sub.unsubscribe();
-    await writePush({ enabled: false, time: (remind && remind.time) || '21:00' });
+    await writePush({ ...remindForm(), enabled: false });
   } catch(e){ remindMsg(`Couldn't turn off reminders: ${e.message}`); }
 }
 
@@ -2282,6 +2324,23 @@ const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
 const fromIso = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
 // let, not const: iOS keeps home-screen apps suspended for days, so "today" is re-checked on resume.
 let today = new Date(); today.setHours(0,0,0,0);
+// Opened from the morning weigh-in notification: go to today's weigh-in field.
+function goWeigh(cold){
+  refreshToday(); hideModal(); closeCoach();
+  sel = iso(today); weekStart = mon(today); showTab('today'); render();
+  const sec = document.querySelector('[data-sec="daily"]');
+  if (sec && sec.classList.contains('shut')) sec.querySelector('[data-togglesec]').click();
+  const r = document.querySelector('[data-row="h0"]'); if (!r) return;
+  const jump = smooth => r.scrollIntoView({ block:'center', behavior: smooth && !calm() ? 'smooth' : 'auto' });
+  setTimeout(() => {
+    jump(!cold);
+    replay(document.getElementById('day'), 'weighping');
+    // iOS won't raise the keyboard without a tap, so only pre-focus where there's a real keyboard (Mac)
+    const w = document.getElementById('wt0'); if (w && !w.disabled && !matchMedia('(pointer:coarse)').matches) w.focus({ preventScroll:true });
+    // on a cold launch the page can still be settling; make sure the field ended up on screen
+    if (cold) setTimeout(() => { const y = r.getBoundingClientRect().top; if (y < 0 || y > innerHeight - 120) jump(false); }, 450);
+  }, 150);
+}
 function refreshToday(){
   const now = new Date(); now.setHours(0,0,0,0);
   if (now.getTime() === today.getTime()) return false;
@@ -2979,6 +3038,7 @@ document.addEventListener('change', e => {
   if (c.dataset && c.dataset.f && c.dataset.k !== undefined && exDraft[Number(c.dataset.k)]){ exDraft[Number(c.dataset.k)][c.dataset.f] = c.value === '' ? '' : Number(c.value); return; }
   if (c.id === 'aimodel'){ cfg.aiModel = c.value; saveCfg(); return; }
   if (c.id === 'cheertoggle'){ cfg.cheers = c.checked; saveCfg(); return; }
+  if (['morningtoggle','eveningtoggle','morningtime','remindtime'].includes(c.id)){ saveRemindPrefs(); return; }
   if (c.id === 'importfile'){ if (c.files[0]) importBackup(c.files[0]); c.value = ''; return; }
   if (c.id === 'startdate'){
     if (c.value){ state.start = iso(mon(fromIso(c.value))); save(); weekStart = mon(today); sel = iso(today); render(); }
@@ -3159,6 +3219,12 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 render();
 renderSync();
 renderChat();
+// (after load, or the browser's own scroll restore would undo the jump)
+if (new URLSearchParams(location.search).has('weigh')){
+  history.replaceState(null, '', location.pathname);
+  if (document.readyState === 'complete') goWeigh(true); else window.addEventListener('load', () => setTimeout(() => goWeigh(true), 60), { once:true });
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data === 'weigh') goWeigh(); });
 renderAiSettings();
 document.getElementById('aibox').addEventListener('toggle', e => { if (e.target.open && !freeModels) loadFreeModels(); });
 syncNow();

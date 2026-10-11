@@ -33,10 +33,14 @@ to a repo that isn't private.
 > iOS keeps the home-screen app's storage separate from Safari's. Connect sync
 > **inside the installed app**, not in a Safari tab.
 
-## Evening reminder
+## Reminders
 
-A GitHub Action ([reminder.yml](.github/workflows/reminder.yml)) runs every 15 minutes. If it's past
-your reminder time and today isn't closed, it sends a push notification to your phone.
+A GitHub Action ([reminder.yml](.github/workflows/reminder.yml)) runs every 15 minutes and sends up to two
+push notifications a day:
+
+- **Morning weigh-in** (default 06:30): skipped once today's weight is logged, and not sent more than
+  4 hours late (a late-morning weigh-in reads heavy). Tapping it opens the app on the weigh-in field.
+- **Close your day** (default 21:00): skipped once today is closed.
 
 One-time setup (two repo secrets):
 
@@ -44,13 +48,15 @@ One-time setup (two repo secrets):
 - `DATA_TOKEN`: the fine-grained token above (Contents read/write on the data repo only).
 - `DATA_PASSPHRASE`: only if you encrypted your data. Same passphrase as in the app.
 
-Then in the app, opened from the home-screen icon: **Evening reminder** → pick a time → **Turn on**.
+Then in the app, opened from the home-screen icon: **Settings → Reminders** → pick times → **Turn on reminders**.
 
 Send a test notification:
 
 ```bash
 gh workflow run reminder.yml -f force=true
 ```
+
+Test the weigh-in one: `gh workflow run reminder.yml -f force=true -f kind=morning`
 
 ## AI coach (OpenRouter, free)
 
