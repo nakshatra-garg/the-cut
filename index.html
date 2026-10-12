@@ -469,6 +469,8 @@ details.exhow ol{margin:0 0 10px; padding-left:20px; font-size:0.8235rem; displa
 .heatpick .cap{font-variant-numeric:tabular-nums; min-width:0}
 .heatpick .iconbtn{flex:none; white-space:nowrap}
 .cuitems{display:grid; margin-top:8px}
+.catchup .btnrow{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.catchup .btnrow .btn{width:100%}
 .cuitem{display:grid; grid-template-columns:auto 1fr; align-items:center; gap:12px; min-height:52px; border-bottom:.5px solid var(--line); cursor:pointer}
 .cuitem:last-child{border-bottom:0}
 .cuitem input{width:22px; height:22px; margin:0; accent-color:var(--accent)}
@@ -801,6 +803,26 @@ body:not([data-tab="home"]) .top .goal{display:none}
 .qlog input{width:100%; height:48px; padding:0 12px; border:0; border-radius:12px; background:var(--fill); color:var(--ink); font-family:var(--rounded); font-size:1.2941rem; font-weight:600}
 .qlog small{display:block; font-size:0.7059rem; color:var(--mute); margin-top:4px}
 .qlog .ok{color:var(--accent); font-weight:600}
+.weighread{margin:12px 0 0; padding:10px 12px; border-radius:12px; background:var(--fill); font-size:0.8824rem; line-height:1.35; color:var(--ink)}
+.weighread.good, .weighread.win{background:var(--soft)}
+.weighread.win{color:var(--accent); font-weight:600}
+.weighread .ico{vertical-align:-.12em}
+@media (prefers-reduced-motion:no-preference){ .weighread.win{animation:pop .5s var(--spring)} }
+/* milestone moment: the old number gives way to the new one, the bar edges toward 105 */
+.milestone .msnum{position:relative; height:84px; overflow:hidden; font-family:var(--rounded); font-weight:800; font-size:4.2rem; line-height:84px; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+.milestone .msnum span{position:absolute; inset:0}
+.milestone .msnum .from{color:var(--mute); transform:translateY(-100%); opacity:0}
+.milestone .msnum .to{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .milestone .msnum .from{animation:msout .9s var(--spring) both}
+  .milestone .msnum .to{animation:msin .9s var(--spring) both}
+}
+@keyframes msout{from{transform:none; opacity:1} 45%{transform:none; opacity:1} to{transform:translateY(-100%); opacity:0}}
+@keyframes msin{from{transform:translateY(100%); opacity:0} 45%{transform:translateY(100%); opacity:0} to{transform:none; opacity:1}}
+.milestone .mstrack{margin:18px 0 10px}
+.milestone .mstrack i{transition:width 1.2s var(--spring) .5s}
+.milestone .chips{justify-content:center}
+.milestone .chip.now{box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--accent)}
 .hgrid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px}
 .tapcard{all:unset; box-sizing:border-box; display:flex; flex-direction:column; gap:2px; background:var(--card); border-radius:22px; padding:14px; cursor:pointer;
   -webkit-tap-highlight-color:transparent; transition:transform .2s var(--spring)}
@@ -2688,7 +2710,11 @@ function catchupPlan(){
     else if (!dayView(d).items.some(it => !LOGLESS.includes(it[1]) && isDone(d, it[0]))) why.push(`${day} not logged (${PLAN[pi].title})`);
   }
   const items = [];
-  if (!weekInfo(ws).deload && short.length){
+  const totPlan = Object.values(plan).reduce((a, b) => a + b, 0), totDone = Object.values(done).reduce((a, b) => a + b, 0);
+  const weekOff = totPlan > 0 && totDone < totPlan * .5;   // most of the week missed: ease back in, don't pile on
+  const trained = d => dayView(d).items.some(it => !LOGLESS.includes(it[1]) && isDone(d, it[0]));
+  if (weekOff && !weekDates(addDays(prev, -7)).some(trained)) return { wk, items: [], why: [], gaps: [] };   // new here, or long break: nothing to catch up on
+  if (!weekInfo(ws).deload && short.length && !weekOff){
     const perDay = {}, used = new Set(), got = {};
     const days = weekDates(ws).filter(d => d >= t && !isClosed(d) && modeOf(d) === 'plan' && dayView(d).lift);
     const want = m => Math.min(CU_MAX_MUSCLE, Math.ceil((plan[m] - done[m]) / 4));
@@ -2709,14 +2735,14 @@ function catchupPlan(){
     items.sort((a, b) => a.d.localeCompare(b.d));
   }
   // first lifting day back after being sick (and nothing lifted since): lighter targets
-  const sick = [...weekDates(prev), ...weekDates(ws)].filter(d => d < t && modeOf(d) === 'sick').pop();
+  const sick = [...weekDates(prev), ...weekDates(ws)].filter(d => d < t && modeOf(d) === 'sick').pop() || (weekOff ? iso(addDays(prev, 6)) : null);
   if (sick){
     const liftedSince = weekDates(ws).concat(weekDates(prev)).some(d => d > sick && d < t && dayView(d).lift && dayView(d).items.some(it => !LOGLESS.includes(it[1]) && isDone(d, it[0])));
     const next = weekDates(ws).find(d => d >= t && !isClosed(d) && modeOf(d) === 'plan' && dayView(d).lift);
-    if (!liftedSince && next && !state.ease[next]) items.unshift({ kind:'ease', key: next, d: next });
+    if (!liftedSince && next && !state.ease[next]) items.unshift({ kind:'ease', key: next, d: next, why: weekOff && modeOf(sick) !== 'sick' ? 'off' : 'sick' });
   }
   const gaps = short.slice(0, 5).map(m => `${MUSCLE_LABEL[m].toLowerCase()} ${Math.round(100 * done[m] / plan[m])}%`);
-  return { wk, items, why, gaps };
+  return { wk, items, why: why.length > 3 ? [...why.slice(0, 2), `${why.length - 2} more days missed`] : why, gaps: weekOff ? [] : gaps, weekOff };
 }
 let cuOff = new Set();   // suggestions you unticked before applying
 function renderCatchup(){
@@ -2735,7 +2761,7 @@ function renderCatchup(){
   el.innerHTML = `<h2 class="sect">Catch-up this week</h2>
     <p class="cap">${cp.why.length ? `Last week: ${cp.why.join(', ')}. ` : ''}${cp.gaps.length ? `Planned sets done: ${cp.gaps.join(', ')}.` : ''}</p>
     <div class="cuitems">${cp.items.map((x, k) => `<label class="cuitem"><input type="checkbox" data-cu="${x.key}" ${cuOff.has(x.key) ? '' : 'checked'}>
-      <span>${x.kind === 'ease' ? `<b>${day(x.d)} · ease back in</b><small>First session after being sick: ~85% weights</small>`
+      <span>${x.kind === 'ease' ? `<b>${day(x.d)} · ease back in</b><small>${x.why === 'off' ? 'First session after a lighter week' : 'First session after being sick'}: ~85% weights</small>`
         : `<b>${day(x.d)} · ${esc(x.name)}</b><small>${x.from} → ${x.from + 1} sets · ${MUSCLE_LABEL[x.muscle].toLowerCase()}</small>`}</span></label>`).join('')}</div>
     <div class="btnrow mt12"><button class="btn" data-cuapply>Apply</button><button class="btn cancel" data-cuskip>Not this week</button></div>`;
 }
@@ -2752,6 +2778,54 @@ function undoCatchup(){
   for (const k of Object.keys(state.boost)) if (wd.includes(k.split('|')[0])) delete state.boost[k];
   for (const d of Object.keys(state.ease)) if (wd.includes(d)) delete state.ease[d];
   delete state.catchup[iso(mon(today))]; save(); render();
+}
+
+/* ---------- The scale, read honestly: one line after each weigh-in, and a moment when a milestone falls ----------
+   Daily weight swings 1–2 kg with water and salt, so the read leads with the 7-day average and never scolds a single
+   high number. Milestones (120/115/110/105) fire once each, on the 7-day average, the same number the progress bar uses. */
+function weighRead(d){
+  const w = state.weights[d], prior = Object.keys(state.weights).filter(x => x < d && typeof state.weights[x] === 'number').sort();
+  if (!prior.length) return { tone:'calm', text:'First weigh-in logged. Your trend starts here.' };
+  const best = Math.min(...prior.map(x => state.weights[x])), prev = state.weights[prior[prior.length - 1]];
+  const a = avgOn(d), a7 = avgOn(iso(addDays(fromIso(d), -7))), wk = a != null && a7 != null ? a - a7 : null;
+  const kg = v => Math.abs(v).toFixed(1);
+  if (w < best) return { tone:'win', text:`New low. ${kg(best - w)} kg under your previous best${wk != null && wk < 0 ? `, and the 7-day average is down ${kg(wk)} this week.` : '.'}` };
+  if (wk != null && wk <= -0.1) return { tone:'good', text:`7-day average ${a.toFixed(1)}, down ${kg(wk)} kg on last week.${w > prev ? ` Today's ${kg(w - prev)} up is most likely water.` : ''}` };
+  if (w > prev) return { tone:'calm', text:`Up ${kg(w - prev)} since last time. One weigh-in swings with water and salt; the 7-day average (${a.toFixed(1)}) is the one to watch.` };
+  return { tone:'calm', text:`7-day average ${a.toFixed(1)}. Holding steady${wk != null ? ' this week' : ''}.` };
+}
+// Milestones you'd already passed when this shipped (or on a synced copy without the record) are marked, never celebrated late.
+function initMilestones(){
+  state.msSeen = state.msSeen || {};
+  const a = avgOn(iso(today));
+  if (a != null) for (const m of MILESTONES) if (a <= m && !state.msSeen[m]) state.msSeen[m] = 'before';
+}
+function checkMilestone(){
+  if (!state.msSeen) return initMilestones();
+  const d = iso(today), a = avgOn(d); if (a == null) return;
+  const hit = MILESTONES.filter(m => a <= m && !state.msSeen[m]); if (!hit.length) return;
+  const m = Math.min(...hit);
+  for (const x of hit) state.msSeen[x] = d;
+  save(); showMilestone(m, a);
+}
+function showMilestone(m, a){
+  const first = Object.keys(state.weights).filter(x => typeof state.weights[x] === 'number').sort()[0];
+  const since = first ? fromIso(first).toLocaleDateString(undefined, { month:'short', day:'numeric' }) : '';
+  const pct = v => Math.max(0, Math.min(100, 100 * (START - v) / (START - GOAL)));
+  const prevM = MILESTONES.filter(x => x > m).pop() ?? START, next = MILESTONES.filter(x => x < m)[0];
+  const goal = m === GOAL, mEl = document.getElementById('modal');
+  mEl.innerHTML = `<div class="mcard milestone" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <div class="msnum" aria-hidden="true"><span class="from">${prevM}</span><span class="to">${m}</span></div>
+    <h2 id="mtitle">${goal ? 'Goal reached' : `Under ${m}`}</h2>
+    <p class="mline">${goal ? `${START} → ${GOAL}. Every weigh-in, every closed day, done.` : `Your 7-day average is ${a.toFixed(1)} kg: ${(START - a).toFixed(1)} kg down since ${since}.`}</p>
+    <div class="track mstrack"><i style="width:${pct(prevM)}%" data-to="${pct(a)}"></i></div>
+    <div class="chips">${MILESTONES.map(x => `<span class="chip ${x > m ? 'hit' : x === m ? 'hit now' : ''}">${x}</span>`).join('')}</div>
+    ${next ? `<p class="msum">Next stop: ${next}. ${(a - next).toFixed(1)} kg to go.</p>` : ''}
+    <button class="btn" data-dismiss>${goal ? 'Look at that' : 'Keep going'}</button></div>`;
+  mEl.hidden = false; mEl.querySelector('[data-dismiss]').focus();
+  haptic(true);
+  const bar = mEl.querySelector('.mstrack i'); void bar.offsetWidth; bar.style.width = bar.dataset.to + '%';   // starts from the last milestone; the transition delay gives the number its beat first
+  confetti(goal ? 160 : 90);
 }
 
 /* ---------- Icons: drawn in the tab bar's stroke style (emoji stay for copy, never as UI icons) ---------- */
@@ -2794,7 +2868,8 @@ function renderHome(){
         <small>${typeof w === 'number' ? `<span class="ok">${ico('check')} logged</span>` : 'Morning, before food'}${av ? ` · avg ${av.toFixed(1)}` : ''}</small></div>
       <div><label for="hprot">Protein (g)</label><input id="hprot" type="number" inputmode="numeric" min="0" max="600" step="1" value="${typeof g === 'number' ? g : ''}" placeholder="0" ${dis}>
         <small>${(g || 0) >= PROTEIN_DONE ? `<span class="ok">${ico('check')} target hit</span>` : `${PROTEIN_DONE}+ counts`}${pa ? ` · 5-day ${Math.round(pa.avg)}` : ''}</small></div>
-    </div>`;
+    </div>
+    ${typeof w === 'number' ? (rd => `<p class="weighread ${rd.tone}">${rd.tone === 'win' ? ico('spark') + ' ' : ''}${rd.text}</p>`)(weighRead(d)) : ''}`;
 
   // weight mini card
   const wd = Object.keys(state.weights).filter(x => typeof state.weights[x] === 'number' && x <= d).sort(), last = wd[wd.length - 1];
@@ -3877,7 +3952,7 @@ function confetti(n){
   const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
   const ctx = c.getContext('2d'), dpr = devicePixelRatio || 1;
   c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.scale(dpr, dpr);
-  const cols = ['#1F7A5C','#4CC59A','#F2C14E','#E86A50','#5B8DEF','#FFFFFF'];
+  const css = getComputedStyle(document.documentElement), cols = ['--ring1', '--ring2', '--ring3', '--accent'].map(v => css.getPropertyValue(v).trim() || '#28CD41');
   const ps = [...Array(n)].map(() => ({ x: innerWidth/2 + (Math.random()-.5)*80, y: innerHeight*.35,
     vx: (Math.random()-.5)*12, vy: -Math.random()*12 - 4, r: Math.random()*Math.PI, vr: (Math.random()-.5)*.3,
     w: 6 + Math.random()*6, h: 3 + Math.random()*4, c: cols[Math.floor(Math.random()*cols.length)] }));
@@ -3980,7 +4055,7 @@ document.addEventListener('click', e => {
     const v = parseFloat(document.getElementById('wt').value);
     if (isNaN(v)) delete state.weights[sel];
     else { state.weights[sel] = Math.round(v*10)/10; if (!isClosed(sel)) state.checks[`${sel}|h0`] = true; }
-    save(); render();
+    save(); render(); if (sel === iso(today)) checkMilestone();
   }
   else if (t.hasAttribute('data-closeday')) closeDay();
   else if (t.hasAttribute('data-remindon')) remindOn();
@@ -4038,7 +4113,7 @@ document.addEventListener('change', e => {
     const d = c.id === 'hwt' ? iso(today) : sel; if (isClosed(d)) return;
     const v = parseFloat(c.value);
     if (isNaN(v)) delete state.weights[d]; else { state.weights[d] = Math.round(v*10)/10; if (d === sel) popRow = 'h0'; haptic(); }
-    save(); render(); return;
+    save(); render(); if (d === iso(today)) checkMilestone(); return;
   }
   if (c.id === 'protein' || c.id === 'hprot'){
     const d = c.id === 'hprot' ? iso(today) : sel; if (isClosed(d)) return;
@@ -4209,6 +4284,7 @@ document.getElementById('exsheet').addEventListener('click', e => { if (e.target
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && exFor) keepAwake(true); });
 ['swapsheet','demosheet','movesheet','modesheet','histsheet'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
 
+initMilestones();   // in memory only; saved with your next change
 render();
 renderSync();
 renderChat();
