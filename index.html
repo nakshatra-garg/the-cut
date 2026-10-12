@@ -2029,6 +2029,7 @@ async function cheer(id){
 
 /* ---------- Exercise sheet: photos, how-to, set log, rest timer, PRs ---------- */
 const GIF_BASE = 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/';
+const GIF_STILL = 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/';   // 180 px stills, same ids
 const rxUnit = rx => { const m = String(rx).match(/×\s*[\d–]+\s*(m|sec|s|min)\b/); return m ? (m[1] === 's' ? 'sec' : m[1]) : 'reps'; };
 const planSets = rx => { const m = String(rx).match(/^(\d+)(?:–(\d+))?\s*×\s*(\d+)/); return { n: m ? Number(m[2] || m[1]) : 3, reps: m ? Number(m[3]) : '' }; };
 const e1rm = (w, r) => (r > 0 && r <= 12 && w > 0) ? w * (1 + r / 30) : 0;     // Epley; not trusted above 12 reps
@@ -2078,9 +2079,16 @@ function bestSet(name, excludeKey){
 /* ---------- Double progression: same weight until every set hits the top of the range, then add load ---------- */
 const BIG_LIFT = /deadlift|squat|leg press|hack|hip thrust|glute bridge|rack pull|rdl|romanian|trap-bar|sumo/i, DB_LIFT = /dumbbell|\bdb\b/i;
 const repRange = rx => { const m = String(rx).match(/×\s*(\d+)(?:–(\d+))?/); return m ? [Number(m[1]), Number(m[2] || m[1])] : null; };
+// Weighted logs grouped by exercise, newest first; rebuilt once per data change instead of per row.
+let logsByName = null, logsByStamp = '';
 function logsFor(name, before){
-  return Object.entries(state.logs).map(([k, v]) => ({ d: k.split('|')[0], ...v }))
-    .filter(l => l.name === name && l.d < before && l.sets.some(x => x.w > 0 && x.r > 0)).sort((a, b) => b.d.localeCompare(a.d));
+  const stamp = `${state.updatedAt}:${Object.keys(state.logs).length}`;
+  if (!logsByName || stamp !== logsByStamp){
+    logsByName = {}; logsByStamp = stamp;
+    for (const [k, v] of Object.entries(state.logs)) if (v.sets.some(x => x.w > 0 && x.r > 0)) (logsByName[v.name] ||= []).push({ d: k.split('|')[0], ...v });
+    for (const n in logsByName) logsByName[n].sort((a, b) => b.d.localeCompare(a.d));
+  }
+  return (logsByName[name] || []).filter(l => l.d < before);
 }
 function progression(name, rx, date, deload){
   if (rxUnit(rx) !== 'reps' || LOGLESS.includes(name)) return null;
@@ -2961,8 +2969,9 @@ function renderLibList(){
   const list = LIB.filter(n => libMatches(n)), el = document.getElementById('library'); if (!el) return;
   el.innerHTML = `<div class="libcount">${list.length} exercise${list.length === 1 ? '' : 's'}</div>` + list.map(n => {
     const info = EX_INFO[n], gif = EX_GIF[n], best = bestSet(n), days = planDaysOf(n);
-    const thumb = info ? `<span class="libthumb"><img src="ex/${info.id}/0.jpg" alt="" loading="lazy"></span>`
-      : gif ? `<span class="libthumb"><img src="${GIF_BASE}${gif.g}" alt="" loading="lazy"></span>` : `<span class="libthumb none">${esc(n[0])}</span>`;
+    // 156 px crops (3× of 52 pt) instead of the 850 px photos; the dataset's still thumbnail instead of an animating GIF
+    const thumb = info ? `<span class="libthumb"><img src="ex/${info.id}/t.jpg" alt="" loading="lazy" decoding="async" width="52" height="52"></span>`
+      : gif ? `<span class="libthumb"><img src="${GIF_STILL}${gif.g.replace(/\.gif$/, '.jpg')}" alt="" loading="lazy" decoding="async" width="52" height="52"></span>` : `<span class="libthumb none">${esc(n[0])}</span>`;
     return `<button class="librow" data-lib="${esc(n)}">${thumb}<span><span class="ln">${esc(n)}</span><span class="lm">${[catsOf(n).join(', '), equipOf(n)].filter(Boolean).join(' · ')}</span></span>
       <span class="lb">${best.e ? `${best.w} kg × ${best.r}` : ''}${days.length ? `<span class="lp">${days.join(' · ')}</span>` : ''}</span></button>`;
   }).join('') || '<p class="cap pady12">No exercises match. Try another filter.</p>';

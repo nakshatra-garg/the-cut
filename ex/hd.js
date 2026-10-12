@@ -133,7 +133,8 @@ void main(){
     const conv = prog(CONV), shuffle = prog(SHUFFLE);
     const A = [0, 1].map(() => tex(N * GROUPS, N, gl.RGBA, gl.HALF_FLOAT, gl.RGBA16F));
     const img = tex(N, N, gl.RGBA, gl.UNSIGNED_BYTE, gl.RGBA8), out = tex(OUT, OUT, gl.RGBA, gl.UNSIGNED_BYTE, gl.RGBA8);
-    ctx = { gl, conv, shuffle, A, fA: A.map(fbo), img, out, fOut: fbo(out), wt: null,
+    const pbo = gl.createBuffer(); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, OUT * OUT * 4, gl.STREAM_READ); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    ctx = { gl, conv, shuffle, A, fA: A.map(fbo), img, out, fOut: fbo(out), wt: null, pbo,
       u: { IG: gl.getUniformLocation(conv, 'IG'), ROW: gl.getUniformLocation(conv, 'ROW'), ACT: gl.getUniformLocation(conv, 'ACT'),
            act: gl.getUniformLocation(conv, 'act'), wt: gl.getUniformLocation(conv, 'wt'),
            sAct: gl.getUniformLocation(shuffle, 'act'), sImg: gl.getUniformLocation(shuffle, 'img') }, tex };
@@ -144,8 +145,21 @@ void main(){
       .then(buf => { const c = gpu(); c.wt = c.tex(578, 284, c.gl.RGBA, c.gl.HALF_FLOAT, c.gl.RGBA16F, new Uint16Array(buf)); return c; })
       .catch(e => { weightsP = null; throw e; }));
   }
+  // Wait for the GPU without blocking the page: poll a fence between short sleeps.
+  async function gpuDone(gl){
+    const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush();
+    try {
+      for (;;){
+        const st = gl.clientWaitSync(sync, 0, 0);
+        if (st === gl.ALREADY_SIGNALED || st === gl.CONDITION_SATISFIED) return;
+        if (st === gl.WAIT_FAILED) throw new Error('GPU wait failed');
+        await new Promise(r => setTimeout(r, 4));
+      }
+    } finally { gl.deleteSync(sync); }
+  }
+  const CHUNK = 3;   // layers per GPU batch (~15–20 ms of GPU each), so the page keeps drawing in between
   // One frame: 18 conv passes ping-ponging between two textures, then the shuffle. Returns 720×720 RGBA bytes.
-  function upscale(c, rgba){
+  async function upscale(c, rgba){
     const { gl, u } = c;
     gl.bindTexture(gl.TEXTURE_2D, c.img); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, N, N, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
     gl.useProgram(c.conv); gl.uniform1i(u.act, 0); gl.uniform1i(u.wt, 1);
@@ -158,12 +172,16 @@ void main(){
       gl.uniform1i(u.IG, l === 0 ? 1 : 16); gl.uniform1i(u.ROW, l * 16); gl.uniform1i(u.ACT, l < LAYERS - 1 ? 1 : 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       src = c.A[dst]; dst ^= 1;
+      if (l % CHUNK === CHUNK - 1){ await gpuDone(gl); gl.useProgram(c.conv); }
     }
     gl.useProgram(c.shuffle); gl.uniform1i(u.sAct, 0); gl.uniform1i(u.sImg, 1);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, src);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, c.img);
     gl.bindFramebuffer(gl.FRAMEBUFFER, c.fOut); gl.viewport(0, 0, OUT, OUT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    const px = new Uint8Array(OUT * OUT * 4); gl.readPixels(0, 0, OUT, OUT, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    // read back through a pixel buffer, so the copy happens on the GPU's time, not the page's
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, c.pbo); gl.readPixels(0, 0, OUT, OUT, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+    await gpuDone(gl);
+    const px = new Uint8Array(OUT * OUT * 4); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, px); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     return new Uint8ClampedArray(px.buffer);
   }
 
@@ -206,6 +224,7 @@ void main(){
   }
 
   const busy = new Map();
+  let gpuLock = Promise.resolve();
   window.hdGif = async function(box, url, id){
     if (!box || !box.isConnected) return;
     try {
@@ -217,13 +236,15 @@ void main(){
       }
       if (busy.has(id)) return;
       busy.set(id, true);
+      const im = box.querySelector('img'); if (im && !im.complete) await new Promise(r => { im.addEventListener('load', r, { once:true }); im.addEventListener('error', r, { once:true }); });
       const [gif, c] = await Promise.all([fetch(url).then(r => { if (!r.ok) throw new Error('gif ' + r.status); return r.arrayBuffer(); }).then(decodeGif), weights()]);
       if (gif.W !== N || gif.H !== N) throw new Error('unexpected size');
       box.classList.add('hdwork');
       const tmp = document.createElement('canvas'); tmp.width = tmp.height = OUT; const tg = tmp.getContext('2d');
       const frames = [], blobs = [];
       for (const [k, f] of gif.frames.entries()){
-        const px = upscale(c, f.rgba);
+        const run = gpuLock.then(() => upscale(c, f.rgba)); gpuLock = run.catch(() => {});   // one frame on the GPU at a time
+        const px = await run;
         tg.putImageData(new ImageData(px, OUT, OUT), 0, 0);
         const blob = await toBlob(tmp);
         blobs.push(blob); frames.push({ bmp: await createImageBitmap(blob), delay: f.delay });
