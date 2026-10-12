@@ -333,6 +333,7 @@ label.iconbtn{display:inline-flex; align-items:center}
 .tool svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
 .tool.sm{width:28px; height:28px; border-radius:8px}
 .tool.sm svg{width:16px; height:16px}
+.swaptag.cutag{background:var(--soft); color:var(--accent)}
 .swaptag{display:inline-block; vertical-align:2px; margin-left:6px; padding:1px 7px; border-radius:999px; background:var(--fill); color:var(--mute); font-size:0.6471rem; font-weight:600; text-transform:uppercase; letter-spacing:.03em}
 details.stepsbox{margin:-4px 0 8px 36px; padding:0; border-radius:0; background:none}
 details.stepsbox summary{font-size:0.8235rem; color:var(--accent); padding:4px 0; font-weight:500}
@@ -464,6 +465,15 @@ details.exhow ol{margin:0 0 10px; padding-left:20px; font-size:0.8235rem; displa
 .heatpick{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px}
 .heatpick .cap{font-variant-numeric:tabular-nums; min-width:0}
 .heatpick .iconbtn{flex:none; white-space:nowrap}
+.cuitems{display:grid; margin-top:8px}
+.cuitem{display:grid; grid-template-columns:auto 1fr; align-items:center; gap:12px; min-height:52px; border-bottom:.5px solid var(--line); cursor:pointer}
+.cuitem:last-child{border-bottom:0}
+.cuitem input{width:22px; height:22px; margin:0; accent-color:var(--accent)}
+.cuitem span{display:grid; gap:1px}
+.cuitem b{font-weight:600; font-size:0.9412rem}
+.cuitem small{color:var(--mute); font-size:0.8235rem}
+.cuon{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:28px; font-size:0.8824rem; color:var(--accent); font-weight:600}
+.cuon .linkbtn{min-height:44px}
 /* spacing utilities (instead of inline styles); !important so they win like the inline styles they replace */
 .mt4{margin-top:4px !important} .mt6{margin-top:6px !important} .mt8{margin-top:8px !important} .mt10{margin-top:10px !important} .mt12{margin-top:12px !important} .mt14{margin-top:14px !important}
 .wfull{width:100%} .pady12{padding:12px 0}
@@ -935,7 +945,7 @@ input, textarea{caret-color:var(--accent)}
 /* ================= P2: drawn icons, remaining 44 pt targets ================= */
 .ico{width:1em; height:1em; vertical-align:-.13em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none}
 .ico .dotfill{fill:currentColor; stroke:none}
-.ico.flame{color:var(--orange)} .ico.trophy{color:var(--orange-text)} .ico.spark{color:var(--accent)} .ico.target{color:currentColor}
+.ico-flame{color:var(--orange)} .ico-trophy{color:var(--orange-text)} .ico-spark{color:var(--accent)} .ico-target{color:currentColor}
 .big .ico{width:.8em; height:.8em; vertical-align:-.04em; stroke-width:2.2}
 .coachpill{display:inline-flex; align-items:center; gap:6px}
 .coachpill .ico, .sheethead h2 .ico{width:1.05em; height:1.05em}
@@ -956,6 +966,11 @@ input, textarea{caret-color:var(--accent)}
 .exgif canvas.exsharp{opacity:0; pointer-events:none}
 .exgif.sharp canvas.exsharp{opacity:1}
 .exgif.sharp > img{opacity:0}
+.exgif canvas.exhd{grid-area:1 / 1; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity .5s ease-out; pointer-events:none}
+.exgif.hd canvas.exhd{opacity:1}
+.exgif.hd > img, .exgif.hd canvas.exsharp{opacity:0}
+/* while the HD version is being made: a hairline that fills along the bottom */
+.exgif.hdwork::after{content:""; position:absolute; left:0; bottom:0; height:3px; width:calc(var(--hd, 0) * 100%); background:var(--accent); opacity:.7; transition:width .2s}
 </style>
 </head>
 <body data-tab="home">
@@ -969,6 +984,7 @@ input, textarea{caret-color:var(--accent)}
   <div class="view" data-view="home">
   <p class="qotd" id="qotd"></p>
   <section class="card" id="htoday"></section>
+  <section class="card catchup" id="hcatch" hidden></section>
   <section class="card" id="hlog"></section>
   <div class="hgrid" id="hcards"></div>
   </div>
@@ -1630,7 +1646,7 @@ function normalize(s){
   s = (s && typeof s === 'object') ? s : {};
   if (!s.checks || typeof s.checks !== 'object') s.checks = {};
   if (!s.modes || typeof s.modes !== 'object') s.modes = {};
-  for (const k of ['closed','protein','checkins','ai','cardio','swaps','skips','logs','moves','modeWhy']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  for (const k of ['closed','protein','checkins','ai','cardio','swaps','skips','logs','moves','modeWhy','boost','ease','catchup']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
   for (const k of ['close','week']) if (!s.ai[k] || typeof s.ai[k] !== 'object') s.ai[k] = {};
   if (!s.weights || typeof s.weights !== 'object') s.weights = {};
   if (typeof s.updatedAt !== 'number') s.updatedAt = 0;
@@ -2072,6 +2088,7 @@ function progression(name, rx, date, deload){
   const work = l => { const ws = l.sets.filter(x => x.w > 0 && x.r > 0), top = Math.max(...ws.map(x => x.w)); return { top, sets: ws.filter(x => x.w === top), all: ws }; };
   const last = work(hist[0]), inc = BIG_LIFT.test(name) ? 5 : DB_LIFT.test(name) ? 2 : 2.5, reps = last.all.map(x => x.r).join(', ');
   if (deload) return { w: last.top, reps: range[0], why: `Deload: keep ${last.top} kg, fewer sets, stop 3–4 reps short.` };
+  if (state.ease[date]){ const w = Math.max(2.5, plateDown(last.top * .85)); return { w, reps: range[0], down: true, why: `Back after being sick: ~85% today (${w} kg). Full weights next session.` }; }
   if (last.sets.every(x => x.r >= range[1])){
     const one = Math.max(...last.sets.map(x => rm1(x.w, x.r + (x.rir ?? 1)))), fit = Math.min(plateDown(wFor(one, range[1] + 1)), plateDown(last.top * 1.15));
     if (fit > last.top + inc) return { w: fit, reps: range[0], up: true, why: `Last time ${reps} at ${last.top} kg was well past ${range[1]} → +${+(fit - last.top).toFixed(1)} kg` };
@@ -2125,7 +2142,7 @@ function openEx(id){
     <div class="exfoot"><button class="btn" data-exdone ${locked ? 'disabled' : ''}>${locked ? 'Day closed' : isDone(sel, id) ? 'Save ✓' : 'Done ✓'}</button></div>`;
   if (loggable){ renderSets(); if (!locked) renderCoach(lastDone(), false); }   // reopening: show advice, don't overwrite what's saved
   showSheet(document.getElementById('exsheet'));
-  sharpenGif(document.querySelector('#exbody .exgif'));
+  sharpenGif(document.querySelector('#exbody .exgif')); hdDemo(document.querySelector('#exbody .exgif'), name);
   keepAwake(true);
 }
 // Animated GIF from the dataset host first; bundled public-domain photos (or a drawing) if it can't load, e.g. offline.
@@ -2156,6 +2173,13 @@ const SHARP_UP = `precision mediump float; uniform sampler2D t; uniform vec2 s; 
            + at(vec2(p0.x, p12.y)) * w0.x * w12.y + at(vec2(p12.x, p12.y)) * w12.x * w12.y + at(vec2(p3.x, p12.y)) * w3.x * w12.y
            + at(vec2(p0.x, p3.y)) * w0.x * w3.y + at(vec2(p12.x, p3.y)) * w12.x * w3.y + at(vec2(p3.x, p3.y)) * w3.x * w3.y;
     gl_FragColor = vec4(clamp(r, 0., 1.), 1.); }`;
+// HD: the phone redraws the 180 px demo at 720 px with a small AI upscaler (ex/hd.js), once per exercise, then reuses it.
+let hdLoad = null;
+function hdDemo(box, name){
+  const gif = EX_GIF[name]; if (!box || !gif || !('WebGL2RenderingContext' in window)) return;
+  hdLoad = hdLoad || new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'ex/hd.js'; sc.onload = res; sc.onerror = () => { hdLoad = null; rej(); }; document.head.appendChild(sc); });
+  hdLoad.then(() => window.hdGif(box, GIF_BASE + gif.g, gif.g)).catch(() => {});
+}
 function sharpenGif(box){
   const img = box && box.querySelector('img'), cv = box && box.querySelector('canvas.exsharp'); if (!img || !cv || cv._on) return;
   const start = () => {
@@ -2189,7 +2213,7 @@ function sharpenGif(box){
       } catch(e){ cv._on = false; box.classList.remove('sharp'); }   // e.g. no CORS: the plain GIF stays
     };
     const frame = now => {
-      if (!cv._on || !cv.isConnected || box.closest('[hidden]')){ cv._on = false; return; }
+      if (!cv._on || !cv.isConnected || box.closest('[hidden]') || box.classList.contains('hd')){ cv._on = false; return; }   // HD took over
       requestAnimationFrame(frame);
       if (now - last < 45) return;               // GIF frames change every ~50–100 ms
       last = now; draw();
@@ -2607,6 +2631,107 @@ function renderSecondary(){
   renderRecent();
 }
 
+/* ---------- Catch-up: after a week with missed training, suggest a little extra where it's due ----------
+   Planned vs done sets per muscle for last week (sick days, rest/cardio swaps, skips and unlogged days all show up
+   as a gap). For each muscle at < 75% of plan: +1 set on an exercise that already trains it this week.
+   Caps like a coach would use: every short muscle gets one set before any gets a second, 4 extra sets a week,
+   2 per session, only on 8+ rep work (never an extra heavy deadlift set), nothing in a deload week. You apply it. */
+const CU_MAX_MUSCLE = 2, CU_MAX_DAY = 2, CU_MAX_WEEK = 4;
+function weekDates(ws){ return [...Array(7)].map((_, k) => iso(addDays(ws, k))); }
+function plannedSets(ws){
+  const tally = Object.fromEntries(Object.keys(MUSCLE_LABEL).map(k => [k, 0])), dl = weekInfo(ws).deload;
+  for (const d of weekDates(ws)){
+    if (!PLAN[(Number.isInteger(state.moves[d]) ? state.moves[d] : dow(fromIso(d)))].lift) continue;
+    for (const [, name, rx, , meta] of planDay(d).items){
+      if (LOGLESS.includes(name) || meta.optional) continue;
+      const n = planSets(dl ? deloadRx(rx) : rx).n;
+      for (const [m, w] of Object.entries(musclesOf(name))) tally[m] += n * w;
+    }
+  }
+  return tally;
+}
+function catchupPlan(){
+  const ws = mon(today), wk = iso(ws), prev = addDays(ws, -7), t = iso(today);
+  if (state.catchup[wk]) return { state: state.catchup[wk], wk };
+  // what got missed last week, and why
+  const plan = plannedSets(prev), done = muscleSets(iso(addDays(prev, 6)), 7);
+  const short = Object.keys(plan).filter(m => plan[m] >= 3 && plan[m] - done[m] >= 3 && done[m] < plan[m] * .75)
+    .sort((a, b) => (plan[b] - done[b]) - (plan[a] - done[a]));
+  const why = [];
+  for (const d of weekDates(prev)){
+    const pi = Number.isInteger(state.moves[d]) ? state.moves[d] : dow(fromIso(d)); if (!PLAN[pi].lift) continue;
+    const mode = modeOf(d), day = fromIso(d).toLocaleDateString(undefined, { weekday:'short' });
+    if (mode === 'sick') why.push(`${day} sick (${PLAN[pi].title})`);
+    else if (mode !== 'plan') why.push(`${day} ${MODES[mode].tag.toLowerCase()} instead of ${PLAN[pi].title}`);
+    else if (!dayView(d).items.some(it => !LOGLESS.includes(it[1]) && isDone(d, it[0]))) why.push(`${day} not logged (${PLAN[pi].title})`);
+  }
+  const items = [];
+  if (!weekInfo(ws).deload && short.length){
+    const perDay = {}, used = new Set(), got = {};
+    const days = weekDates(ws).filter(d => d >= t && !isClosed(d) && modeOf(d) === 'plan' && dayView(d).lift);
+    const want = m => Math.min(CU_MAX_MUSCLE, Math.ceil((plan[m] - done[m]) / 4));
+    const pick = m => {
+      for (const d of days){
+        if ((perDay[d] || 0) >= CU_MAX_DAY) continue;
+        const it = dayView(d).items.find(([id, name, rx, , meta]) => !LOGLESS.includes(name) && !meta.optional && !meta.boost
+          && musclesOf(name)[m] === 1 && (repRange(rx) || [0, 0])[1] >= 8 && !used.has(`${d}|${id}`) && !isDone(d, id) && !skipOf(d, id));
+        if (!it) continue;
+        used.add(`${d}|${it[0]}`); perDay[d] = (perDay[d] || 0) + 1; got[m] = (got[m] || 0) + 1;
+        items.push({ kind:'set', key:`${d}|${it[0]}`, d, name: it[1], from: planSets(it[2]).n, muscle: m });
+        return true;
+      }
+      return false;
+    };
+    for (let round = 1; round <= CU_MAX_MUSCLE; round++)
+      for (const m of short) if (items.length < CU_MAX_WEEK && want(m) >= round && (got[m] || 0) < round) pick(m);
+    items.sort((a, b) => a.d.localeCompare(b.d));
+  }
+  // first lifting day back after being sick (and nothing lifted since): lighter targets
+  const sick = [...weekDates(prev), ...weekDates(ws)].filter(d => d < t && modeOf(d) === 'sick').pop();
+  if (sick){
+    const liftedSince = weekDates(ws).concat(weekDates(prev)).some(d => d > sick && d < t && dayView(d).lift && dayView(d).items.some(it => !LOGLESS.includes(it[1]) && isDone(d, it[0])));
+    const next = weekDates(ws).find(d => d >= t && !isClosed(d) && modeOf(d) === 'plan' && dayView(d).lift);
+    if (!liftedSince && next && !state.ease[next]) items.unshift({ kind:'ease', key: next, d: next });
+  }
+  const gaps = short.slice(0, 5).map(m => `${MUSCLE_LABEL[m].toLowerCase()} ${Math.round(100 * done[m] / plan[m])}%`);
+  return { wk, items, why, gaps };
+}
+let cuOff = new Set();   // suggestions you unticked before applying
+function renderCatchup(){
+  const el = document.getElementById('hcatch'); if (!el) return;
+  const cp = catchupPlan();
+  if (cp.state === 'applied'){
+    const n = Object.entries(state.boost).filter(([k]) => weekDates(mon(today)).includes(k.split('|')[0])).reduce((a, [, v]) => a + v, 0);
+    const e = Object.keys(state.ease).filter(d => weekDates(mon(today)).includes(d)).length;
+    el.hidden = !(n || e);
+    el.innerHTML = `<div class="cuon"><span>${ico('target')} Catch-up on${n ? ` · +${n} set${n > 1 ? 's' : ''} this week` : ''}${e ? ' · lighter first day back' : ''}</span><button class="linkbtn" data-cuundo>Undo</button></div>`;
+    return;
+  }
+  if (cp.state || !cp.items.length){ el.hidden = true; return; }
+  const day = d => d === iso(today) ? 'Today' : fromIso(d).toLocaleDateString(undefined, { weekday:'short' });
+  el.hidden = false;
+  el.innerHTML = `<h2 class="sect">Catch-up this week</h2>
+    <p class="cap">${cp.why.length ? `Last week: ${cp.why.join(', ')}. ` : ''}${cp.gaps.length ? `Planned sets done: ${cp.gaps.join(', ')}.` : ''}</p>
+    <div class="cuitems">${cp.items.map((x, k) => `<label class="cuitem"><input type="checkbox" data-cu="${x.key}" ${cuOff.has(x.key) ? '' : 'checked'}>
+      <span>${x.kind === 'ease' ? `<b>${day(x.d)} · ease back in</b><small>First session after being sick: ~85% weights</small>`
+        : `<b>${day(x.d)} · ${esc(x.name)}</b><small>${x.from} → ${x.from + 1} sets · ${MUSCLE_LABEL[x.muscle].toLowerCase()}</small>`}</span></label>`).join('')}</div>
+    <div class="btnrow mt12"><button class="btn" data-cuapply>Apply</button><button class="btn cancel" data-cuskip>Not this week</button></div>`;
+}
+function applyCatchup(){
+  const cp = catchupPlan(); if (!cp.items) return;
+  for (const x of cp.items){
+    if (cuOff.has(x.key)) continue;
+    if (x.kind === 'ease') state.ease[x.d] = true; else state.boost[x.key] = (state.boost[x.key] || 0) + 1;
+  }
+  state.catchup[cp.wk] = 'applied'; cuOff.clear(); save(); render(); haptic();
+}
+function undoCatchup(){
+  const wd = weekDates(mon(today));
+  for (const k of Object.keys(state.boost)) if (wd.includes(k.split('|')[0])) delete state.boost[k];
+  for (const d of Object.keys(state.ease)) if (wd.includes(d)) delete state.ease[d];
+  delete state.catchup[iso(mon(today))]; save(); render();
+}
+
 /* ---------- Icons: drawn in the tab bar's stroke style (emoji stay for copy, never as UI icons) ---------- */
 const ICONS = {
   flame:'<path d="M12 3c.6 3.4 4.5 5.1 4.5 10a4.5 4.5 0 0 1-9 0c0-2.4 1.2-3.9 2.3-4.9.3 1.5 1 2.5 2.2 2.9C11 8.9 11 6 12 3z"/>',
@@ -2616,13 +2741,14 @@ const ICONS = {
   target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" class="dotfill"/>',
   spark:'<path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>'
 };
-const ico = name => `<svg class="ico ${name}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const ico = name => `<svg class="ico ico-${name}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;   // prefixed: .target etc. are also card classes
 
 /* ---------- Home: today at a glance, quick log, weight and streak ---------- */
 // Exercises that count today (skipped and un-ticked optional ones don't).
 const liveItems = d => dayView(d).items.filter(it => !skipOf(d, it[0]) && !(it[4].optional && !isDone(d, it[0])));
 function renderHome(){
   setHeader();
+  renderCatchup();
   const d = iso(today), v = dayView(d), p = progress(d), closed = isClosed(d), wi = weekInfo(mon(today));
   const live = liveItems(d), done = live.filter(it => isDone(d, it[0])).length;
   const wk = wi.n >= 1 ? `Week ${wi.n} ${wi.n % 2 ? 'A' : 'B'}${wi.deload ? ' · deload' : ''}` : '';
@@ -2859,7 +2985,7 @@ function openLib(name){
     <div class="exfoot"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener">▶︎ Watch a video</a></div>`;
   calc1rm();
   showSheet(document.getElementById('exsheet'));
-  sharpenGif(document.querySelector('#exbody .exgif'));
+  sharpenGif(document.querySelector('#exbody .exgif')); hdDemo(document.querySelector('#exbody .exgif'), name);
 }
 // Epley estimate, then the weight you could lift for a given number of reps at that max.
 function calc1rm(){
@@ -3135,19 +3261,28 @@ function chartHtml(){
 // (`3-2` planned, `cardio-0`), so switching modes never mixes up ticked boxes.
 // A swap is remembered per plan slot and applies every week until you pick "Plan" again.
 const swapName = (id, it) => { const sw = state.swaps[id]; return sw && it.alts && it.alts.includes(sw) ? sw : it.n; };
+// +N sets: "4 × 5–8" → "5 × 5–8", "2–3 × 12–15" → "3–4 × 12–15"
+const addSets = (rx, n) => String(rx).replace(/^(\d+)(?:–(\d+))?(?= ×)/, (_, a, b) => b ? `${+a + n}–${+b + n}` : `${+a + n}`);
+// The planned workout for a date, whatever mode the day ended up in. Items: [id, name (after any swap), prescription, steps, meta].
+function planDay(date){
+  const own = dow(fromIso(date)), mv = state.moves[date], i = Number.isInteger(mv) ? mv : own;
+  // Ids: keyed items use their key; others count only unkeyed items, so inserting a keyed item never shifts old ids.
+  // Week-B variants get a "b" suffix so their ticks, swaps and logs stay separate from Week A.
+  const B = isWeekB(date); let n = 0;
+  const items = PLAN[i].items.map(it0 => {
+    const base = it0.key ? `${i}-${it0.key}` : `${i}-${n++}`, it = B && it0.b ? it0.b : it0, id = it === it0 ? base : base + 'b';
+    const bx = state.boost[`${date}|${id}`];   // catch-up sets you applied
+    return bx ? [id, swapName(id, it), addSets(it.rx, bx), it.steps, { ...it, boost: bx }] : [id, swapName(id, it), it.rx, it.steps, it];
+  });
+  return { i, own, B, items };
+}
 function dayView(date){
-  const own = dow(fromIso(date)), mv = state.moves[date], i = Number.isInteger(mv) ? mv : own, mode = modeOf(date);
-  // Items become [id, name (after any swap), prescription, steps, meta].
+  const mode = modeOf(date);
   if (mode === 'plan'){
-    // Ids: keyed items use their key; others count only unkeyed items, so inserting a keyed item never shifts old ids.
-    // Week-B variants get a "b" suffix so their ticks, swaps and logs stay separate from Week A.
-    const B = isWeekB(date); let n = 0;
-    const items = PLAN[i].items.map(it0 => {
-      const base = it0.key ? `${i}-${it0.key}` : `${i}-${n++}`, it = B && it0.b ? it0.b : it0, id = it === it0 ? base : base + 'b';
-      return [id, swapName(id, it), it.rx, it.steps, it];
-    });
+    const { i, own, B, items } = planDay(date);
     return { mode, ...PLAN[i], weekB: B, movedFrom: i !== own ? PLAN[i].day : null, items };
   }
+  const own = dow(fromIso(date)), mv = state.moves[date], i = Number.isInteger(mv) ? mv : own;
   const m = MODES[mode];
   return { mode, day: PLAN[i].day, title: m.title, load: m.load, note: m.note, lift: false,
     planned: PLAN[i].title, items: m.items.map((it,k) => { const id = it.key ? `${mode}-${it.key}` : `${mode}-${k}`; return [id, swapName(id, it), it.rx, it.steps, it]; }) };
@@ -3348,7 +3483,7 @@ function render(){
     const tag = meta.n ? 'div' : 'label', bodyTag = meta.n ? `button class="rowbody" data-openex="${id}" aria-label="Open ${esc(name)}"` : 'div';
     return `<div class="item${tools ? ' hastools' : ''}${skip ? ' skipped' : ''}">
       <${tag} class="row" data-row="${id}"><input type="checkbox" data-id="${id}" aria-label="Done: ${esc(name)}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
-      <${bodyTag}><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">${ico('target')} ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
+      <${bodyTag}><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${meta.boost ? `<span class="swaptag cutag">+${meta.boost} catch-up</span>` : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">${ico('target')} ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
       ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse, id) : ''}</div>`;
   };
   const proteinRow = () => {
@@ -3748,6 +3883,9 @@ document.addEventListener('click', e => {
   if (t.dataset.lib){ openLib(t.dataset.lib); return; }
   if (t.dataset.openex){ openEx(t.dataset.openex); return; }
   if (t.dataset.step){ stepSet(t.dataset.step); const x = exDraft[Number(t.dataset.step.split(':')[0])]; x.edited = true; x.auto = false; t.closest('.setrow')?.classList.remove('sugg'); return; }
+  if (t.hasAttribute('data-cuapply')){ applyCatchup(); return; }
+  if (t.hasAttribute('data-cuskip')){ state.catchup[iso(mon(today))] = 'skipped'; save(); render(); return; }
+  if (t.hasAttribute('data-cuundo')){ undoCatchup(); return; }
   if (t.dataset.setdone){ const k = Number(t.dataset.setdone), x = exDraft[k]; x.done = !x.done; x.auto = false; t.closest('.setrow').classList.toggle('done', x.done); t.closest('.setrow').classList.remove('sugg');
     if (x.done){ haptic(); startRest(); renderCoach(k); } else renderCoach(lastDone()); return; }
   if (t.dataset.effort){ const [k, v] = t.dataset.effort.split(':').map(Number), x = exDraft[k]; const was = x.rir; x.rir = x.rir === v ? null : v;
@@ -3882,6 +4020,7 @@ document.addEventListener('change', e => {
     if (isNaN(v) || v <= 0) delete state.protein[d]; else { if (v >= PROTEIN_DONE && !isDone(d,'h1')){ if (d === sel) popRow = 'h1'; haptic(); } state.protein[d] = Math.round(v); }
     save(); render(); return;
   }
+  if (c.dataset && c.dataset.cu){ if (c.checked) cuOff.delete(c.dataset.cu); else cuOff.add(c.dataset.cu); return; }
   if (c.id === 'exprogsel'){ exProgName = c.value; renderExProg(); return; }
   if (!c.dataset || !c.dataset.id || isClosed(sel)) return;
   const k = `${sel}|${c.dataset.id}`;
