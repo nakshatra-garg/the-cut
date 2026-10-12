@@ -47,6 +47,7 @@ body{
 main{max-width:560px; margin:0 auto}
 h1,h2{font-family:var(--display); margin:0}
 button{font:inherit; color:inherit}
+.cap{font-size:0.8824rem; line-height:1.35; color:var(--mute)}   /* subhead: explanations, legends, secondary facts */
 
 
 .top{ justify-content:space-between}
@@ -415,6 +416,7 @@ button, a, input, label, summary, .rowbody{touch-action:manipulation}
 .mzero{margin-top:10px; color:var(--orange-text) !important}
 .exchips{display:flex; flex-wrap:wrap; gap:6px}
 .exchips .chip{text-transform:capitalize}
+.exchips .chip.nocase{text-transform:none}
 .exrx{margin:0; font-size:1rem; font-weight:600}
 .sets{display:grid; gap:6px}
 .sethead, .setrow{display:grid; gap:8px; align-items:center}
@@ -446,6 +448,7 @@ details.exhow ol{margin:0 0 10px; padding-left:20px; font-size:0.8235rem; displa
 .resttimer{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(84px + env(safe-area-inset-bottom,0px)); z-index:26; display:flex; align-items:center; gap:10px;
   padding:8px 8px 8px 16px; border-radius:999px; background:var(--ink); color:var(--bg); box-shadow:0 8px 24px rgba(0,0,0,.25); font-size:0.8824rem}
 .resttimer[hidden]{display:none}
+.sheet-open .resttimer{top:calc(env(safe-area-inset-top,0px) + 10px); bottom:auto}
 .resttimer b{font-family:var(--rounded); font-size:1.1765rem; min-width:46px}
 .resttimer button{border:0; border-radius:999px; padding:6px 12px; background:rgba(128,128,128,.35); color:inherit; font:inherit; cursor:pointer}
 .heatwrap{margin-top:10px}
@@ -627,7 +630,9 @@ h1,h2{letter-spacing:-.02em; line-height:1.15}
 details{border:0; border-radius:14px; padding:0 16px; margin-top:14px}
 summary{list-style:none; font-family:var(--body); font-size:1rem; font-weight:400; display:flex; justify-content:space-between; align-items:center; padding:13px 0}
 summary::-webkit-details-marker{display:none}
-summary::after{content:"›"; color:var(--grabber); font-size:1.4118rem; line-height:1; transition:transform .2s}
+summary::after{content:""; width:8px; height:14px; flex:none; background:var(--grabber); transition:transform .2s;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5L6.5 7l-5 5.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5L6.5 7l-5 5.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat}
 details[open] summary::after{transform:rotate(90deg)}
 details[open] summary{border-bottom:.5px solid var(--line); margin-bottom:10px}
 details h3{font-size:0.7647rem; font-weight:400; text-transform:uppercase; letter-spacing:.02em; color:var(--mute); margin:18px 0 6px}
@@ -940,11 +945,21 @@ input, textarea{caret-color:var(--accent)}
 
 /* the date reads as the large title's subtitle, not a label above it */
 .toptitle{display:flex; flex-direction:column-reverse}
-#topkicker{text-transform:none; letter-spacing:0; font-weight:500; font-size:0.8824rem; margin-top:2px}
+#topkicker{text-transform:none; letter-spacing:0; font-weight:500; font-size:0.8824rem}
+.topmeta{display:flex; align-items:center; gap:10px; margin-top:2px; min-height:1.2em}
+.topmeta .syncdot{font-size:0.7647rem}
+body:not([data-tab="home"]) .syncdot{display:none}
+[data-view="more"] > details{margin:0; border-radius:0; position:relative}
+[data-view="more"] > details:first-of-type{border-radius:22px 22px 0 0}
+[data-view="more"] > details:last-of-type{border-radius:0 0 22px 22px; margin-bottom:14px}
+[data-view="more"] > details + details::before{content:""; position:absolute; top:0; left:16px; right:0; border-top:.5px solid var(--line)}
 
 /* ================= P2: drawn icons, remaining 44 pt targets ================= */
 .ico{width:1em; height:1em; vertical-align:-.13em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none}
 .ico .dotfill{fill:currentColor; stroke:none}
+.ico-check{stroke-width:2.4}
+[data-nav] .ico{width:20px; height:20px; vertical-align:middle; stroke-width:2.2}
+.wdots .ico, .pill .mt .ico{width:.85em; height:.85em; vertical-align:-.08em; stroke-width:3}
 .ico-flame{color:var(--orange)} .ico-trophy{color:var(--orange-text)} .ico-spark{color:var(--accent)} .ico-target{color:currentColor}
 .big .ico{width:.8em; height:.8em; vertical-align:-.04em; stroke-width:2.2}
 .coachpill{display:inline-flex; align-items:center; gap:6px}
@@ -961,7 +976,7 @@ input, textarea{caret-color:var(--accent)}
 .sheethead .iconbtn::before{content:""; position:absolute; inset:-7px}
 .rowbody{min-height:44px}
 .setup input{min-height:44px}
-.exgif{position:relative}
+.exgif{position:relative; background-size:contain; background-position:center; background-repeat:no-repeat}
 .exgif > img, .exgif > canvas{grid-area:1 / 1}
 .exgif canvas.exsharp{opacity:0; pointer-events:none}
 .exgif.sharp canvas.exsharp{opacity:1}
@@ -976,8 +991,7 @@ input, textarea{caret-color:var(--accent)}
 <body data-tab="home">
 <main>
   <div class="top">
-    <div class="toptitle"><small id="topkicker"></small><h1>The Cut</h1></div>
-    <div class="goal"><span>127.4 → 105 kg</span><button class="syncdot" id="syncdot" data-opensync></button></div>
+    <div class="toptitle"><div class="topmeta"><small id="topkicker"></small><button class="syncdot" id="syncdot" data-opensync></button></div><h1>The Cut</h1></div>
     <button class="gear" data-tab="more" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></button>
   </div>
 
@@ -991,9 +1005,9 @@ input, textarea{caret-color:var(--accent)}
 
   <div class="view" data-view="plan" hidden>
   <div class="weeknav">
-    <button class="iconbtn" data-nav="-1" aria-label="Previous week">‹</button>
+    <button class="iconbtn" data-nav="-1" aria-label="Previous week"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="label" id="weeklabel"></div>
-    <button class="iconbtn" data-nav="1" aria-label="Next week">›</button>
+    <button class="iconbtn" data-nav="1" aria-label="Next week"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
   </div>
   <div class="weekmeta" id="weekmeta"></div>
   <div class="strip" id="strip"></div>
@@ -1195,7 +1209,7 @@ input, textarea{caret-color:var(--accent)}
       <h2 id="demotitle"></h2>
       <div class="demofig" id="demofig"></div>
       <ol class="democues" id="democues"></ol>
-      <a class="btn cancel videolink" id="demovideo" href="#" target="_blank" rel="noopener">▶︎ Watch a video</a>
+      <a class="btn cancel videolink" id="demovideo" href="#" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path class="dotfill" d="M8 5.5v13l10.5-6.5z"/></svg> Watch a video</a>
       <button class="btn" data-closesheet="demosheet">Done</button>
     </div>
   </div>
@@ -2136,7 +2150,7 @@ function openEx(id){
   document.getElementById('extitle').textContent = name;
   document.getElementById('exbody').innerHTML = `${media}
     <div class="exchips">${(info ? info.muscles : []).map(m => `<span class="chip">${esc(m)}</span>`).join('')}
-      ${best.e ? `<span class="chip">Best ${best.w} kg × ${best.r} · e1RM ${Math.round(best.e)}</span>` : ''}</div>
+      ${best.e ? `<span class="chip nocase">Best ${best.w} kg × ${best.r} · e1RM ${Math.round(best.e)}</span>` : ''}</div>
     <p class="exrx">${fmtRx(rx)}${dl ? ' · deload week' : ''}</p>
     ${tgt && !locked ? `<div class="target ${tgt.up ? 'up' : tgt.down ? 'down' : ''}"><b>${ico('target')} Today: ${tgt.w} kg${tgt.up ? ' ↑' : tgt.down ? ' ↓' : ''}</b><span>${tgt.why}</span></div>` : ''}
     ${!tgt && !last && loggable && exUnit === 'reps' && !locked ? `<div class="target"><b>${ico('target')} First time logging this</b><span>Start with a weight you could lift about ${(repRange(rx) || [8, 12])[1] + 4} times. After set 1 the coach works out your real working weight.</span></div>` : ''}
@@ -2145,9 +2159,9 @@ function openEx(id){
       <div class="setbtns"><button class="linkbtn" data-addset ${locked ? 'disabled' : ''}>+ Add set</button><button class="linkbtn" data-delset ${locked ? 'disabled' : ''}>− Remove set</button></div>` : ''}
     ${steps ? stepsHtml(steps, false, id) : ''}
     ${how ? `<details class="exhow"><summary>How to do it</summary><ol>${how.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>` : ''}
-    <div class="exactions"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener">▶︎ Watch</a>
+    <div class="exactions"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener">${ico('play')} Watch</a>
       ${meta.n && !locked ? `<button class="btn cancel" data-swap="${id}">${meta.alts ? 'Swap or skip' : 'Skip'}</button>` : ''}</div>
-    <div class="exfoot"><button class="btn" data-exdone ${locked ? 'disabled' : ''}>${locked ? 'Day closed' : isDone(sel, id) ? 'Save ✓' : 'Done ✓'}</button></div>`;
+    <div class="exfoot"><button class="btn" data-exdone ${locked ? 'disabled' : ''}>${locked ? 'Day closed' : isDone(sel, id) ? 'Save' : 'Done'}</button></div>`;
   if (loggable){ renderSets(); if (!locked) renderCoach(lastDone(), false); }   // reopening: show advice, don't overwrite what's saved
   showSheet(document.getElementById('exsheet'));
   sharpenGif(document.querySelector('#exbody .exgif')); hdDemo(document.querySelector('#exbody .exgif'), name);
@@ -2160,7 +2174,7 @@ function exMedia(name){
     ? `<div class="exphoto" role="img" aria-label="${esc(name)}, start and end position"><img src="ex/${info.id}/0.jpg" alt=""><img src="ex/${info.id}/1.jpg" alt="" class="b"></div>`
     : DEMOS[name] ? `<div class="demofig">${demoSvg(DEMOS[name])}</div>` : '';
   return gif
-    ? `<div class="exgif" role="img" aria-label="${esc(name)} demo"><img src="${GIF_BASE}${gif.g}" alt="" crossorigin="anonymous" onerror="this.parentElement.outerHTML = this.parentElement.dataset.fallback || ''"><canvas class="exsharp" aria-hidden="true"></canvas></div>`.replace('<div class="exgif"', `<div class="exgif" data-fallback="${esc(still)}"`)
+    ? `<div class="exgif" role="img" aria-label="${esc(name)} demo" style="background-image:url(${GIF_STILL}${gif.g.replace(/\.gif$/, '.jpg')})"><img src="${GIF_BASE}${gif.g}" alt="" crossorigin="anonymous" onerror="this.parentElement.outerHTML = this.parentElement.dataset.fallback || ''"><canvas class="exsharp" aria-hidden="true"></canvas></div>`.replace('<div class="exgif"', `<div class="exgif" data-fallback="${esc(still)}"`)
     : still;
 }
 /* ---------- GIF sharpening: the demo GIFs only exist at 180×180, so each frame is sharpened at its own
@@ -2238,7 +2252,7 @@ function renderSets(){
       <span class="setno">${k + 1}</span>
       <div class="stepper"><button data-step="${k}:w:-1" ${locked ? 'disabled' : ''} aria-label="Less weight">−</button><input data-k="${k}" data-f="w" inputmode="decimal" value="${x.w}" placeholder="kg" ${locked ? 'disabled' : ''}><button data-step="${k}:w:1" ${locked ? 'disabled' : ''} aria-label="More weight">+</button></div>
       <div class="stepper"><button data-step="${k}:r:-1" ${locked ? 'disabled' : ''} aria-label="Fewer">−</button><input data-k="${k}" data-f="r" inputmode="numeric" value="${x.r}" placeholder="0" ${locked ? 'disabled' : ''}><button data-step="${k}:r:1" ${locked ? 'disabled' : ''} aria-label="More">+</button></div>
-      <button class="setchk" data-setdone="${k}" aria-label="Set ${k + 1} done" ${locked ? 'disabled' : ''}>✓</button></div>`).join('');
+      <button class="setchk" data-setdone="${k}" aria-label="Set ${k + 1} done" ${locked ? 'disabled' : ''}>${ico('check')}</button></div>`).join('');
 }
 function stepSet(spec){
   const [k, f, dir] = spec.split(':'), x = exDraft[Number(k)];
@@ -2411,7 +2425,7 @@ function openModeSheet(m){
 function openMove(){
   const own = dow(fromIso(sel)), cur = Number.isInteger(state.moves[sel]) ? state.moves[sel] : own;
   document.getElementById('movelist').innerHTML = PLAN.map((pl, k) =>
-    `<div class="swapopt"><button data-move="${k}" class="${k === cur ? 'on' : ''}"><span>${pl.day} · ${pl.title}${k === own ? ' <small>today’s plan</small>' : ''}</span>${k === cur ? '<b>✓</b>' : ''}</button></div>`).join('');
+    `<div class="swapopt"><button data-move="${k}" class="${k === cur ? 'on' : ''}"><span>${pl.day} · ${pl.title}${k === own ? ' <small>today’s plan</small>' : ''}</span>${k === cur ? '<b>' + ico('check') + '</b>' : ''}</button></div>`).join('');
   showSheet(document.getElementById('movesheet'));
 }
 function pickMove(k){
@@ -2425,9 +2439,9 @@ function openSwap(id){
   document.getElementById('swaptitle').textContent = meta.alts ? 'Swap or skip' : it[1];
   document.getElementById('swapsub').textContent = meta.alts ? `${meta.rx} · a swap is remembered for future weeks` : meta.rx;
   const swaps = meta.alts ? [meta.n, ...meta.alts].map((n, i) =>
-    `<div class="swapopt"><button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>✓</b>' : ''}</button>${ytBtn(n)}</div>`).join('')
+    `<div class="swapopt"><button data-pick="${esc(n)}" class="${n === it[1] ? 'on' : ''}"><span>${esc(n)}${i === 0 ? ' <small>Plan</small>' : ''}</span>${n === it[1] ? '<b>' + ico('check') + '</b>' : ''}</button>${ytBtn(n)}</div>`).join('')
     : it[1] === 'Cardio' ? ''   // cardio is a machine of your choice, not a technique to learn
-    : `<div class="swapopt"><a class="btn cancel videolink" href="${ytLink(it[1])}" target="_blank" rel="noopener">▶︎ Watch how: ${esc(it[1])}</a></div>`;
+    : `<div class="swapopt"><a class="btn cancel videolink" href="${ytLink(it[1])}" target="_blank" rel="noopener">${ico('play')} Watch how: ${esc(it[1])}</a></div>`;
   const skips = skip
     ? `<button data-unskip class="on"><span>Skipped today · ${SKIP_LABEL[skip]}</span><b>Undo</b></button>`
     : Object.entries(SKIP_LABEL).map(([k, l]) => `<button data-skip="${k}"><span>${l}${k === 'equipment' && meta.alts ? ' <small>try a swap first</small>' : ''}</span></button>`).join('');
@@ -2447,7 +2461,7 @@ function openStepSwap(key){
   document.getElementById('swaptitle').textContent = 'Swap drill';
   document.getElementById('swapsub').textContent = 'Your pick is remembered for this routine.';
   document.getElementById('swaplist').innerHTML = [base, ...DRILL_ALTS[base[0]]].map(([n, d], i) =>
-    `<div class="swapopt"><button data-steppick="${esc(n)}" class="${n === cur ? 'on' : ''}"><span>${esc(n)} <small>${esc(d)}${i === 0 ? ' · plan' : ''}</small></span>${n === cur ? '<b>✓</b>' : ''}</button>${ytBtn(n)}</div>`).join('');
+    `<div class="swapopt"><button data-steppick="${esc(n)}" class="${n === cur ? 'on' : ''}"><span>${esc(n)} <small>${esc(d)}${i === 0 ? ' · plan' : ''}</small></span>${n === cur ? '<b>' + ico('check') + '</b>' : ''}</button>${ytBtn(n)}</div>`).join('');
   showSheet(document.getElementById('swapsheet'));
 }
 function pickStepSwap(name){
@@ -2470,7 +2484,7 @@ function openDemo(name){
   showSheet(document.getElementById('demosheet'));
 }
 const ytLink = name => `https://www.youtube.com/results?search_query=${encodeURIComponent(name.replace(/\(.*?\)/g, '').trim() + ' exercise how to')}`;
-const ytBtn = name => `<a class="yt" href="${ytLink(name)}" target="_blank" rel="noopener" aria-label="Watch how to do ${esc(name)} on YouTube">▶︎</a>`;
+const ytBtn = name => `<a class="yt" href="${ytLink(name)}" target="_blank" rel="noopener" aria-label="Watch how to do ${esc(name)} on YouTube">${ico('play')}</a>`;
 const closeSheet = id => { const el = document.getElementById(id); if (!el.hidden) fadeOut(el); };
 
 /* ---------- Cardio minutes picker ---------- */
@@ -2747,6 +2761,9 @@ const ICONS = {
   lock:'<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7"/>',
   target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" class="dotfill"/>',
+  play:'<path class="dotfill" d="M8 5.5v13l10.5-6.5z"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  chevL:'<path d="M15 5l-7 7 7 7"/>', chevR:'<path d="M9 5l7 7-7 7"/>',
   spark:'<path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>'
 };
 const ico = name => `<svg class="ico ico-${name}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;   // prefixed: .target etc. are also card classes
@@ -2774,9 +2791,9 @@ function renderHome(){
   document.getElementById('hlog').innerHTML = `<h2 class="sect">Log today</h2>
     <div class="qlog">
       <div><label for="hwt">Weigh-in (kg)</label><input id="hwt" type="number" inputmode="decimal" step="0.1" min="40" max="300" value="${typeof w === 'number' ? w : ''}" placeholder="0.0" ${dis}>
-        <small>${typeof w === 'number' ? '<span class="ok">✓ logged</span>' : 'Morning, before food'}${av ? ` · avg ${av.toFixed(1)}` : ''}</small></div>
+        <small>${typeof w === 'number' ? `<span class="ok">${ico('check')} logged</span>` : 'Morning, before food'}${av ? ` · avg ${av.toFixed(1)}` : ''}</small></div>
       <div><label for="hprot">Protein (g)</label><input id="hprot" type="number" inputmode="numeric" min="0" max="600" step="1" value="${typeof g === 'number' ? g : ''}" placeholder="0" ${dis}>
-        <small>${(g || 0) >= PROTEIN_DONE ? '<span class="ok">✓ target hit</span>' : `${PROTEIN_DONE}+ counts`}${pa ? ` · 5-day ${Math.round(pa.avg)}` : ''}</small></div>
+        <small>${(g || 0) >= PROTEIN_DONE ? `<span class="ok">${ico('check')} target hit</span>` : `${PROTEIN_DONE}+ counts`}${pa ? ` · 5-day ${Math.round(pa.avg)}` : ''}</small></div>
     </div>`;
 
   // weight mini card
@@ -2787,13 +2804,13 @@ function renderHome(){
     const xy = pts.map((v2, k) => [pts.length === 1 ? 60 : k * 120 / (pts.length - 1), 4 + 30 * (hi - v2) / span]);
     const avg = avgOn(last), lost = START - (avg ?? state.weights[last]);
     wcard = `<div class="hkicker">Weight</div><span class="big">${state.weights[last].toFixed(1)}<span class="cap"> kg</span></span>
-      <span class="cap">${lost >= 0 ? '−' : '+'}${Math.abs(lost).toFixed(1)} kg so far · ${Math.max(0, (avg ?? state.weights[last]) - GOAL).toFixed(1)} to go</span>
+      <span class="cap">${lost >= 0 ? '−' : '+'}${Math.abs(lost).toFixed(1)} kg · ${Math.max(0, (avg ?? state.weights[last]) - GOAL).toFixed(1)} to go</span>
       <svg class="spark" viewBox="-3 0 126 38" preserveAspectRatio="none" aria-hidden="true">${pts.length > 1 ? `<polyline points="${xy.map(q => q.map(n => n.toFixed(1)).join(',')).join(' ')}"/>` : ''}<circle cx="${xy[xy.length - 1][0]}" cy="${xy[xy.length - 1][1]}" r="3"/></svg>`;
   }
   // streak mini card: this week's days as dots
   const st = stats(), ws = mon(today);
   const dots = [...Array(7)].map((_, k) => { const x = iso(addDays(ws, k)), c = isGood(x) ? 'good' : isSick(x) ? 'sick' : isClosed(x) ? 'closed' : '';
-    return `<i class="${c}${x === d ? ' today' : ''}">${isGood(x) ? '✓' : ''}</i>`; }).join('');
+    return `<i class="${c}${x === d ? ' today' : ''}">${isGood(x) ? ico('check') : ''}</i>`; }).join('');
   document.getElementById('hcards').innerHTML = `
     <button class="tapcard" data-tab="stats" data-scroll="weight" aria-label="Weight, open stats">${wcard}</button>
     <button class="tapcard" data-tab="stats" data-scroll="heat" aria-label="Streak, open stats"><div class="hkicker">Streak</div>
@@ -2991,7 +3008,7 @@ function openLib(name){
       <label>Reps (≤ 12)<input id="c1r" inputmode="numeric" value="${best.r || ''}" placeholder="0"></label><div class="calcout" id="c1out">—</div></div>
     <div class="pcts" id="c1pct"></div>` : ''}
     ${how ? `<details class="exhow"><summary>How to do it</summary><ol>${how.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>` : ''}
-    <div class="exfoot"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener">▶︎ Watch a video</a></div>`;
+    <div class="exfoot"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path class="dotfill" d="M8 5.5v13l10.5-6.5z"/></svg> Watch a video</a></div>`;
   calc1rm();
   showSheet(document.getElementById('exsheet'));
   sharpenGif(document.querySelector('#exbody .exgif')); hdDemo(document.querySelector('#exbody .exgif'), name);
@@ -3253,7 +3270,7 @@ function chartHtml(){
     g += `<line class="g" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${+v.toFixed(1)}</text>`;
   }
   MILESTONES.filter(m => m > lo && m < hi).forEach(m => {
-    g += `<line class="ms" x1="${L}" x2="${W-R}" y1="${y(m)}" y2="${y(m)}"/><text x="${W-R}" y="${y(m)-4}" text-anchor="end">${m}</text>`;
+    g += `<line class="ms" x1="${L}" x2="${W-R}" y1="${y(m)}" y2="${y(m)}"/><text x="${L+4}" y="${y(m)-4}">${m}</text>`;
   });
   const dots = pts.map(p => `<circle class="raw" cx="${x(p.t).toFixed(1)}" cy="${y(p.w).toFixed(1)}" r="2.6"/>`).join('');
   const line = `<polyline class="avgl" points="${pts.map(p => `${x(p.t).toFixed(1)},${y(p.a).toFixed(1)}`).join(' ')}"/>`;
@@ -3474,7 +3491,7 @@ function render(){
     const cl = isClosed(s), good = cl && pct >= GOOD_PCT;
     strip += `<button class="pill ${s===sel?'sel':''} ${s===iso(today)?'today':''} ${md!=='plan'?'alt':''} ${good?'good':''}" data-date="${s}" aria-label="${PLAN[k].day} ${fmt(d)}${tag ? ', ' + MODES[md].label : ''}, ${pct}% done${cl ? ', closed' : ''}">
       <span class="dn">${PLAN[k].day}</span><span class="dd">${d.getDate()}</span>
-      <span class="bar"><i data-k="pill-${s}" style="width:${pct}%"></i></span><span class="mt">${[tag, cl ? '✓' : ''].filter(Boolean).join(' ') || '&nbsp;'}</span></button>`;
+      <span class="bar"><i data-k="pill-${s}" style="width:${pct}%"></i></span><span class="mt">${[tag, cl ? ico('check') : ''].filter(Boolean).join(' ') || '&nbsp;'}</span></button>`;
   }
   document.getElementById('strip').innerHTML = strip;
 
@@ -3492,7 +3509,7 @@ function render(){
     const tag = meta.n ? 'div' : 'label', bodyTag = meta.n ? `button class="rowbody" data-openex="${id}" aria-label="Open ${esc(name)}"` : 'div';
     return `<div class="item${tools ? ' hastools' : ''}${skip ? ' skipped' : ''}">
       <${tag} class="row" data-row="${id}"><input type="checkbox" data-id="${id}" aria-label="Done: ${esc(name)}" ${!skip && isDone(sel,id)?'checked':''} ${dis || (skip ? 'disabled' : '')}>
-      <${bodyTag}><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${meta.boost ? `<span class="swaptag cutag">+${meta.boost} catch-up</span>` : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">✓ ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">${ico('target')} ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
+      <${bodyTag}><span class="name">${name}${swapped ? '<span class="swaptag">swap</span>' : ''}${meta.boost ? `<span class="swaptag cutag">+${meta.boost} catch-up</span>` : ''}${skip ? `<span class="swaptag skiptag">Skipped · ${SKIP_LABEL[skip]}</span>` : ''}${mins ? ` <span class="mins ${minsTier(mins)}">${mins} min · ${TIER_LABEL[minsTier(mins)]}${minsTier(mins) === 'superb' ? ' ✦' : ''}</span>` : ''}</span><span class="rx">${fmtRx(rx)}</span>${logLine ? `<span class="logline">${ico('check')} ${logLine}</span>` : tg ? `<span class="tgtline ${tg.up ? 'up' : tg.down ? 'down' : ''}">${ico('target')} ${tg.w} kg${tg.up ? ' ↑' : tg.down ? ' ↓' : ''}</span>` : ''}</${meta.n ? 'button' : 'div'}></${tag}>
       ${tools ? `<div class="tools">${tools}</div>` : ''}${steps ? stepsHtml(steps, meta.collapse, id) : ''}</div>`;
   };
   const proteinRow = () => {
