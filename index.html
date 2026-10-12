@@ -2016,6 +2016,11 @@ const GIF_BASE = 'https://raw.githubusercontent.com/hasaneyldrm/exercises-datase
 const rxUnit = rx => { const m = String(rx).match(/×\s*[\d–]+\s*(m|sec|s|min)\b/); return m ? (m[1] === 's' ? 'sec' : m[1]) : 'reps'; };
 const planSets = rx => { const m = String(rx).match(/^(\d+)(?:–(\d+))?\s*×\s*(\d+)/); return { n: m ? Number(m[2] || m[1]) : 3, reps: m ? Number(m[3]) : '' }; };
 const e1rm = (w, r) => (r > 0 && r <= 12 && w > 0) ? w * (1 + r / 30) : 0;     // Epley; not trusted above 12 reps
+// Wathan's formula stays sensible from 1 to ~30 reps (Epley overshoots past ~12), so the coach uses it for advice.
+// rtf = reps to failure (reps done + reps left in the tank).
+const rmCurve = rtf => (48.8 + 53.8 * Math.exp(-0.075 * rtf)) / 100;
+const rm1 = (w, rtf) => w / rmCurve(Math.min(30, rtf)), wFor = (one, rtf) => one * rmCurve(rtf);
+const plateDown = w => Math.floor(w / 2.5 + 1e-6) * 2.5;
 const LOGLESS = ['Warm-up', 'Mobility', 'Optional core', 'Cardio'];
 function fmtSets(sets, unit = 'reps'){
   const ds = (sets || []).filter(x => x.r !== '' && x.r != null && Number(x.r) > 0);
@@ -2067,7 +2072,11 @@ function progression(name, rx, date, deload){
   const work = l => { const ws = l.sets.filter(x => x.w > 0 && x.r > 0), top = Math.max(...ws.map(x => x.w)); return { top, sets: ws.filter(x => x.w === top), all: ws }; };
   const last = work(hist[0]), inc = BIG_LIFT.test(name) ? 5 : DB_LIFT.test(name) ? 2 : 2.5, reps = last.all.map(x => x.r).join(', ');
   if (deload) return { w: last.top, reps: range[0], why: `Deload: keep ${last.top} kg, fewer sets, stop 3–4 reps short.` };
-  if (last.sets.every(x => x.r >= range[1])) return { w: last.top + inc, reps: range[0], up: true, why: `Every set hit ${range[1]} last time (${reps}) → +${inc} kg` };
+  if (last.sets.every(x => x.r >= range[1])){
+    const one = Math.max(...last.sets.map(x => rm1(x.w, x.r + (x.rir ?? 1)))), fit = Math.min(plateDown(wFor(one, range[1] + 1)), plateDown(last.top * 1.15));
+    if (fit > last.top + inc) return { w: fit, reps: range[0], up: true, why: `Last time ${reps} at ${last.top} kg was well past ${range[1]} → +${+(fit - last.top).toFixed(1)} kg` };
+    return { w: last.top + inc, reps: range[0], up: true, why: `Every set hit ${range[1]} last time (${reps}) → +${inc} kg` };
+  }
   if (hist[1]){
     const prev = work(hist[1]), miss = l => l.sets.some(x => x.r < range[0]);
     if (prev.top === last.top && miss(last) && miss(prev)){
@@ -2105,6 +2114,7 @@ function openEx(id){
       ${best.e ? `<span class="chip">Best ${best.w} kg × ${best.r} · e1RM ${Math.round(best.e)}</span>` : ''}</div>
     <p class="exrx">${fmtRx(rx)}${dl ? ' · deload week' : ''}</p>
     ${tgt && !locked ? `<div class="target ${tgt.up ? 'up' : tgt.down ? 'down' : ''}"><b>${ico('target')} Today: ${tgt.w} kg${tgt.up ? ' ↑' : tgt.down ? ' ↓' : ''}</b><span>${tgt.why}</span></div>` : ''}
+    ${!tgt && !last && loggable && exUnit === 'reps' && !locked ? `<div class="target"><b>${ico('target')} First time logging this</b><span>Start with a weight you could lift about ${(repRange(rx) || [8, 12])[1] + 4} times. After set 1 the coach works out your real working weight.</span></div>` : ''}
     ${last && loggable ? `<p class="cap">Last time (${fmt(fromIso(last.d))}): ${fmtSets(last.sets, exUnit)}</p>` : ''}
     ${loggable ? `<div class="sets" id="exsets"></div><div id="setcoach" aria-live="polite"></div>
       <div class="setbtns"><button class="linkbtn" data-addset ${locked ? 'disabled' : ''}>+ Add set</button><button class="linkbtn" data-delset ${locked ? 'disabled' : ''}>− Remove set</button></div>` : ''}
@@ -2235,14 +2245,17 @@ function adviseNext(k){
     if (at < lo) return { dir:'down', head:`Next set: aim for ${Math.max(1, at)}–${lo} reps`, why:`${r} reps${tag}. Take a slightly longer rest or an easier variation.` };
     return { dir:'keep', head:`Next set: ${Math.min(at, hi)}–${hi} reps`, why:`Right in your range${tag}.`, r: Math.min(at, hi) };
   }
-  const e = w * (1 + Math.min(15, cap) / 30), wAt = reps => e / (1 + (reps + 1) / 30);
+  const one = rm1(w, cap), wAt = reps => wFor(one, reps + 1);   // weight for `reps` with 1 left
   if (rir === 0 && r < lo){
     const nw = Math.min(plate(w * .9), w - 2.5), nr = Math.min(hi, lo + 1);
     return { dir:'down', w: Math.max(2.5, nw), r: nr, head:`Next set: ${Math.max(2.5, nw)} kg × ${lo}–${nr}`, why:`Failed at ${r}: drop about 10% so the next set stays clean.` };
   }
   if (at > hi && !c.dl){
-    const tr = Math.max(lo, hi - 1), nw = Math.min(plate(wAt(tr)), plate(w * 1.1));
-    if (nw > w) return { dir:'up', w: nw, r: tr, head:`Next set: ${nw} kg × ${tr}–${hi}`, why:`${r} reps${tag}: room for more. +${+(nw - w).toFixed(1)} kg.` };
+    // a few reps over: small step. Way over (a warm-up weight, or no history yet): jump straight to the right weight.
+    const tr = Math.max(lo, hi - 1), far = at >= hi + 4, nw = Math.min(plate(wAt(tr)), plateDown(w * (far ? 1.4 : 1.1)));
+    if (nw > w) return { dir:'up', w: nw, r: tr, head:`Next set: ${nw} kg × ${tr}–${hi}`,
+      why: far ? `${r} reps${tag} is far past ${lo}–${hi}, so that was a warm-up weight. +${+(nw - w).toFixed(1)} kg puts you in range.`
+               : `${r} reps${tag}: room for more. +${+(nw - w).toFixed(1)} kg.` };
   }
   if (at < lo){
     const tr = Math.min(hi, lo + 1), nw = Math.max(plate(wAt(tr)), plate(w * .85));
@@ -2258,7 +2271,11 @@ function adviseSession(){
   const top = Math.max(...ws.map(x => Number(x.w))), at = ws.filter(x => Number(x.w) === top), [lo, hi] = c.range;
   const inc = BIG_LIFT.test(c.name) ? 5 : DB_LIFT.test(c.name) ? 2 : 2.5;
   if (c.dl) return { dir:'keep', head:'Next session: back to normal loads', why:'Deload done. Pick up where you left off.' };
-  if (at.every(x => Number(x.r) >= hi)) return { dir:'up', head:`Next session: ${top + inc} kg`, why:`Every set at ${top} kg hit ${hi}. Time to add weight.` };
+  if (at.every(x => Number(x.r) >= hi)){
+    const one = Math.max(...at.map(x => rm1(Number(x.w), Number(x.r) + (x.rir ?? 1)))), fit = Math.min(plateDown(wFor(one, hi + 1)), plateDown(top * 1.15));
+    const nw = Math.max(top + inc, fit);
+    return { dir:'up', head:`Next session: ${nw} kg`, why: nw > top + inc ? `Your sets at ${top} kg went well past ${hi}. Start higher next time.` : `Every set at ${top} kg hit ${hi}. Time to add weight.` };
+  }
   return { dir:'keep', head:`Next session: stay at ${top} kg`, why:`Get every set to ${hi} reps (today: ${at.map(x => x.r).join(', ')}), then add weight.` };
 }
 function renderCoach(k, apply = true){
@@ -2272,7 +2289,7 @@ function renderCoach(k, apply = true){
   const last = lastLog(c.name, sel), ls = last && last.sets[k], key = `${sel}|${exFor}`;
   let vs = '';
   if (ls && Number(ls.r) > 0){
-    const de = e1rm(w, r) - e1rm(Number(ls.w), Number(ls.r));
+    const de = rm1(w, r) - rm1(Number(ls.w), Number(ls.r));
     vs = `Last time set ${k + 1}: ${ls.w ? ls.w + ' × ' : ''}${ls.r}${Math.abs(de) >= .5 ? ` · ${de > 0 ? 'stronger' : 'a bit lighter'} today` : ' · same as today'}`;
   }
   const best = bestSet(c.name, key).e, now = e1rm(w, r);
