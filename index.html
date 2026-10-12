@@ -20,6 +20,7 @@
   --fill:rgba(118,118,128,.12); --material:rgba(249,249,249,.8); --grabber:#C7C7CC;
   --red:#FF3B30; --orange:#FF9500; --seg-on:#FFFFFF;
   --orange-text:#B84A00; --red-text:#D70015; --tick:#8E8E93;   /* text/outline-safe versions of the fills (4.5:1 / 3:1) */
+  --warn-bg:#FBEFD5; --warn-ink:#5A4210;
   --ring1:#28CD41; --ring2:#0A84FF; --ring3:#FF9500;
   --display:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,'Segoe UI',Roboto,sans-serif;
   --body:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI',Roboto,sans-serif;
@@ -33,6 +34,7 @@
     --fill:rgba(118,118,128,.24); --material:rgba(28,28,30,.78); --grabber:#48484A;
     --red:#FF453A; --orange:#FF9F0A; --seg-on:#636366;
     --orange-text:#FF9F0A; --red-text:#FF6961; --tick:#7C7C80;
+    --warn-bg:#3A3018; --warn-ink:#F2DFA8;
     --ring1:#30D158; --ring2:#0A84FF; --ring3:#FF9F0A;
   }
 }
@@ -214,8 +216,7 @@ label.iconbtn{display:inline-flex; align-items:center}
 .mbadges small{width:100%; font-weight:400; color:var(--mute)}
 .mquote{margin:16px 0; font-style:italic; font-size:0.8824rem}
 .mcard .btn{width:100%}
-.warn{margin:10px 0 0; padding:10px 12px; background:#FBEFD5; color:#5A4210; font-size:0.8235rem}
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .warn{background:#3A3018; color:#F2DFA8} }
+.warn{margin:10px 0 0; padding:10px 12px; background:var(--warn-bg); color:var(--warn-ink); font-size:0.8235rem}
 .proj{margin-top:14px}
 .projrow{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:4px; font-size:0.8824rem}
 .projrow b{font-family:var(--display); font-size:1.1765rem; margin-right:4px}
@@ -322,12 +323,12 @@ label.iconbtn{display:inline-flex; align-items:center}
 .steps li{counter-increment:st; display:grid; grid-template-columns:22px 1fr auto; column-gap:8px; align-items:center; padding:5px 0; font-size:0.8824rem}
 .steps li::before{content:counter(st); grid-row:span 2; align-self:start; margin-top:1px; width:20px; height:20px; border-radius:50%; background:var(--fill); color:var(--mute); font-size:0.7059rem; font-weight:600; display:grid; place-items:center; font-family:var(--rounded)}
 .steps li b{font-weight:500; grid-column:2}
-.steps li .steptools{grid-column:3; grid-row:1 / span 2; display:flex; gap:6px}
+.steps li .steptools{grid-column:3; grid-row:1 / span 2; display:flex; gap:16px}
 .steps li span{grid-column:2; font-size:0.7647rem; color:var(--mute)}
 .item{position:relative; border-bottom:.5px solid var(--line)}
 .item .row{border-bottom:0}
-.item.hastools .row{padding-right:80px}
-.tools{position:absolute; right:0; top:9px; display:flex; gap:6px}
+.item.hastools .row{padding-right:88px}
+.tools{position:absolute; right:0; top:9px; display:flex; gap:12px}
 .tool{width:32px; height:32px; border:0; border-radius:9px; background:var(--fill); color:var(--accent); display:grid; place-items:center; cursor:pointer; padding:0}
 .tool svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
 .tool.sm{width:28px; height:28px; border-radius:8px}
@@ -438,10 +439,10 @@ details.exhow ol{margin:0 0 10px; padding-left:20px; font-size:0.8235rem; displa
 .resttimer[hidden]{display:none}
 .resttimer b{font-family:var(--rounded); font-size:1.1765rem; min-width:46px}
 .resttimer button{border:0; border-radius:999px; padding:6px 12px; background:rgba(128,128,128,.35); color:inherit; font:inherit; cursor:pointer}
-.heatwrap{overflow-x:auto; margin-top:10px}
+.heatwrap{margin-top:10px}
 .heatmonths{display:grid; grid-template-columns:repeat(26, 1fr); gap:3px; color:var(--mute); margin-bottom:4px; white-space:nowrap}
 .heatgrid{display:grid; grid-template-rows:repeat(7, 1fr); grid-auto-flow:column; grid-auto-columns:1fr; gap:3px}
-.hc{display:block; aspect-ratio:1; border-radius:3px; border:0; padding:0; background:var(--fill); cursor:pointer}
+.hc{display:block; aspect-ratio:1; border-radius:3px; background:var(--fill)}
 .hc.future{background:transparent}
 .hc.l1{background:color-mix(in srgb, var(--ring1) 25%, var(--fill))}
 .hc.l2{background:color-mix(in srgb, var(--ring1) 50%, var(--fill))}
@@ -449,7 +450,16 @@ details.exhow ol{margin:0 0 10px; padding-left:20px; font-size:0.8235rem; displa
 .hc.l4{background:var(--ring1)}
 .hc.today{box-shadow:inset 0 0 0 1.5px var(--ink)}
 .heatlegend{display:flex; align-items:center; gap:4px; justify-content:flex-end; margin-top:8px}
-.heatlegend .hc{width:11px; cursor:default}
+.heatlegend .hc{width:11px}
+.heatgrid{touch-action:pan-y; cursor:pointer; border-radius:4px; -webkit-tap-highlight-color:transparent}
+.hc.sel{box-shadow:0 0 0 1.5px var(--card), 0 0 0 3px var(--accent); position:relative; z-index:1}
+.heatpick{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px}
+.heatpick .cap{font-variant-numeric:tabular-nums; min-width:0}
+.heatpick .iconbtn{flex:none; white-space:nowrap}
+/* spacing utilities (instead of inline styles); !important so they win like the inline styles they replace */
+.mt4{margin-top:4px !important} .mt6{margin-top:6px !important} .mt8{margin-top:8px !important} .mt10{margin-top:10px !important} .mt12{margin-top:12px !important} .mt14{margin-top:14px !important}
+.wfull{width:100%} .pady12{padding:12px 0}
+.rk1{background:var(--ring1)} .rk2{background:var(--ring2)} .rk3{background:var(--ring3)}
 .swapopt{display:flex; gap:6px}
 .swapopt button{flex:1}
 .swapopt .videolink{flex:1}
@@ -678,8 +688,10 @@ button, .pill, .tabbar, .sechead, .rowbody, .chip, summary, .seg, .navbar, .toas
 .navbar{position:fixed; top:0; left:0; right:0; z-index:9; height:calc(48px + env(safe-area-inset-top,0px)); padding:env(safe-area-inset-top,0px) 16px 0;
   display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.15;
   background:var(--material); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px);
-  border-bottom:.5px solid var(--line); opacity:0; pointer-events:none; transition:opacity .2s}
-.navbar.on{opacity:1; pointer-events:auto; cursor:pointer}
+  border-bottom:.5px solid var(--line); opacity:0; pointer-events:none}
+/* Blur is the costliest layer we have: the hidden title bar drops it, but only after it has faded out */
+.navbar:not(.on){-webkit-backdrop-filter:none; backdrop-filter:none; transition:opacity .2s, -webkit-backdrop-filter 0s .2s, backdrop-filter 0s .2s}
+.navbar.on{opacity:1; pointer-events:auto; cursor:pointer; transition:opacity .2s}
 .navbar b{ font-weight:600}
 .navbar small{ color:var(--mute); font-family:var(--rounded); font-weight:600}
 .navbar small:empty{display:none}
@@ -727,6 +739,10 @@ button, .pill, .tabbar, .sechead, .rowbody, .chip, summary, .seg, .navbar, .toas
     padding-bottom:16px; max-height:calc(88dvh - env(safe-area-inset-bottom,0px))}
 }
 @media (min-width:900px){ .tabind{display:none} .navbar{left:220px} }
+/* Reduce Transparency: solid bars, no live blur */
+@media (prefers-reduced-transparency:reduce){
+  .tabbar, .navbar, .coachpill, .toast{background:var(--card) !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important}
+}
 .toast{cursor:pointer; touch-action:none}
 .asks .chip{background:var(--fill); color:var(--accent); font-weight:500; padding:7px 13px}
 #chatin{resize:none; border-radius:23px; padding:12px 16px}
@@ -885,7 +901,7 @@ html{font-size:17px}
 .row input[type="checkbox"]:checked{background:radial-gradient(circle, var(--accent) 12px, transparent 12.25px)}
 .tool, .gear, .syncdot, .seg button{position:relative}
 .tool::before, .gear::before, .syncdot::after, .seg button::after{content:""; position:absolute}
-.tool::before{inset:-6px -3px} .tool.sm::before{inset:-8px -3px} .gear::before{inset:-4px}
+.tool::before{inset:-6px} .tool.sm::before{inset:-8px} .gear::before{inset:-4px}
 .syncdot::after{inset:-12px -6px} .seg button::after{inset:-7px 0}
 .modeseg button{min-height:44px}
 .sechead{min-height:44px}
@@ -1002,7 +1018,7 @@ input, textarea{caret-color:var(--accent)}
       <label class="togglerow"><span>Cheer me on as I tick exercises</span><input type="checkbox" id="cheertoggle" class="switch"></label>
       <label for="aimodel" class="cap">Model (free)</label>
       <select id="aimodel" class="aisel"></select>
-      <p class="cap" style="margin-top:8px">If this model is busy, the app falls back to another free one. Free models may log prompts, so the app sends only your numbers, never check-in notes.</p>
+      <p class="cap mt8">If this model is busy, the app falls back to another free one. Free models may log prompts, so the app sends only your numbers, never check-in notes.</p>
       <div class="btnrow"><button class="iconbtn text" data-airemove>Remove key</button></div>
     </div>
   </details>
@@ -1014,8 +1030,8 @@ input, textarea{caret-color:var(--accent)}
         <input id="morningtime" type="time" value="06:30" aria-label="Weigh-in reminder time"><input type="checkbox" id="morningtoggle" class="switch" checked aria-label="Morning weigh-in reminder"></div>
       <div class="remrow"><label for="eveningtoggle"><b>Close your day</b><small>Skipped once the day is closed</small></label>
         <input id="remindtime" type="time" value="21:00" aria-label="Close-day reminder time"><input type="checkbox" id="eveningtoggle" class="switch" checked aria-label="Close-day reminder"></div>
-      <button class="btn" data-remindon style="width:100%; margin-top:12px">Turn on reminders</button>
-      <p class="cap" id="remindstatus" style="margin-top:8px"></p>
+      <button class="btn wfull mt12" data-remindon>Turn on reminders</button>
+      <p class="cap mt8" id="remindstatus"></p>
       <p class="syncerr" id="remindmsg"></p>
       <div class="btnrow"><button class="iconbtn text" data-remindoff hidden>Turn off all reminders</button></div>
     </div>
@@ -1059,11 +1075,11 @@ input, textarea{caret-color:var(--accent)}
     <div id="enc-set" hidden>
       <h3 id="enc-title">Encrypt synced data</h3>
       <p class="cap">Your repo will hold only scrambled data. You'll enter this passphrase once on each new device. If you forget it, the synced copy can't be recovered (this phone keeps its own copy).</p>
-      <div class="cgrid" style="margin-top:6px">
+      <div class="cgrid mt6">
         <input id="pass1" type="password" autocomplete="new-password" placeholder="Passphrase (8+ characters)" aria-label="New passphrase">
         <input id="pass2" type="password" autocomplete="new-password" placeholder="Repeat passphrase" aria-label="Repeat passphrase">
       </div>
-      <div class="btnrow" style="margin-top:8px"><button class="btn" id="enc-btn" data-encrypt>Encrypt</button></div>
+      <div class="btnrow mt8"><button class="btn" id="enc-btn" data-encrypt>Encrypt</button></div>
       <p class="syncerr" id="passmsg"></p>
     </div>
     <h3>Backup file</h3>
@@ -1191,7 +1207,7 @@ input, textarea{caret-color:var(--accent)}
       <button class="chip" data-ask="Am I on pace for my goal? What should I change?">Am I on pace?</button>
       <button class="chip" data-ask="My knee hurts a bit on squats. What can I swap in?">Knee-friendly swap?</button>
     </div>
-    <div class="tokrow" style="margin-top:10px">
+    <div class="tokrow mt10">
       <textarea id="chatin" rows="1" placeholder="Ask the coach…" aria-label="Message the coach"></textarea>
       <button class="btn" data-chatsend>Send</button>
     </div>
@@ -2247,9 +2263,9 @@ function ringsHtml(date, p, pre = ''){
     return `<circle cx="44" cy="44" r="${r}" class="rtrack" style="stroke:var(${c})"/><circle cx="44" cy="44" r="${r}" class="ring" data-r="${pre}ring${i}" style="stroke:var(${c}); stroke-dasharray:${C.toFixed(1)}; stroke-dashoffset:${(C * (1 - v)).toFixed(1)}"/>`; }).join('');
   return `<div class="dayhead"><svg viewBox="0 0 88 88" class="rings" aria-hidden="true">${svg}</svg>
     <div class="ringstats">
-      <div><i style="background:var(--ring1)"></i><b>${p.done}/${p.total}</b> done</div>
-      <div><i style="background:var(--ring2)"></i><b>${g}</b>/${PROTEIN_MIN} g protein</div>
-      <div><i style="background:var(--ring3)"></i><b>${cm}</b>/${ct} min cardio</div></div></div>`;
+      <div><i class="rk1"></i><b>${p.done}/${p.total}</b> done</div>
+      <div><i class="rk2"></i><b>${g}</b>/${PROTEIN_MIN} g protein</div>
+      <div><i class="rk3"></i><b>${cm}</b>/${ct} min cardio</div></div></div>`;
 }
 let modeKind = 'cardio';
 function openModeSheet(m){
@@ -2428,6 +2444,15 @@ const haptic = (() => {
 const hideModal = () => fadeOut(document.getElementById('modal'));
 
 let secondaryDirty = true;
+// Stats cards only depend on the data, the date and their own toggles: skip a card when none of those changed.
+const drawn = {};
+let drawnState = null;
+function unchanged(card, ...deps){
+  if (drawnState !== state){ drawnState = state; for (const k in drawn) delete drawn[k]; }   // sync/import swapped the whole object
+  const key = [state.updatedAt, iso(today), ...deps].join('|');
+  if (drawn[card] === key && document.getElementById(card)?.childElementCount) return true;
+  drawn[card] = key; return false;
+}
 // Collapsed sections are a per-device preference (not synced).
 let uiPrefs = {}; try { uiPrefs = JSON.parse(localStorage.getItem('cutplan-ui')) || {}; } catch(e) {}
 const saveUi = () => { try { localStorage.setItem('cutplan-ui', JSON.stringify(uiPrefs)); } catch(e) {} };
@@ -2445,7 +2470,7 @@ function renderSecondary(){
   const a = sevenDayAvg();
   const wDates = Object.keys(state.weights).filter(d => typeof state.weights[d] === 'number' && d <= iso(today)).sort();
   const lastD = wDates[wDates.length - 1], prevD = wDates[wDates.length - 2];
-  let avgHtml = '<div class="cap" style="margin-top:14px">Log a weigh-in to see your progress.</div>';
+  let avgHtml = '<div class="cap mt14">Log a weigh-in to see your progress.</div>';
   let barPct = 0, chips = '';
   if (a && lastD){
     const latest = state.weights[lastD], lost = START - latest, togo = latest - GOAL;
@@ -2459,7 +2484,7 @@ function renderSecondary(){
       <div><div class="big">${lost >= 0 ? '−' : '+'}${Math.abs(lost).toFixed(1)}</div><div class="cap">kg from start (${START})</div></div>
       <div><div class="big">${a.avg.toFixed(1)}</div><div class="cap">7-day avg${a.n ? ` · ${a.n} weigh-in${a.n > 1 ? 's' : ''}` : ''}</div></div>
       <div><div class="big">${Math.max(0, togo).toFixed(1)}</div><div class="cap">kg to ${GOAL}</div></div></div>
-      <div class="cap" style="margin-top:6px">The bar and milestones follow your 7-day average, which smooths out daily water swings.</div>`;
+      <div class="cap mt6">The bar and milestones follow your 7-day average, which smooths out daily water swings.</div>`;
     chips = MILESTONES.map(m => `<span class="chip ${a.avg<=m?'hit':''}">${m}</span>`).join('');
   } else {
     chips = MILESTONES.map(m => `<span class="chip">${m}</span>`).join('');
@@ -2526,7 +2551,7 @@ function renderHome(){
 
   // weight mini card
   const wd = Object.keys(state.weights).filter(x => typeof state.weights[x] === 'number' && x <= d).sort(), last = wd[wd.length - 1];
-  let wcard = '<div class="hkicker">Weight</div><div class="cap" style="margin-top:6px">Log a weigh-in to start your trend.</div>';
+  let wcard = '<div class="hkicker">Weight</div><div class="cap mt6">Log a weigh-in to start your trend.</div>';
   if (last){
     const pts = wd.slice(-30).map(x => state.weights[x]), lo = Math.min(...pts), hi = Math.max(...pts), span = Math.max(.5, hi - lo);
     const xy = pts.map((v2, k) => [pts.length === 1 ? 60 : k * 120 / (pts.length - 1), 4 + 30 * (hi - v2) / span]);
@@ -2543,7 +2568,7 @@ function renderHome(){
     <button class="tapcard" data-tab="stats" data-scroll="weight" aria-label="Weight, open stats">${wcard}</button>
     <button class="tapcard" data-tab="stats" data-scroll="heat" aria-label="Streak, open stats"><div class="hkicker">Streak</div>
       <span class="big">${ico('flame')} ${st.cur}</span><span class="cap">day streak · best ${st.best}</span>
-      <div class="wdots">${dots}</div><span class="cap" style="margin-top:6px">${st.weekNow}/5 good days · ${st.weekCur} week streak</span></button>`;
+      <div class="wdots">${dots}</div><span class="cap mt6">${st.weekNow}/5 good days · ${st.weekCur} week streak</span></button>`;
 }
 
 /* ---------- Start: jump straight into the next exercise of today ---------- */
@@ -2593,6 +2618,7 @@ function workoutSummary(d){
 }
 const fmtVol = v => v >= 1000 ? `${(v / 1000).toFixed(1)} t` : `${Math.round(v)} kg`;
 function renderKpis(){
+  if (unchanged('kpis')) return;
   const wds = workoutDays(), month = iso(today).slice(0, 7), st = stats();
   const a = avgOn(iso(today)), b = avgOn(iso(addDays(today, -30))), ch = a != null && b != null ? a - b : null;
   const tile = (v, cap, cls = '') => `<div class="kpi"><div class="big ${cls}">${v}</div><div class="cap">${cap}</div></div>`;
@@ -2634,13 +2660,13 @@ function exChart(name, metric, seg){
   const val = x => m[0] === 'top' ? x.top : m[0] === 'e1rm' ? x.e : m[0] === 'vol' ? x.vol : x.maxR;
   const pts = h.map(x => ({ d: x.d, v: val(x) })).filter(p => p.v > 0);
   const best = bestSet(name);
-  return `${seg && metrics.length > 1 ? `<div class="seg" style="margin-top:10px">${metrics.map(([k, l]) => `<button class="${k === m[0] ? 'on' : ''}" data-exmetric="${k}">${l}</button>`).join('')}</div>` : ''}
+  return `${seg && metrics.length > 1 ? `<div class="seg mt10">${metrics.map(([k, l]) => `<button class="${k === m[0] ? 'on' : ''}" data-exmetric="${k}">${l}</button>`).join('')}</div>` : ''}
     ${pts.length >= 2 ? lineChart(pts, m[2]) : `<p class="cap">${h.length ? 'Log it once more to see a trend.' : 'No sets logged yet. Open it from the Plan tab and log your sets.'}</p>`}
-    ${best.e ? `<p class="cap" style="margin-top:6px">Best: <b>${best.w} kg × ${best.r}</b> · est. 1RM <b>${Math.round(best.e)} kg</b></p>` : ''}
+    ${best.e ? `<p class="cap mt6">Best: <b>${best.w} kg × ${best.r}</b> · est. 1RM <b>${Math.round(best.e)} kg</b></p>` : ''}
     ${h.length ? `<div class="sessrows">${h.slice(-5).reverse().map(x => `<div class="sessrow"><span>${fmt(fromIso(x.d))}</span><span>${fmtSets(x.sets)}</span></div>`).join('')}</div>` : ''}`;
 }
 function renderExProg(){
-  const el = document.getElementById('exprog'); if (!el) return;
+  const el = document.getElementById('exprog'); if (!el || unchanged('exprog', exProgName, exProgMetric)) return;
   const recent = Object.entries(state.logs).sort((a, b) => b[0].localeCompare(a[0])).map(([, v]) => v.name);
   const names = [...new Set(recent)].filter(n => exHistory(n).length);
   if (!names.length){ el.innerHTML = '<h2 class="sect">Exercise progress</h2><p class="cap">Log your sets in an exercise (tap its name on the Plan tab) and your strength trend shows up here.</p>'; return; }
@@ -2656,7 +2682,7 @@ function workoutRow(w){
     <span><span class="wt">${w.title}</span><br><span class="wm">${bits}</span></span>${w.prs ? `<span class="pr">${ico('trophy')} ${w.prs} PR${w.prs > 1 ? 's' : ''}</span>` : '<span></span>'}</button>`;
 }
 function renderRecent(){
-  const el = document.getElementById('recent'); if (!el) return;
+  const el = document.getElementById('recent'); if (!el || unchanged('recent')) return;
   const wds = workoutDays();
   el.innerHTML = `<div class="charthead"><h2 class="sect">Recent workouts</h2>${wds.length > 6 ? '<button class="linkbtn" data-allworkouts>See all</button>' : ''}</div>
     ${wds.length ? `<div class="wlist">${wds.slice(0, 6).map(d => workoutRow(workoutSummary(d))).join('')}</div>` : '<p class="cap">Your sessions show up here once you tick exercises.</p>'}`;
@@ -2717,7 +2743,7 @@ function renderLibList(){
       : gif ? `<span class="libthumb"><img src="${GIF_BASE}${gif.g}" alt="" loading="lazy"></span>` : `<span class="libthumb none">${esc(n[0])}</span>`;
     return `<button class="librow" data-lib="${esc(n)}">${thumb}<span><span class="ln">${esc(n)}</span><span class="lm">${[catsOf(n).join(', '), equipOf(n)].filter(Boolean).join(' · ')}</span></span>
       <span class="lb">${best.e ? `${best.w} kg × ${best.r}` : ''}${days.length ? `<span class="lp">${days.join(' · ')}</span>` : ''}</span></button>`;
-  }).join('') || '<p class="cap" style="padding:12px 0">No exercises match. Try another filter.</p>';
+  }).join('') || '<p class="cap pady12">No exercises match. Try another filter.</p>';
 }
 function openLib(name){
   exFor = null; libFor = name;
@@ -2971,7 +2997,7 @@ function chartHtml(){
   const seg = [[30,'30d'],[90,'90d'],[0,'All']].map(([v,l]) =>
     `<button class="${range===v?'on':''}" data-range="${v}" aria-pressed="${range===v}">${l}</button>`).join('');
   const head = `<div class="charthead"><h3>Trend</h3><div class="seg">${seg}</div></div>`;
-  if (all.length < 2) return `<div class="chartwrap">${head}<div class="cap" style="margin-top:8px">Log two or more weigh-ins to see your trend.</div></div>`;
+  if (all.length < 2) return `<div class="chartwrap">${head}<div class="cap mt8">Log two or more weigh-ins to see your trend.</div></div>`;
 
   const cutoff = range ? iso(addDays(today, -range + 1)) : all[0];
   const pts = all.filter(d => d >= cutoff).map(d => {
@@ -2980,7 +3006,7 @@ function chartHtml(){
     const win = all.filter(x => x >= lo && x <= d).map(x => state.weights[x]);
     return { d, t: fromIso(d).getTime(), w: state.weights[d], a: win.reduce((s,x)=>s+x,0) / win.length };
   });
-  if (pts.length < 2) return `<div class="chartwrap">${head}<div class="cap" style="margin-top:8px">Fewer than two weigh-ins in this range.</div></div>`;
+  if (pts.length < 2) return `<div class="chartwrap">${head}<div class="cap mt8">Fewer than two weigh-ins in this range.</div></div>`;
 
   const W = 340, H = 170, L = 34, R = 8, T = 8, B = 20;
   const vals = pts.flatMap(p => [p.w, p.a]);
@@ -3068,7 +3094,14 @@ function bestRun(dates, test){
 const fullWeek = (ws, test) => [...Array(7)].every((_,k) => test(iso(addDays(ws, k))));
 
 /* Everything below is derived from entries, so reopening a day can't leave stale badges. */
+// Streaks walk every closed day; Home, Overview and Badges all ask, so reuse the answer until the data or the date changes.
+let statsMemo = null, statsKey = '';
 function stats(){
+  const key = `${state.updatedAt}|${iso(today)}`;
+  if (statsMemo && statsKey === key && statsMemo.of === state) return statsMemo.v;
+  statsMemo = { of: state, v: calcStats() }; statsKey = key; return statsMemo.v;
+}
+function calcStats(){
   const closed = Object.keys(state.closed);
   let cur = 0, d = today;
   if (!isGood(iso(d))) d = addDays(d, -1);   // today still open: streak runs through yesterday
@@ -3371,13 +3404,13 @@ const REC = [['Ready','rc0'], ['Recovering','rc1'], ['Fatigued','rc2']];
 const recLevel = v => v >= 4 ? 2 : v >= 1 ? 1 : 0;
 const agoText = k => k === 0 ? 'today' : k === 1 ? 'yesterday' : `${k} days ago`;   // calendar days, not hours
 function renderMuscles(){
-  const el = document.getElementById('muscles'); if (!el) return;
+  const el = document.getElementById('muscles'); if (!el || unchanged('muscles', muscleMode, muscleRange)) return;
   const modeSeg = `<div class="seg">${[['balance','Balance'],['recovery','Recovery']].map(([k,l]) => `<button class="${muscleMode===k?'on':''}" data-mmode="${k}">${l}</button>`).join('')}</div>`;
   if (muscleMode === 'recovery'){
     const { f, ago } = muscleFatigue(), trained = Object.keys(ago).filter(m => m !== 'adductors');
     const cls = m => m in ago ? REC[recLevel(f[m])][1] : 'rcx';
     el.innerHTML = `<div class="mhead"><h2 class="sect">Muscles</h2>${modeSeg}</div>
-      <div class="cap" style="margin-top:4px">What's still loaded from the last few days. Plan heavy work for green muscles.</div>
+      <div class="cap mt4">What's still loaded from the last few days. Plan heavy work for green muscles.</div>
       <div class="bodies">${bodySvg('front', cls)}${bodySvg('back', cls)}</div>
       ${trained.length ? `<div class="recgrid">${trained.sort((a, b) => f[b] - f[a]).map(m => { const [lbl, c] = REC[recLevel(f[m])];
         return `<div class="recrow"><span>${MUSCLE_LABEL[m]} <span class="cap">· ${agoText(ago[m])}</span></span><span class="recchip ${c}">${lbl}</span></div>`; }).join('')}</div>`
@@ -3391,7 +3424,7 @@ function renderMuscles(){
   const zero = Object.keys(per).filter(m => per[m] === 0 && m !== 'adductors' && m !== 'traps');
   const seg = [[7,'This week'],[28,'4 weeks']].map(([v,l]) => `<button class="${muscleRange===v?'on':''}" data-mrange="${v}">${l}</button>`).join('');
   el.innerHTML = `<div class="mhead"><h2 class="sect">Muscles</h2>${modeSeg}</div>
-    <div class="mhead" style="margin-top:8px"><span class="cap">Sets per week. Primary muscle = 1 set, helpers = ½.</span><div class="seg">${seg}</div></div>
+    <div class="mhead mt8"><span class="cap">Sets per week. Primary muscle = 1 set, helpers = ½.</span><div class="seg">${seg}</div></div>
     <div class="bodies">${bodySvg('front', level)}${bodySvg('back', level)}</div>
     <div class="heatlegend"><span class="cap">0</span><i class="hc l0"></i><i class="hc l1"></i><i class="hc l2"></i><i class="hc l3"></i><i class="hc l4"></i><span class="cap">12+ sets</span></div>
     ${any ? `<div class="mlist">${Object.entries(per).filter(([,v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([m, v]) =>
@@ -3401,6 +3434,7 @@ function renderMuscles(){
 }
 function renderReview(){
   renderMuscles();
+  if (unchanged('review', iso(weekStart), !!cfg.aiKey)) return;
   const r = weekReview(addDays(weekStart, -7));
   const label = `${fmt(r.ws)} – ${fmt(addDays(r.ws,6))}`;
   const isLastWeek = iso(weekStart) === iso(mon(today));
@@ -3415,32 +3449,87 @@ function renderReview(){
       ${stat(r.prot == null ? '—' : Math.round(r.prot) + ' g', 'avg protein')}
       ${stat(`${r.good}/7`, 'good days')}
     </div>
-    <div class="cap" style="margin-top:8px">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardioMin} cardio min${r.skipped ? ` · ${r.skipped} skipped` : ''} · ${r.cardio} cardio-only${r.walk ? ` · ${r.walk} walk` : ''} · ${r.rest} rest${r.sick ? ` · ${r.sick} sick` : ''} · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
+    <div class="cap mt8">${r.lifts} workout${r.lifts===1?'':'s'} done · ${r.cardioMin} cardio min${r.skipped ? ` · ${r.skipped} skipped` : ''} · ${r.cardio} cardio-only${r.walk ? ` · ${r.walk} walk` : ''} · ${r.rest} rest${r.sick ? ` · ${r.sick} sick` : ''} · ${r.closed} closed${r.w0 != null ? ` · avg ${r.w0.toFixed(1)} kg` : ''}</div>
     <ul class="tips">${r.tips.map(t => `<li>${t}</li>`).join('')}</ul>
     ${state.ai.week[iso(r.ws)] ? `<div class="aibox"><b>${ico('spark')} Coach insights</b><div>${md(state.ai.week[iso(r.ws)])}</div><button class="linkbtn" data-aiweek>Refresh</button></div>`
-      : cfg.aiKey ? '<button class="iconbtn text" data-aiweek style="margin-top:12px">' + ico('spark') + ' Get AI insights</button>' : ''}
+      : cfg.aiKey ? '<button class="iconbtn text mt12" data-aiweek>' + ico('spark') + ' Get AI insights</button>' : ''}
     <p class="syncerr" id="aiweekmsg"></p>`;
 }
 
+// The 6-month grid is one control: tap or slide across it to pick a day (squares are far below 44 pt), then open it.
+let heatSel = null;
+const HEAT_WEEKS = 26;
+const heatStart = () => addDays(mon(today), -7 * (HEAT_WEEKS - 1));
+function heatText(day){
+  const p = progress(day), pct = Math.round(100 * p.done / p.total);
+  const when = day === iso(today) ? 'Today' : fromIso(day).toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'short' });
+  return `${when} · ${pct}%${isClosed(day) ? ' · closed' : ''}`;
+}
 function renderHeat(){
-  const weeks = 26, start = addDays(mon(today), -7 * (weeks - 1)), t = iso(today);
+  const el = document.getElementById('heat'), t = iso(today), start = heatStart();
+  if (!heatSel || heatSel > t || heatSel < iso(start)) heatSel = t;
+  if (unchanged('heat')) return;
   let cells = '', months = '';
-  for (let w = 0; w < weeks; w++){
+  for (let w = 0; w < HEAT_WEEKS; w++){
     const ws = addDays(start, w * 7);
     months += `<span>${ws.getDate() <= 7 ? ws.toLocaleDateString(undefined, { month:'short' }) : ''}</span>`;
     for (let d = 0; d < 7; d++){
       const day = iso(addDays(ws, d));
       if (day > t){ cells += '<i class="hc future"></i>'; continue; }
       const p = progress(day), pct = p.done / p.total, lv = isClosed(day) ? (pct >= 1 ? 4 : pct >= GOOD_PCT / 100 ? 3 : pct >= .5 ? 2 : 1) : (p.done ? 1 : 0);
-      cells += `<button class="hc l${lv}${day === t ? ' today' : ''}" data-jump="${day}" aria-label="${day}: ${Math.round(pct * 100)}%${isClosed(day) ? ', closed' : ''}"></button>`;
+      cells += `<i class="hc l${lv}${day === t ? ' today' : ''}" data-d="${day}"></i>`;
     }
   }
-  document.getElementById('heat').innerHTML = `<h2 class="sect">Last 6 months</h2>
-    <div class="heatwrap"><div class="heatmonths">${months}</div><div class="heatgrid">${cells}</div></div>
-    <div class="heatlegend"><span class="cap">Less</span><i class="hc l0"></i><i class="hc l1"></i><i class="hc l2"></i><i class="hc l3"></i><i class="hc l4"></i><span class="cap">Perfect</span></div>`;
+  const last = Math.round((fromIso(t) - start) / 864e5);
+  el.innerHTML = `<h2 class="sect">Last 6 months</h2>
+    <div class="heatwrap"><div class="heatmonths" aria-hidden="true">${months}</div>
+      <div class="heatgrid" role="slider" tabindex="0" aria-label="Day" aria-valuemin="0" aria-valuemax="${last}">${cells}</div></div>
+    <div class="heatpick"><span class="cap" id="heatcap" aria-live="polite"></span><button class="iconbtn text" id="heatopen">Open day</button></div>
+    <div class="heatlegend" aria-hidden="true"><span class="cap">Less</span><i class="hc l0"></i><i class="hc l1"></i><i class="hc l2"></i><i class="hc l3"></i><i class="hc l4"></i><span class="cap">Perfect</span></div>`;
+  pickHeat(heatSel);
 }
+function pickHeat(day, felt){
+  const g = document.querySelector('#heat .heatgrid'); if (!g) return;
+  const t = iso(today), first = iso(heatStart());
+  day = day > t ? t : day < first ? first : day;
+  if (felt && day !== heatSel) haptic();
+  heatSel = day;
+  g.querySelector('.hc.sel')?.classList.remove('sel');
+  g.querySelector(`[data-d="${day}"]`)?.classList.add('sel');
+  const txt = heatText(day);
+  g.setAttribute('aria-valuenow', Math.round((fromIso(day) - fromIso(first)) / 864e5));
+  g.setAttribute('aria-valuetext', txt);
+  document.getElementById('heatcap').textContent = txt;
+  document.getElementById('heatopen').dataset.jump = day;
+}
+// nearest square to a point, so taps in the gaps or a finger's width off still land
+function heatAt(g, x, y){
+  const r = g.getBoundingClientRect();
+  const col = Math.max(0, Math.min(HEAT_WEEKS - 1, Math.floor((x - r.left) / r.width * HEAT_WEEKS)));
+  const row = Math.max(0, Math.min(6, Math.floor((y - r.top) / r.height * 7)));
+  return iso(addDays(heatStart(), col * 7 + row));
+}
+let heatDrag = false;
+document.addEventListener('pointerdown', e => {
+  const g = e.target.closest('#heat .heatgrid'); if (!g) return;
+  heatDrag = true; pickHeat(heatAt(g, e.clientX, e.clientY), true);
+});
+document.addEventListener('pointermove', e => {
+  if (!heatDrag) return;
+  const g = document.querySelector('#heat .heatgrid'); if (g) pickHeat(heatAt(g, e.clientX, e.clientY), true);
+});
+['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, () => { heatDrag = false; }));
+document.addEventListener('keydown', e => {
+  if (!e.target.matches?.('#heat .heatgrid')) return;
+  const step = { ArrowDown:1, ArrowUp:-1, ArrowRight:7, ArrowLeft:-7 }[e.key];
+  if (step){ e.preventDefault(); pickHeat(iso(addDays(fromIso(heatSel), step))); }
+  else if (e.key === 'Home'){ e.preventDefault(); pickHeat(iso(heatStart())); }
+  else if (e.key === 'End'){ e.preventDefault(); pickHeat(iso(today)); }
+  else if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); document.getElementById('heatopen').click(); }
+});
 function renderBadges(){
   renderHeat();
+  if (unchanged('badges')) return;
   const st = stats(), got = earned(st);
   document.getElementById('badges').innerHTML = `
     <h2 class="sect">Streaks &amp; badges</h2>
@@ -3449,7 +3538,7 @@ function renderBadges(){
       <div><div class="big">${st.best}</div><div class="cap">best streak</div></div>
       <div><div class="big">${ico('calendar')} ${st.weekCur}</div><div class="cap">week streak · ${st.weekNow}/5 this week</div></div>
     </div>
-    <div class="cap" style="margin-top:8px">A good day is a closed day at ${GOOD_PCT}% or more. ${got.size} of ${BADGES.length} badges earned.</div>
+    <div class="cap mt8">A good day is a closed day at ${GOOD_PCT}% or more. ${got.size} of ${BADGES.length} badges earned.</div>
     <div class="badges">${BADGES.map(b => `<div class="badge ${got.has(b.name)?'got':''}" title="${b.name}"><span class="be">${b.icon}</span><span class="bn">${b.name}</span></div>`).join('')}</div>`;
 }
 
@@ -3482,7 +3571,7 @@ function renderCheckin(){
       <div><label>Pain (foot, knees, shoulders)</label><div class="seg" id="painseg">${seg('pain', PAIN, ci.pain)}</div></div>
       <div><label for="cinote">Note</label><input id="cinote" type="text" maxlength="140" placeholder="Strength, sleep, how clothes fit…" value="${esc(ci.note || '')}"></div>
     </div>
-    <div class="btnrow" style="margin-top:12px">
+    <div class="btnrow mt12">
       <button class="btn" data-savecheckin>${state.checkins[sel] ? 'Update check-in' : 'Save check-in'}</button>
       ${state.checkins[sel] ? '<button class="linkbtn" data-delcheckin>Delete</button>' : ''}
     </div>
