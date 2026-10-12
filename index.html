@@ -426,6 +426,14 @@ button, a, input, label, summary, .rowbody{touch-action:manipulation}
 .setchk{width:44px; height:44px; border-radius:50%; border:1.5px solid var(--tick); background:none; color:transparent; font-size:0.9412rem; cursor:pointer; transition:background-color .2s, color .2s, border-color .2s}
 .setrow.done .setchk{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
 .setrow.done .setno{background:var(--accent); color:var(--accent-ink)}
+.setrow.sugg .stepper input[data-f="w"]{color:var(--accent); font-weight:600}
+.setcoach{display:grid; gap:10px; margin-top:12px; padding:12px; border-radius:16px; background:var(--card); box-shadow:inset 0 0 0 .5px var(--line)}
+.schead{display:grid; gap:2px}
+.schead b{font-family:var(--rounded); font-size:1rem}
+.scpr{display:flex; align-items:center; gap:6px; color:var(--accent); font-weight:600; font-size:0.8824rem}
+.effort{display:grid; grid-template-columns:repeat(4, 1fr); gap:6px}
+.effort button{min-height:44px; border:0; border-radius:12px; background:var(--fill); font-size:0.8824rem; font-weight:500; cursor:pointer}
+.effort button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink); font-weight:600}
 .setbtns{display:flex; justify-content:space-between}
 details.exhow{margin:0; padding:0 12px; background:var(--bg); border-radius:12px}
 details.exhow summary{font-size:0.8824rem; padding:10px 0}
@@ -2070,7 +2078,7 @@ function progression(name, rx, date, deload){
   return { w: last.top, reps: null, why: `Stay at ${last.top} kg and beat ${reps}. Hit ${range[1]} on every set to move up.` };
 }
 let libFor = null;   // exercise open from the library (read-only detail, not a plan slot)
-let exFor = null, exDraft = [], exUnit = 'reps', wakeLock = null, restTimer = null;
+let exFor = null, exDraft = [], exUnit = 'reps', wakeLock = null, restTimer = null, restLeft = 0;
 async function keepAwake(on){
   try {
     if (on && 'wakeLock' in navigator && !wakeLock){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
@@ -2098,14 +2106,14 @@ function openEx(id){
     <p class="exrx">${fmtRx(rx)}${dl ? ' · deload week' : ''}</p>
     ${tgt && !locked ? `<div class="target ${tgt.up ? 'up' : tgt.down ? 'down' : ''}"><b>${ico('target')} Today: ${tgt.w} kg${tgt.up ? ' ↑' : tgt.down ? ' ↓' : ''}</b><span>${tgt.why}</span></div>` : ''}
     ${last && loggable ? `<p class="cap">Last time (${fmt(fromIso(last.d))}): ${fmtSets(last.sets, exUnit)}</p>` : ''}
-    ${loggable ? `<div class="sets" id="exsets"></div>
+    ${loggable ? `<div class="sets" id="exsets"></div><div id="setcoach" aria-live="polite"></div>
       <div class="setbtns"><button class="linkbtn" data-addset ${locked ? 'disabled' : ''}>+ Add set</button><button class="linkbtn" data-delset ${locked ? 'disabled' : ''}>− Remove set</button></div>` : ''}
     ${steps ? stepsHtml(steps, false, id) : ''}
     ${how ? `<details class="exhow"><summary>How to do it</summary><ol>${how.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>` : ''}
     <div class="exactions"><a class="btn cancel videolink" href="${ytLink(name)}" target="_blank" rel="noopener">▶︎ Watch</a>
       ${meta.n && !locked ? `<button class="btn cancel" data-swap="${id}">${meta.alts ? 'Swap or skip' : 'Skip'}</button>` : ''}</div>
     <div class="exfoot"><button class="btn" data-exdone ${locked ? 'disabled' : ''}>${locked ? 'Day closed' : isDone(sel, id) ? 'Save ✓' : 'Done ✓'}</button></div>`;
-  if (loggable) renderSets();
+  if (loggable){ renderSets(); if (!locked) renderCoach(lastDone(), false); }   // reopening: show advice, don't overwrite what's saved
   showSheet(document.getElementById('exsheet'));
   sharpenGif(document.querySelector('#exbody .exgif'));
   keepAwake(true);
@@ -2184,7 +2192,7 @@ function renderSets(){
   const el = document.getElementById('exsets'); if (!el) return;
   const locked = isClosed(sel), ul = exUnit === 'reps' ? 'Reps' : exUnit === 'm' ? 'Metres' : exUnit === 'sec' ? 'Seconds' : 'Min';
   el.innerHTML = `<div class="sethead"><span>Set</span><span>Weight (kg)</span><span>${ul}</span><span></span></div>` + exDraft.map((x, k) => `
-    <div class="setrow${x.done ? ' done' : ''}">
+    <div class="setrow${x.done ? ' done' : ''}${x.auto && !x.done ? ' sugg' : ''}">
       <span class="setno">${k + 1}</span>
       <div class="stepper"><button data-step="${k}:w:-1" ${locked ? 'disabled' : ''} aria-label="Less weight">−</button><input data-k="${k}" data-f="w" inputmode="decimal" value="${x.w}" placeholder="kg" ${locked ? 'disabled' : ''}><button data-step="${k}:w:1" ${locked ? 'disabled' : ''} aria-label="More weight">+</button></div>
       <div class="stepper"><button data-step="${k}:r:-1" ${locked ? 'disabled' : ''} aria-label="Fewer">−</button><input data-k="${k}" data-f="r" inputmode="numeric" value="${x.r}" placeholder="0" ${locked ? 'disabled' : ''}><button data-step="${k}:r:1" ${locked ? 'disabled' : ''} aria-label="More">+</button></div>
@@ -2199,21 +2207,92 @@ function stepSet(spec){
 }
 function startRest(){
   const v = dayView(sel), idx = v.items.findIndex(x => x[0] === exFor);
-  let left = idx === 1 && v.lift ? 150 : 90;              // the day's main lift gets a longer rest
+  restLeft = idx === 1 && v.lift ? 150 : 90;              // the day's main lift gets a longer rest
   const el = document.getElementById('resttimer'); clearInterval(restTimer);
   const tick = () => {
-    el.querySelector('b').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
-    if (left-- <= 0){ clearInterval(restTimer); el.hidden = true; if (navigator.vibrate) navigator.vibrate(200); toast('Rest done. Next set 💪'); }
+    el.querySelector('b').textContent = `${Math.floor(restLeft / 60)}:${String(restLeft % 60).padStart(2, '0')}`;
+    if (restLeft-- <= 0){ clearInterval(restTimer); el.hidden = true; if (navigator.vibrate) navigator.vibrate(200); toast('Rest done. Next set 💪'); }
   };
   showSheet(el); tick(); restTimer = setInterval(tick, 1000);
 }
+/* ---------- Set coach: after each ticked set, work out the next one from what you just lifted ----------
+   Effort = reps left in the tank (RIR). Capacity next set = reps done + RIR − 1 (fatigue); aim to leave ~1 in reserve.
+   Direction comes from the rep range, size from an RIR-adjusted Epley estimate, rounded to 2.5 kg plates. */
+const EFFORTS = [[4, 'Easy', '4+ left'], [2, 'Good', '2–3 left'], [1, 'Hard', '1 left'], [0, 'Failed', 'nothing left']];
+const plate = w => Math.round(w / 2.5) * 2.5;
+function exCtx(){
+  const v = dayView(sel), it = v.items.find(x => x[0] === exFor); if (!it) return null;
+  const dl = weekInfo(mon(fromIso(sel))).deload && v.lift, rx = dl ? deloadRx(it[2]) : it[2];
+  return { name: it[1], rx, dl, range: repRange(rx) || [8, 12] };
+}
+function adviseNext(k){
+  const c = exCtx(), x = exDraft[k]; if (!c || !x) return null;
+  const w = Number(x.w) || 0, r = Number(x.r) || 0; if (!r) return null;
+  const [lo, hi] = c.range, rir = x.rir ?? 2, cap = r + rir - 1, at = cap - 1;   // reps you'd get next set leaving 1 in the tank
+  const tag = x.rir == null ? '' : `, ${EFFORTS.find(e => e[0] === x.rir)[2]}`;
+  if (!w){   // bodyweight
+    if (at > hi && !c.dl) return { dir:'up', head:`Next set: harder variation or add load`, why:`${r} reps${tag}: past your ${lo}–${hi} range. Slow the lowering to 3 s or hold a weight.` };
+    if (at < lo) return { dir:'down', head:`Next set: aim for ${Math.max(1, at)}–${lo} reps`, why:`${r} reps${tag}. Take a slightly longer rest or an easier variation.` };
+    return { dir:'keep', head:`Next set: ${Math.min(at, hi)}–${hi} reps`, why:`Right in your range${tag}.`, r: Math.min(at, hi) };
+  }
+  const e = w * (1 + Math.min(15, cap) / 30), wAt = reps => e / (1 + (reps + 1) / 30);
+  if (rir === 0 && r < lo){
+    const nw = Math.min(plate(w * .9), w - 2.5), nr = Math.min(hi, lo + 1);
+    return { dir:'down', w: Math.max(2.5, nw), r: nr, head:`Next set: ${Math.max(2.5, nw)} kg × ${lo}–${nr}`, why:`Failed at ${r}: drop about 10% so the next set stays clean.` };
+  }
+  if (at > hi && !c.dl){
+    const tr = Math.max(lo, hi - 1), nw = Math.min(plate(wAt(tr)), plate(w * 1.1));
+    if (nw > w) return { dir:'up', w: nw, r: tr, head:`Next set: ${nw} kg × ${tr}–${hi}`, why:`${r} reps${tag}: room for more. +${+(nw - w).toFixed(1)} kg.` };
+  }
+  if (at < lo){
+    const tr = Math.min(hi, lo + 1), nw = Math.max(plate(wAt(tr)), plate(w * .85));
+    if (nw < w) return { dir:'down', w: nw, r: tr, head:`Next set: ${nw} kg × ${lo}–${tr}`, why:`${r} reps${tag}: you'd likely miss ${lo} next set. −${+(w - nw).toFixed(1)} kg keeps you in range.` };
+  }
+  const tr = Math.max(lo, Math.min(hi, at));
+  return { dir:'keep', w, r: tr, head:`Next set: ${w} kg × ${tr}${tr < hi ? `–${hi}` : ''}`, why: c.dl ? 'Deload week: same weight, stop well short of failure.' : `${r} reps${tag}: right weight. Stay and chase ${hi}.` };
+}
+// After the last set: what the next session should start at (same double-progression rule as the plan)
+function adviseSession(){
+  const c = exCtx(); if (!c) return null;
+  const ws = exDraft.filter(x => x.done && Number(x.w) > 0 && Number(x.r) > 0); if (!ws.length) return null;
+  const top = Math.max(...ws.map(x => Number(x.w))), at = ws.filter(x => Number(x.w) === top), [lo, hi] = c.range;
+  const inc = BIG_LIFT.test(c.name) ? 5 : DB_LIFT.test(c.name) ? 2 : 2.5;
+  if (c.dl) return { dir:'keep', head:'Next session: back to normal loads', why:'Deload done. Pick up where you left off.' };
+  if (at.every(x => Number(x.r) >= hi)) return { dir:'up', head:`Next session: ${top + inc} kg`, why:`Every set at ${top} kg hit ${hi}. Time to add weight.` };
+  return { dir:'keep', head:`Next session: stay at ${top} kg`, why:`Get every set to ${hi} reps (today: ${at.map(x => x.r).join(', ')}), then add weight.` };
+}
+function renderCoach(k, apply = true){
+  const el = document.getElementById('setcoach'); if (!el) return;
+  if (k == null || k < 0 || exUnit !== 'reps' || !exDraft[k] || !exDraft[k].done){ el.innerHTML = ''; return; }
+  const c = exCtx(), x = exDraft[k], w = Number(x.w) || 0, r = Number(x.r) || 0;
+  const next = exDraft.slice(k + 1).findIndex(s => !s.done), ni = next < 0 ? -1 : k + 1 + next;
+  const adv = ni < 0 ? adviseSession() : adviseNext(k);
+  // apply to the next open set unless you've typed into it yourself
+  if (apply && ni >= 0 && adv && adv.w != null && !exDraft[ni].edited){ exDraft[ni].w = adv.w; if (adv.r) exDraft[ni].r = adv.r; exDraft[ni].auto = true; renderSets(); }
+  const last = lastLog(c.name, sel), ls = last && last.sets[k], key = `${sel}|${exFor}`;
+  let vs = '';
+  if (ls && Number(ls.r) > 0){
+    const de = e1rm(w, r) - e1rm(Number(ls.w), Number(ls.r));
+    vs = `Last time set ${k + 1}: ${ls.w ? ls.w + ' × ' : ''}${ls.r}${Math.abs(de) >= .5 ? ` · ${de > 0 ? 'stronger' : 'a bit lighter'} today` : ' · same as today'}`;
+  }
+  const best = bestSet(c.name, key).e, now = e1rm(w, r);
+  const pr = best && now > best + .01 ? `<div class="scpr">${ico('trophy')} New best: est. 1RM ${Math.round(now)} kg (was ${Math.round(best)})</div>` : '';
+  el.innerHTML = `<div class="setcoach">
+    <div class="schead"><b>Set ${k + 1} · ${w ? `${w} kg × ` : ''}${r}</b>${vs ? `<span class="cap">${vs}</span>` : ''}</div>
+    ${pr}
+    <div class="effort" role="group" aria-label="How did set ${k + 1} feel?">${EFFORTS.map(([v, l]) => `<button data-effort="${k}:${v}" aria-pressed="${x.rir === v}">${l}</button>`).join('')}</div>
+    ${adv ? `<div class="target ${adv.dir === 'up' ? 'up' : adv.dir === 'down' ? 'down' : ''}"><b>${adv.dir === 'up' ? '↑ ' : adv.dir === 'down' ? '↓ ' : ''}${adv.head}</b><span>${adv.why}${x.rir == null && ni >= 0 ? ' Tap how it felt for a sharper call.' : ''}</span></div>` : ''}
+  </div>`;
+  if (pr && !x.prCheered){ x.prCheered = true; haptic(); }
+}
+const lastDone = () => { for (let i = exDraft.length - 1; i >= 0; i--) if (exDraft[i].done) return i; return -1; };
 function stopRest(){ clearInterval(restTimer); document.getElementById('resttimer').hidden = true; }
 function exDone(){
   const v = dayView(sel), it = v.items.find(x => x[0] === exFor); if (!it) return;
   const id = exFor, key = `${sel}|${id}`, name = it[1];
   let pr = null;
   if (!LOGLESS.includes(name)){
-    const sets = exDraft.filter(x => (x.r !== '' && Number(x.r) > 0) || (x.w !== '' && Number(x.w) > 0)).map(x => ({ w: x.w === '' ? '' : Number(x.w), r: x.r === '' ? '' : Number(x.r), done: !!x.done }));
+    const sets = exDraft.filter(x => (x.r !== '' && Number(x.r) > 0) || (x.w !== '' && Number(x.w) > 0)).map(x => ({ w: x.w === '' ? '' : Number(x.w), r: x.r === '' ? '' : Number(x.r), done: !!x.done, ...(x.rir != null ? { rir: x.rir } : {}) }));
     if (sets.length){
       const before = bestSet(name, key), now = sets.reduce((b, x) => { const e = e1rm(x.w, x.r); return e > b.e ? { e, w: x.w, r: x.r } : b; }, { e: 0 });
       if (before.e && now.e > before.e + 0.01) pr = now;
@@ -3651,8 +3730,12 @@ document.addEventListener('click', e => {
   if (t.dataset.libeq){ libEq = t.dataset.libeq; renderLibrary(); return; }
   if (t.dataset.lib){ openLib(t.dataset.lib); return; }
   if (t.dataset.openex){ openEx(t.dataset.openex); return; }
-  if (t.dataset.step){ stepSet(t.dataset.step); return; }
-  if (t.dataset.setdone){ const x = exDraft[Number(t.dataset.setdone)]; x.done = !x.done; t.closest('.setrow').classList.toggle('done', x.done); if (x.done){ haptic(); startRest(); } return; }
+  if (t.dataset.step){ stepSet(t.dataset.step); const x = exDraft[Number(t.dataset.step.split(':')[0])]; x.edited = true; x.auto = false; t.closest('.setrow')?.classList.remove('sugg'); return; }
+  if (t.dataset.setdone){ const k = Number(t.dataset.setdone), x = exDraft[k]; x.done = !x.done; x.auto = false; t.closest('.setrow').classList.toggle('done', x.done); t.closest('.setrow').classList.remove('sugg');
+    if (x.done){ haptic(); startRest(); renderCoach(k); } else renderCoach(lastDone()); return; }
+  if (t.dataset.effort){ const [k, v] = t.dataset.effort.split(':').map(Number), x = exDraft[k]; const was = x.rir; x.rir = x.rir === v ? null : v;
+    if (x.rir != null && x.rir <= 1 && !(was != null && was <= 1) && !document.getElementById('resttimer').hidden) restLeft += 30;   // hard set: a bit more rest
+    renderCoach(k); return; }
   if (t.hasAttribute('data-addset')){ const l = exDraft[exDraft.length - 1] || { w:'', r:'' }; exDraft.push({ w: l.w, r: l.r, done:false }); renderSets(); return; }
   if (t.hasAttribute('data-delset')){ if (exDraft.length > 1){ exDraft.pop(); renderSets(); } return; }
   if (t.hasAttribute('data-exdone')){ exDone(); return; }
@@ -3761,7 +3844,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const c = e.target;
-  if (c.dataset && c.dataset.f && c.dataset.k !== undefined && exDraft[Number(c.dataset.k)]){ exDraft[Number(c.dataset.k)][c.dataset.f] = c.value === '' ? '' : Number(c.value); return; }
+  if (c.dataset && c.dataset.f && c.dataset.k !== undefined && exDraft[Number(c.dataset.k)]){ exDraft[Number(c.dataset.k)][c.dataset.f] = c.value === '' ? '' : Number(c.value); exDraft[Number(c.dataset.k)].edited = true; exDraft[Number(c.dataset.k)].auto = false; c.closest('.setrow')?.classList.remove('sugg'); return; }
   if (c.id === 'aimodel'){ cfg.aiModel = c.value; saveCfg(); return; }
   if (c.id === 'cheertoggle'){ cfg.cheers = c.checked; saveCfg(); return; }
   if (['morningtoggle','eveningtoggle','morningtime','remindtime'].includes(c.id)){ saveRemindPrefs(); return; }
