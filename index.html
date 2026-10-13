@@ -469,6 +469,34 @@ details.exhow ol{margin:0 0 10px; padding-left:20px; font-size:0.8235rem; displa
 .heatpick .cap{font-variant-numeric:tabular-nums; min-width:0}
 .heatpick .iconbtn{flex:none; white-space:nowrap}
 .cuitems{display:grid; margin-top:8px}
+/* Strength insights */
+.siverdict{margin-top:6px}
+.siverdict b{display:block; font-family:var(--display); font-size:1.2941rem; font-weight:700; letter-spacing:-.01em}
+.siverdict.hold b{color:var(--accent)} .siverdict.fall b{color:var(--orange-text)}
+.siverdict p{margin:4px 0 0; color:var(--ink); line-height:1.35}
+.siverdict.none b{font-size:1.0588rem}
+.siverdict.none p{color:var(--mute); font-size:0.8824rem}
+.sichart{display:block; width:100%; height:auto; margin-top:12px; overflow:visible}
+.sichart .zero{stroke:var(--line); stroke-dasharray:3 3}
+.sichart polyline{fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round}
+.sichart .ss{stroke:var(--accent); fill:var(--accent)} .sichart polyline.ss{fill:none}
+.sichart .sw{stroke:var(--ring2); fill:var(--ring2)} .sichart polyline.sw{fill:none}
+.sichart text{stroke:none; font-family:var(--rounded); font-size:12px; font-weight:700}
+.silegend{display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:6px; font-size:0.7647rem; color:var(--mute)}
+.silegend i{display:inline-block; width:12px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px}
+.silegend i.ss{background:var(--accent)} .silegend i.sw{background:var(--ring2)}
+.sih{margin:18px 0 2px; font-size:0.7647rem; font-weight:400; letter-spacing:.02em; text-transform:uppercase; color:var(--mute)}
+.sirow{all:unset; box-sizing:border-box; width:100%; display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; min-height:44px; padding:10px 0; border-bottom:.5px solid var(--line); cursor:pointer; -webkit-tap-highlight-color:transparent}
+.sirow:last-of-type{border-bottom:0}
+.sirow > span{display:grid; gap:2px}
+.sirow b{font-weight:600}
+.sirow small{color:var(--mute); font-size:0.8235rem}
+.sirow .sifix{font-size:0.8824rem; color:var(--ink)}
+.sirow > .ico{color:var(--grabber); width:16px; height:16px}
+.sirow:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:8px}
+.sihow{margin-top:12px; padding:0; background:none}
+.sihow summary{font-size:0.8235rem; color:var(--accent); padding:6px 0}
+.sihow p{margin:0 0 6px; font-size:0.8235rem; color:var(--mute); line-height:1.4}
 .catchup .btnrow{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 .catchup .btnrow .btn{width:100%}
 .cuitem{display:grid; grid-template-columns:auto 1fr; align-items:center; gap:12px; min-height:52px; border-bottom:.5px solid var(--line); cursor:pointer}
@@ -1038,6 +1066,7 @@ body:not([data-tab="home"]) .syncdot{display:none}
   </div>
 
   <div class="view" data-view="stats" hidden>
+  <section class="card" id="strength"></section>
   <section class="card" id="kpis"></section>
   <section class="card" id="weight"></section>
   <section class="card" id="exprog"></section>
@@ -2670,6 +2699,7 @@ function renderSecondary(){
   renderBadges();
   renderCheckin();
   renderRemind();
+  renderStrength();
   renderKpis();
   renderExProg();
   renderRecent();
@@ -2951,6 +2981,124 @@ function renderKpis(){
     ${tile(ch == null ? '—' : `${ch <= 0 ? '−' : '+'}${Math.abs(ch).toFixed(1)}`, '7-day avg vs 30 days ago (kg)', ch == null ? '' : ch <= 0 ? 'good' : 'bad')}
   </div>`;
 }
+/* ---------- Strength insights: is muscle staying, what's stuck, is volume right (8-week window) ----------
+   Strength per session = best estimated 1RM (Wathan, holds at high reps) over its weighted sets. Deload weeks are
+   left out of trends and stalls. Each exercise name (swaps included) keeps its own trend. */
+const SI_DAYS = 56, SI_MIN = 3, STALL_N = 3, VOL_LO = 8, VOL_SHARE = .75;
+const VOL_MUSCLES = ['chest', 'back', 'shoulders', 'quads', 'hamstrings', 'glutes', 'biceps', 'triceps', 'calves', 'abs'];
+const isCompound = name => Object.keys(musclesOf(name)).length >= 2;
+function planItemFor(name){
+  const all = PLAN.flatMap(day => day.items.flatMap(it => [it, it.b].filter(Boolean)));
+  return all.find(it => it.n === name) || all.find(it => (it.alts || []).includes(name)) || null;   // the exercise itself before a swap list that mentions it
+}
+function liftSessions(from){
+  const by = {};
+  for (const [k, v] of Object.entries(state.logs)){
+    const d = k.split('|')[0]; if (d < from || d > iso(today) || weekInfo(mon(fromIso(d))).deload) continue;
+    const ws = v.sets.filter(x => Number(x.w) > 0 && Number(x.r) > 0); if (!ws.length) continue;
+    const e = Math.max(...ws.map(x => rm1(Number(x.w), Math.min(15, Number(x.r)))));
+    (by[v.name] ||= []).push({ d, id: k.split('|')[1], e, sets: ws.map(x => ({ w: Number(x.w), r: Number(x.r) })) });
+  }
+  for (const n in by) by[n].sort((a, b) => a.d.localeCompare(b.d));
+  return by;
+}
+function strengthInsights(){
+  const from = iso(addDays(today, -SI_DAYS + 1)), by = liftSessions(from);
+  // 1. keeping muscle: median strength change of main lifts vs the 7-day average weight over the same window
+  const main = Object.entries(by).filter(([n, ss]) => isCompound(n) && ss.length >= SI_MIN);
+  const chg = main.map(([n, ss]) => { const a = Math.max(ss[0].e, ss[1].e), b = Math.max(ss[ss.length - 1].e, ss[ss.length - 2].e); return { n, pct: b / a - 1, ss, base: a }; });
+  const med = a => { const v = [...a].sort((x, y) => x - y), m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
+  const wDates = Object.keys(state.weights).filter(d => d >= from && typeof state.weights[d] === 'number').sort();
+  const w0 = wDates.length ? avgOn(wDates[0]) : null, w1 = avgOn(iso(today));
+  const spanDays = wDates.length ? (today - fromIso(wDates[0])) / 864e5 : 0;
+  let verdict = null;
+  if (chg.length >= 2 && w0 != null && w1 != null && spanDays >= 14){
+    const sp = med(chg.map(c => c.pct)), wkg = w1 - w0, wpct = w1 / w0 - 1;
+    const tier = sp >= -.02 ? 'hold' : sp >= -.05 ? 'dip' : 'fall';
+    // weekly points for the chart: % change of the weight average and of median main-lift strength
+    const pts = [];
+    for (let k = 7; k >= 0; k--){
+      const d = iso(addDays(today, -7 * k)); if (d < wDates[0]) continue;
+      const aw = avgOn(d), ps = chg.map(c => { const last = c.ss.filter(x => x.d <= d).pop(); return last ? last.e / c.base - 1 : null; }).filter(v => v != null);
+      if (aw != null && ps.length) pts.push({ d, w: aw / w0 - 1, s: med(ps) });
+    }
+    verdict = { tier, sp, wkg, wpct, n: chg.length, pts };
+  }
+  // 2. stalling: no new best in the last STALL_N sessions; the fix depends on why
+  const stalls = [];
+  for (const [n, ss] of Object.entries(by)){
+    if (ss.length < STALL_N + 1) continue;
+    const before = Math.max(...ss.slice(0, -STALL_N).map(x => x.e)), recent = Math.max(...ss.slice(-STALL_N).map(x => x.e));
+    if (recent > before * 1.01) continue;
+    const es = ss.map(x => x.e), since = Math.max(STALL_N, ss.length - 1 - es.lastIndexOf(Math.max(...es)));   // sessions since the last best
+    const lastS = ss[ss.length - 1], slot = planDay(lastS.d).items.find(x => x[0] === lastS.id);   // the plan slot it was logged in (Week A/B differ)
+    const it = slot ? { n: slot[4].n, rx: slot[2], alts: slot[4].alts } : planItemFor(n), [lo, hi] = repRange(it ? it.rx : '') || [8, 12];
+    const top = Math.max(...lastS.sets.map(x => x.w)), topSets = lastS.sets.filter(x => x.w === top);
+    const misses = ss.slice(-STALL_N).filter(x => { const t = Math.max(...x.sets.map(y => y.w)); return x.sets.filter(y => y.w === t).some(y => y.r < lo); }).length;
+    const inc = BIG_LIFT.test(n) ? 5 : DB_LIFT.test(n) ? 2 : 2.5;
+    let fix;
+    if (topSets.every(x => x.r >= hi)) fix = `You're hitting ${hi} on every set at ${top} kg. Add ${inc} kg next time.`;
+    else if (misses >= 2) fix = `Missing ${lo} reps often. Drop to ${Math.max(2.5, plateDown(top * .9))} kg and build back up.`;
+    else if (it && it.alts && it.alts.length && it.n === n) fix = `Swap to ${it.alts[0]} for 4 weeks, then come back fresh.`;
+    else fix = `Try a new rep target: ${Math.max(3, lo - 2)}–${Math.max(4, hi - 2)} reps with a little more weight for 3 weeks.`;
+    stalls.push({ n, since, fix, compound: isCompound(n) });
+  }
+  stalls.sort((a, b) => (b.compound - a.compound) || (b.since - a.since));
+  // 3. volume: the last 8 complete weeks, done vs your own plan. Your plan already sets the dose; the risk on a cut is
+  //    quietly doing less of it (or dropping under ~8 sets a week, the usual floor for keeping a muscle).
+  const pl = {}, dn = {}, active = [];
+  for (let k = 1; k <= 8; k++){
+    const ws = addDays(mon(today), -7 * k), p = plannedSets(ws), d = muscleSets(iso(addDays(ws, 6)), 7);
+    if (!Object.values(d).some(v => v > 0)) continue;   // a week with nothing logged (before you started) doesn't count
+    active.push(ws); for (const m of VOL_MUSCLES){ pl[m] = (pl[m] || 0) + p[m]; dn[m] = (dn[m] || 0) + d[m]; }
+  }
+  const vol = active.length >= 2 ? VOL_MUSCLES.filter(m => pl[m] / active.length >= 4)
+    .map(m => ({ m, v: dn[m] / active.length, plan: pl[m] / active.length }))
+    .filter(x => x.v < x.plan * VOL_SHARE || (x.plan >= VOL_LO && x.v < VOL_LO)).sort((a, b) => a.v / a.plan - b.v / b.plan) : [];
+  return { verdict, stalls: stalls.slice(0, 3), vol, mainCount: chg.length, lifts: Object.keys(by).length, weightDays: wDates.length, spanDays };
+}
+function strengthChart(pts){
+  const W = 320, H = 96, L = 4, R = 34, T = 10, B = 10;
+  const vs = pts.flatMap(p => [p.w, p.s, 0]), lo = Math.min(...vs) - .005, hi = Math.max(...vs) + .005;
+  const x = k => L + (W - L - R) * (pts.length > 1 ? k / (pts.length - 1) : .5), y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+  const line = key => pts.map((p, k) => `${x(k).toFixed(1)},${y(p[key]).toFixed(1)}`).join(' ');
+  const pc = v => `${v >= 0 ? '+' : '−'}${Math.abs(v * 100).toFixed(0)}%`, last = pts[pts.length - 1];
+  return `<svg class="sichart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Strength ${pc(last.s)} and weight ${pc(last.w)} over the last ${pts.length} weeks">
+    <line class="zero" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>
+    <polyline class="sw" points="${line('w')}"/><polyline class="ss" points="${line('s')}"/>
+    <circle class="sw" cx="${x(pts.length - 1)}" cy="${y(last.w)}" r="3.5"/><circle class="ss" cx="${x(pts.length - 1)}" cy="${y(last.s)}" r="3.5"/>
+    <text class="ss" x="${W - R + 6}" y="${y(last.s) + 4}">${pc(last.s)}</text><text class="sw" x="${W - R + 6}" y="${y(last.w) + 4}">${pc(last.w)}</text></svg>`;
+}
+function renderStrength(){
+  const el = document.getElementById('strength'); if (!el || unchanged('strength')) return;
+  const si = strengthInsights(), v = si.verdict;
+  const pc = x => `${x >= 0 ? '+' : '−'}${Math.abs(x * 100).toFixed(0)}%`;
+  let head;
+  if (v){
+    const down = v.wkg < 0 ? `while weight fell ${Math.abs(v.wkg).toFixed(1)} kg` : `with weight ${v.wkg >= 0 ? 'up' : 'down'} ${Math.abs(v.wkg).toFixed(1)} kg`;
+    const T = { hold: ['Keeping muscle', `Strength ${pc(v.sp)} ${down}.`],
+      dip: ['Small dip, normal on a cut', `Strength ${pc(v.sp)} ${down}. Keep protein at ${PROTEIN_DONE} g+ and the reps honest.`],
+      fall: ['Strength is slipping', `Strength ${pc(v.sp)} ${down}. Likely causes: protein under ${PROTEIN_DONE} g, short sleep, or a deficit that's too steep (more than ~1 kg a week).`] }[v.tier];
+    head = `<div class="siverdict ${v.tier}"><b>${T[0]}</b><p>${T[1]}</p></div>
+      ${v.pts.length >= 2 ? strengthChart(v.pts) : ''}
+      <div class="silegend" aria-hidden="true"><span><i class="ss"></i>Main-lift strength (median of ${v.n})</span><span><i class="sw"></i>Weight, 7-day avg</span></div>`;
+  } else {
+    const need = [];
+    if (si.mainCount < 2) need.push(`weights logged on 3+ sessions of at least 2 main lifts (${si.mainCount} so far)`);
+    if (si.spanDays < 14) need.push('two weeks of weigh-ins');
+    head = `<div class="siverdict none"><b>Not enough data yet</b><p>To judge whether you're keeping muscle, the app needs ${need.join(' and ') || 'a little more history'}.</p></div>`;
+  }
+  const stalls = si.stalls.length
+    ? si.stalls.map(x => `<button class="sirow" data-lib="${esc(x.n)}"><span><b>${esc(x.n)}</b><small>No new best in ${x.since} sessions</small><span class="sifix">${x.fix}</span></span>${ico('chevR')}</button>`).join('')
+    : si.lifts ? '<p class="cap">Every lift with enough sessions is still moving.</p>' : '';
+  const vol = si.vol.map(x => `<button class="sirow" data-tab="stats" data-scroll="muscles"><span><b>${MUSCLE_LABEL[x.m]}: ${x.v.toFixed(1)} sets/week</b><small>Plan: ${x.plan.toFixed(0)} a week · ${Math.round(100 * x.v / x.plan)}% done${x.v < VOL_LO && x.plan >= VOL_LO ? ` · under ${VOL_LO} risks muscle on a cut` : ''}</small></span>${ico('chevR')}</button>`).join('');
+  el.innerHTML = `<h2 class="sect">Strength</h2>${head}
+    ${stalls ? `<h3 class="sih">Stalling lifts</h3>${stalls}` : ''}
+    ${vol ? `<h3 class="sih">Volume to adjust</h3>${vol}` : ''}
+    <details class="sihow"><summary>How this is worked out</summary>
+      <p>Last 8 weeks, deload weeks left out. Strength is each session's best estimated 1-rep max. "Main lifts" are compound exercises logged with weight 3+ times; the verdict uses their median change. A lift is stalling when its last ${STALL_N} sessions set no new best (within 1%). Volume compares the sets you did per muscle (helper muscles count half) with your plan over the last 8 complete weeks; it flags anything under ${Math.round(VOL_SHARE * 100)}% of plan or under ${VOL_LO} sets a week, a common floor for keeping muscle while cutting. These are guides from your logs, not measurements of muscle.</p></details>`;
+}
+
 function exHistory(name){
   return Object.entries(state.logs).filter(([, v]) => v.name === name).map(([k, v]) => {
     const ws = v.sets.filter(x => Number(x.r) > 0);
